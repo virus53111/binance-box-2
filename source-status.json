@@ -1,11 +1,11 @@
 {
-  "last_attempt": "2026-09-12T18:27:13+00:00",
+  "last_attempt": "2026-09-12T18:31:37+00:00",
   "sources": {
     "douglas": {
       "store": "Douglas",
       "state": "ok",
-      "last_attempt": "2026-09-12T18:27:13+00:00",
-      "last_success": "2026-09-12T18:27:13+00:00",
+      "last_attempt": "2026-09-12T18:31:37+00:00",
+      "last_success": "2026-09-12T18:31:37+00:00",
       "count": 28,
       "url": "https://www.douglas.lv/lv/davana-par-pirkumu/",
       "detail": "Получены подарки"
@@ -13,8 +13,8 @@
     "atdot": {
       "store": "Atdot.lv",
       "state": "ok",
-      "last_attempt": "2026-09-12T18:27:13+00:00",
-      "last_success": "2026-09-12T18:27:13+00:00",
+      "last_attempt": "2026-09-12T18:31:37+00:00",
+      "last_success": "2026-09-12T18:31:37+00:00",
       "count": 7,
       "url": "https://www.atdot.lv/sludinajumi/",
       "detail": "Получены объявления"
@@ -22,8 +22,8 @@
     "rimi": {
       "store": "Rimi",
       "state": "ok",
-      "last_attempt": "2026-09-12T18:27:13+00:00",
-      "last_success": "2026-09-12T18:27:13+00:00",
+      "last_attempt": "2026-09-12T18:31:37+00:00",
+      "last_success": "2026-09-12T18:31:37+00:00",
       "count": 3,
       "url": "https://www.rimi.lv/akcijas-un-bukleti",
       "detail": "Получены ссылки на каталоги"
@@ -31,8 +31,8 @@
     "kursi": {
       "store": "Kurši",
       "state": "ok",
-      "last_attempt": "2026-09-12T18:27:13+00:00",
-      "last_success": "2026-09-12T18:27:13+00:00",
+      "last_attempt": "2026-09-12T18:31:37+00:00",
+      "last_success": "2026-09-12T18:31:37+00:00",
       "count": 7,
       "url": "https://www.kursi.lv/lv/visas-kampanas/avize/",
       "detail": "Получены ссылки на каталоги"
@@ -40,7 +40,7 @@
     "rd": {
       "store": "RD Electronics",
       "state": "error",
-      "last_attempt": "2026-09-12T18:27:13+00:00",
+      "last_attempt": "2026-09-12T18:31:37+00:00",
       "url": "https://www.rdveikals.lv/site/catalog/lv/626/page/1/Akcijas.html",
       "error": "HTTP Error 403: Forbidden",
       "detail": "Не удалось обновить",
