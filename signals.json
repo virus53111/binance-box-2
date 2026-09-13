@@ -1,7 +1,7 @@
 {
   "source": "https://t.me/s/Crypto_pravda1",
-  "updated_at": "2026-09-13T05:59:28.579673+00:00",
-  "status": "ok",
-  "error": null,
+  "updated_at": "2026-09-13T06:01:15.311459+00:00",
+  "status": "error",
+  "error": "ValueError: Telegram returned no readable posts",
   "signals": []
 }
