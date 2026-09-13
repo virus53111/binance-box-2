@@ -21,7 +21,7 @@ class Page(HTMLParser):
  @property
  def text(self):return '\n'.join(self.lines)
 def fetch(url):
- req=urllib.request.Request(url,headers={'User-Agent':'HalyavaLV/1.0 (+public-offer-index; refresh every 6 hours)'})
+ req=urllib.request.Request(url,headers={'User-Agent':'HalyavaLV/1.0 (+public-offer-index; refresh every 3 hours)'})
  with urllib.request.urlopen(req,timeout=18) as r:
   if urllib.parse.urlparse(r.url).hostname!=urllib.parse.urlparse(url).hostname:raise ValueError('Unexpected redirect host')
   b=r.read(4_000_001)
