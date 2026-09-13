@@ -11,6 +11,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090d18'/%3E%3Cpath d='M12 42l12-13 9 8 19-22' fill='none' stroke='%2381f4c1' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='15' r='5' fill='%23a98bff'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="safety.css" />
+  <link rel="stylesheet" href="futures.css" />
 </head>
 <body>
   <div class="ambient a1"></div><div class="ambient a2"></div>
@@ -21,7 +22,7 @@
       </button>
       <div class="market-status"><i></i><span data-i18n="marketLive">Рынок онлайн</span><b id="latency">— ms</b></div>
       <div class="header-actions">
-        <button id="simulate" class="outline"><span>✦</span><span data-i18n="demoSignal">Новый сигнал</span></button>
+        <button id="refreshSignals" class="outline"><span>↻</span><span data-i18n="refreshSignals">Обновить сигналы</span></button>
         <button id="lang" class="lang">EN</button>
         <button class="avatar" aria-label="Profile">AP</button>
       </div>
@@ -29,20 +30,19 @@
 
     <main>
       <aside class="watchlist panel">
-        <div class="aside-title"><span data-i18n="markets">Рынки</span><button aria-label="Search">⌕</button></div>
-        <div class="coin active" data-pair="BTCUSDT"><span class="coin-icon btc">₿</span><div><b>Bitcoin</b><small>BTC / USDT</small></div><div><strong id="btcPrice">—</strong><em id="btcChange">—</em></div></div>
-        <div class="coin" data-pair="SOLUSDT"><span class="coin-icon sol">S</span><div><b>Solana</b><small>SOL / USDT</small></div><div><strong id="solPrice">—</strong><em id="solChange">—</em></div></div>
-        <div class="coin" data-pair="SEIUSDT"><span class="coin-icon sei">S</span><div><b>Sei</b><small>SEI / USDT</small></div><div><strong id="seiPrice">—</strong><em id="seiChange">—</em></div></div>
+        <div class="aside-title"><span data-i18n="markets">Все фьючерсы</span><span id="marketCount" class="count">—</span></div>
+        <div class="market-search"><input id="marketSearch" type="search" placeholder="BTC, ETH, SOL…" aria-label="Search futures"><span>⌕</span></div>
+        <div id="marketList" class="market-list"><div class="mini-loading">Загрузка Binance Futures…</div></div>
         <div class="source-card">
-          <div class="source-top"><span class="tg">➤</span><div><b>КриптоПравда</b><small>@Crypto_pravda1</small></div><i></i></div>
-          <div class="source-stats"><div><small>Status</small><b class="red">OFFLINE</b></div><div><small>Signals</small><b>0</b></div></div>
+          <div class="source-top"><span class="tg">➤</span><div><b>КриптоПравда</b><small>@Crypto_pravda1</small></div><i id="sourceDot"></i></div>
+          <div class="source-stats"><div><small>Status</small><b id="sourceStatus">SYNCING</b></div><div><small>Signals</small><b id="sourceCount">0</b></div></div>
         </div>
       </aside>
 
       <section class="workspace">
-        <div class="risk-warning"><b data-i18n="marketMonitor">Рыночный монитор</b><span data-i18n="noExecution">Данные Binance Spot. Сайт не открывает сделки и не является торговым терминалом.</span></div>
+        <div class="risk-warning"><b data-i18n="marketMonitor">Рыночный монитор</b><span data-i18n="noExecution">Данные Binance USDT‑M Futures. Telegram проверяется каждые 5 минут; это не мгновенная торговая система.</span></div>
         <div class="stats-row">
-          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>BINANCE SPOT</b><span data-i18n="publicMarket">Публичные рыночные данные</span></div>
+          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>BINANCE FUTURES</b><span data-i18n="publicMarket">USDT‑M perpetual</span></div>
           <div class="metric"><small data-i18n="selectedInterval">Интервал</small><b id="metricInterval">15m</b><span data-i18n="candleInterval">Интервал свечи</span></div>
           <div class="metric"><small data-i18n="lastUpdate">Последнее обновление</small><b id="lastUpdate">—</b><span>UTC</span></div>
           <div class="metric"><small data-i18n="connection">Соединение</small><b id="connectionState">CONNECTING</b><span id="connectionDetail">REST + WebSocket</span></div>
@@ -59,22 +59,22 @@
             <div id="chartLoading" class="chart-loading"><span></span><span data-i18n="loading">Загрузка рынка…</span></div>
             <div id="chartError" class="chart-error hidden"><b data-i18n="dataUnavailable">Данные недоступны</b><span data-i18n="doNotTrade">Не используйте график для принятия торговых решений.</span><button id="retry" data-i18n="retry">Повторить</button></div>
           </div>
-          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">BINANCE SPOT · CONNECTING</b></div>
+          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">BINANCE FUTURES · CONNECTING</b></div>
         </div>
 
-        <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки отключены</b><span data-i18n="paperReason">Они будут включены только после проверки Telegram-парсера, комиссий, задержек и логики исполнения.</span></div>
+        <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки: этап 2</b><span data-i18n="paperReason">Сначала проверяем точность получения и разбора сигналов. Автоматическое исполнение пока не включено.</span></div>
       </section>
 
       <aside class="signals panel">
-        <div class="aside-title"><span data-i18n="liveSignals">Сигналы</span><span class="count">0</span><button>•••</button></div>
-        <div class="auto-card disabled"><div><span>⚠</span><div><b data-i18n="telegramOffline">Telegram не подключён</b><small data-i18n="noVerifiedSignals">Нет проверенных сигналов</small></div></div><p data-i18n="signalSafety">Старые демонстрационные сигналы удалены. Сигналы появятся только после подключения и проверки источника.</p></div>
+        <div class="aside-title"><span data-i18n="liveSignals">Сигналы</span><span id="signalCount" class="count">0</span><button>•••</button></div>
+        <div class="auto-card"><div><span>➤</span><div><b>КриптоПравда</b><small id="syncTime">Синхронизация…</small></div></div><p data-i18n="signalSafety">Публичный канал проверяется автоматически. Задержка GitHub может превышать 5 минут.</p></div>
         <div id="signalList" class="signals-empty"><span>➤</span><b data-i18n="noSignals">Нет сигналов</b><p data-i18n="noSignalsText">Сейчас сайт показывает только реальные рыночные данные Binance.</p></div>
         <div class="disclaimer" data-i18n="disclaimer">Виртуальная торговля. Не финансовая рекомендация.</div>
       </aside>
     </main>
   </div>
 
-  <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">ТЕСТОВОЕ УВЕДОМЛЕНИЕ</small><b>SIGNAL LAB UI TEST</b><span data-i18n="tapOpen">Реальный сигнал не создавался</span></div><button aria-label="Close">×</button></div>
-  <script src="app.js"></script>
+  <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
+  <script src="app-v2.js"></script>
 </body>
 </html>

@@ -1,32 +1,42 @@
-name: Deploy Signal Lab
+name: Sync Telegram and deploy Signal Lab
 
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: signal-lab-pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - name: Read public Telegram channel
+        run: python3 telegram_sync.py
+      - name: Save new signals
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add signals.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update Crypto_pravda1 signals [skip ci]'
+            git push
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: .
       - name: Deploy
