@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090d18'/%3E%3Cpath d='M12 42l12-13 9 8 19-22' fill='none' stroke='%2381f4c1' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='15' r='5' fill='%23a98bff'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="safety.css" />
 </head>
 <body>
   <div class="ambient a1"></div><div class="ambient a2"></div>
@@ -34,53 +35,46 @@
         <div class="coin" data-pair="SEIUSDT"><span class="coin-icon sei">S</span><div><b>Sei</b><small>SEI / USDT</small></div><div><strong id="seiPrice">—</strong><em id="seiChange">—</em></div></div>
         <div class="source-card">
           <div class="source-top"><span class="tg">➤</span><div><b>КриптоПравда</b><small>@Crypto_pravda1</small></div><i></i></div>
-          <div class="source-stats"><div><small data-i18n="signals30">Сигналов / 30д</small><b>42</b></div><div><small>Win rate</small><b>64.3%</b></div></div>
+          <div class="source-stats"><div><small>Status</small><b class="red">OFFLINE</b></div><div><small>Signals</small><b>0</b></div></div>
         </div>
       </aside>
 
       <section class="workspace">
+        <div class="risk-warning"><b data-i18n="marketMonitor">Рыночный монитор</b><span data-i18n="noExecution">Данные Binance Spot. Сайт не открывает сделки и не является торговым терминалом.</span></div>
         <div class="stats-row">
-          <div class="metric"><small data-i18n="virtualBalance">Виртуальный баланс</small><b>$10,684.20</b><em>+6.84%</em></div>
-          <div class="metric"><small data-i18n="openPnl">Открытый PnL</small><b class="green">+$126.40</b><span>2 <span data-i18n="positions">позиции</span></span></div>
-          <div class="metric"><small data-i18n="profitFactor">Profit factor</small><b>1.82</b><span>30D</span></div>
-          <div class="metric"><small data-i18n="maxDrawdown">Макс. просадка</small><b class="red">−4.12%</b><span>30D</span></div>
+          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>BINANCE SPOT</b><span data-i18n="publicMarket">Публичные рыночные данные</span></div>
+          <div class="metric"><small data-i18n="selectedInterval">Интервал</small><b id="metricInterval">15m</b><span data-i18n="candleInterval">Интервал свечи</span></div>
+          <div class="metric"><small data-i18n="lastUpdate">Последнее обновление</small><b id="lastUpdate">—</b><span>UTC</span></div>
+          <div class="metric"><small data-i18n="connection">Соединение</small><b id="connectionState">CONNECTING</b><span id="connectionDetail">REST + WebSocket</span></div>
         </div>
 
         <div class="chart-card panel">
           <div class="chart-head">
             <div class="instrument"><span id="pairIcon" class="coin-icon btc">₿</span><div><h1 id="pairName">Bitcoin <small>BTC / USDT</small></h1><div><b id="livePrice">—</b><em id="liveChange">—</em></div></div></div>
-            <div class="timeframes" role="group" aria-label="Timeframe"><button>5m</button><button class="active">15m</button><button>1H</button><button>4H</button><button>1D</button></div>
+            <div class="timeframes" role="group" aria-label="Timeframe"><button data-interval="1m">1m</button><button data-interval="5m">5m</button><button data-interval="15m" class="active">15m</button><button data-interval="1h">1H</button><button data-interval="4h">4H</button><button data-interval="1d">1D</button></div>
           </div>
           <div class="chart-wrap">
-            <div class="chart-tools"><button>⌖</button><button>╱</button><button>＋</button><button>↕</button></div>
+            <div id="ohlc" class="ohlc">O — · H — · L — · C —</div>
             <canvas id="chart"></canvas>
             <div id="chartLoading" class="chart-loading"><span></span><span data-i18n="loading">Загрузка рынка…</span></div>
-            <div id="signalBadge" class="signal-badge hidden"><small>SHORT · 25X</small><b>SEI / USDT</b><span data-i18n="activeSignal">Активный сигнал</span></div>
+            <div id="chartError" class="chart-error hidden"><b data-i18n="dataUnavailable">Данные недоступны</b><span data-i18n="doNotTrade">Не используйте график для принятия торговых решений.</span><button id="retry" data-i18n="retry">Повторить</button></div>
           </div>
-          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span><i class="legend entry"></i>Entry</span><span><i class="legend tp"></i>Take profit</span><span><i class="legend sl"></i>Stop loss</span><b id="feedStatus">BINANCE · LIVE</b></div>
+          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">BINANCE SPOT · CONNECTING</b></div>
         </div>
 
-        <div class="positions panel">
-          <div class="section-head"><h2 data-i18n="openPositions">Открытые позиции</h2><span>2</span><button data-i18n="history">История →</button></div>
-          <div class="position-row"><div><span class="coin-icon sol">S</span><b>SOL/USDT<small>LONG · 10X</small></b></div><div><small>Entry</small><b>$128.50</b></div><div><small>Mark</small><b>$130.14</b></div><div><small>Size</small><b>$1,000</b></div><div><small>PnL</small><b class="green">+$12.76</b></div><span class="pill green-bg">OPEN</span></div>
-          <div class="position-row"><div><span class="coin-icon sei">S</span><b>SEI/USDT<small>SHORT · 25X</small></b></div><div><small>Entry</small><b>$0.0561</b></div><div><small>Mark</small><b>$0.0558</b></div><div><small>Size</small><b>$750</b></div><div><small>PnL</small><b class="green">+$4.01</b></div><span class="pill purple-bg">TP1 HIT</span></div>
-        </div>
+        <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки отключены</b><span data-i18n="paperReason">Они будут включены только после проверки Telegram-парсера, комиссий, задержек и логики исполнения.</span></div>
       </section>
 
       <aside class="signals panel">
-        <div class="aside-title"><span data-i18n="liveSignals">Сигналы</span><span class="count">3</span><button>•••</button></div>
-        <div class="auto-card"><div><span>⚡</span><div><b data-i18n="autoTrading">Автосделки</b><small data-i18n="paperOnly">Только виртуально</small></div><label class="switch"><input id="autoTrade" type="checkbox" checked><span></span></label></div><p data-i18n="riskText">Риск 1% · Плечо из сигнала</p></div>
-        <div id="signalList">
-          <button class="signal active" data-pair="SEIUSDT"><div class="sig-top"><span class="pill short">SHORT</span><time data-i18n="now">сейчас</time></div><h3>SEI / USDT <small>25–30X</small></h3><div class="levels"><span><small>Entry</small><b>Market</b></span><span><small>TP1</small><b>0.0530</b></span><span><small>SL</small><b>0.0565</b></span></div><div class="sig-source"><span class="tg tiny">➤</span>КриптоПравда <i>NEW</i></div></button>
-          <button class="signal" data-pair="SOLUSDT"><div class="sig-top"><span class="pill long">LONG</span><time>18 min</time></div><h3>SOL / USDT <small>10X</small></h3><div class="levels"><span><small>Entry</small><b>128–130</b></span><span><small>TP1</small><b>134.00</b></span><span><small>SL</small><b>124.00</b></span></div><div class="sig-source"><span class="tg tiny">➤</span>КриптоПравда <i class="tracking">TRACKING</i></div></button>
-          <button class="signal faded" data-pair="BTCUSDT"><div class="sig-top"><span class="pill long">LONG</span><time>2h</time></div><h3>BTC / USDT <small>5X</small></h3><div class="levels"><span><small>Entry</small><b>58,400</b></span><span><small>Close</small><b>60,210</b></span><span><small>PnL</small><b class="green">+3.1%</b></span></div><div class="sig-source"><span class="tg tiny">➤</span>КриптоПравда <i class="closed">CLOSED</i></div></button>
-        </div>
+        <div class="aside-title"><span data-i18n="liveSignals">Сигналы</span><span class="count">0</span><button>•••</button></div>
+        <div class="auto-card disabled"><div><span>⚠</span><div><b data-i18n="telegramOffline">Telegram не подключён</b><small data-i18n="noVerifiedSignals">Нет проверенных сигналов</small></div></div><p data-i18n="signalSafety">Старые демонстрационные сигналы удалены. Сигналы появятся только после подключения и проверки источника.</p></div>
+        <div id="signalList" class="signals-empty"><span>➤</span><b data-i18n="noSignals">Нет сигналов</b><p data-i18n="noSignalsText">Сейчас сайт показывает только реальные рыночные данные Binance.</p></div>
         <div class="disclaimer" data-i18n="disclaimer">Виртуальная торговля. Не финансовая рекомендация.</div>
       </aside>
     </main>
   </div>
 
-  <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b>SEI SHORT · 25–30X</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
+  <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">ТЕСТОВОЕ УВЕДОМЛЕНИЕ</small><b>SIGNAL LAB UI TEST</b><span data-i18n="tapOpen">Реальный сигнал не создавался</span></div><button aria-label="Close">×</button></div>
   <script src="app.js"></script>
 </body>
 </html>
