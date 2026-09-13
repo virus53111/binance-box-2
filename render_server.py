@@ -70,6 +70,7 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
     side = found.group(1 if reverse else 2)
     symbol = asset if asset.endswith('USDT') else f'{asset}USDT'
     leverage = re.search(r'(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*[XХ]', upper)
+    leverage_after = re.search(r'[XХ]\s*(\d{1,3})', upper) if not leverage else None
     entry: list[float] = []
     targets: list[float] = []
     stop = None
@@ -77,13 +78,13 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
     for line in [line.strip() for line in upper.splitlines() if line.strip()]:
         if re.search(r'ТЕЙК|TARGET|ЦЕЛ', line):
             in_targets = True
-        if re.search(r'СТОП|STOP|\bSL\b', line):
+        if re.search(r'[СC]ТОП|STOP|\bSL\b', line):
             line_nums = nums(line)
             stop = line_nums[0] if line_nums else None
             in_targets = False
             continue
-        if re.search(r'ВХОД|ENTRY', line):
-            entry = nums(line)[:2]
+        if re.search(r'^(?:[^A-ZА-Я0-9]*)(?:ДИАПАЗОН\s+ВХОДА|ВХОД||ВХОД|ENTRY)\s*:', line):
+            entry = [] if re.search(r'РЫН|MARKET', line) else nums(line)[:2]
             in_targets = False
             continue
         if in_targets:
@@ -92,8 +93,8 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
         'id': str(message_id),
         'symbol': symbol,
         'side': side,
-        'leverageMin': int(leverage.group(1)) if leverage else None,
-        'leverageMax': int(leverage.group(2) or leverage.group(1)) if leverage else None,
+        'leverageMin': int(leverage.group(1)) if leverage else (int(leverage_after.group(1)) if leverage_after else None),
+        'leverageMax': int(leverage.group(2) or leverage.group(1)) if leverage else (int(leverage_after.group(1)) if leverage_after else None),
         'entry': entry,
         'targets': targets[:8],
         'stop': stop,
@@ -120,9 +121,10 @@ async def sync_signals(session_text: str) -> int:
                     continue
                 parsed = parse_signal(channel, message.id, message.message, message.date or datetime.now(timezone.utc))
                 key = f"{parsed['source']}:{parsed['id']}" if parsed else ''
-                if parsed and key not in by_id:
+                if parsed:
+                    if key not in by_id:
+                        added += 1
                     by_id[key] = parsed
-                    added += 1
         ordered = sorted(by_id.values(), key=lambda item: item['publishedAt'], reverse=True)[:300]
         await redis.set('telegram:signals', json.dumps(ordered, ensure_ascii=False))
         return added
@@ -183,8 +185,12 @@ async def update_paper_positions() -> None:
     signals = json.loads(signals_raw) if signals_raw else []
     positions = json.loads(positions_raw) if positions_raw else []
     by_id = {item['id']: item for item in positions}
-    ticker_rows = await fetch_binance('/fapi/v1/ticker/price')
-    prices = {row['symbol']: float(row['price']) for row in ticker_rows if 'symbol' in row and 'price' in row}
+    try:
+        ticker_rows = await fetch_binance('/fapi/v1/ticker/price')
+        prices = {row['symbol']: float(row['price']) for row in ticker_rows if 'symbol' in row and 'price' in row}
+    except HTTPException:
+        ticker_result = await fetch_bybit('/v5/market/tickers', {'category': 'linear'})
+        prices = {row['symbol']: float(row['lastPrice']) for row in ticker_result.get('list', []) if row.get('symbol') and row.get('lastPrice')}
     now = int(datetime.now(timezone.utc).timestamp() * 1000)
     for signal in signals:
         position_id = f"{signal.get('source')}:{signal.get('id')}"
