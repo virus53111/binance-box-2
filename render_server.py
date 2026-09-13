@@ -172,6 +172,53 @@ async def sync_public_signals() -> int:
     await redis.set('telegram:public_sync', str(int(datetime.now(timezone.utc).timestamp() * 1000)))
     return added
 
+async def update_paper_positions() -> None:
+    signals_raw = await redis.get('telegram:signals')
+    positions_raw = await redis.get('paper:positions')
+    signals = json.loads(signals_raw) if signals_raw else []
+    positions = json.loads(positions_raw) if positions_raw else []
+    by_id = {item['id']: item for item in positions}
+    ticker_rows = await fetch_binance('/fapi/v1/ticker/price')
+    prices = {row['symbol']: float(row['price']) for row in ticker_rows if 'symbol' in row and 'price' in row}
+    now = int(datetime.now(timezone.utc).timestamp() * 1000)
+    for signal in signals:
+        position_id = f"{signal.get('source')}:{signal.get('id')}"
+        if position_id in by_id or not signal.get('targets') or signal.get('stop') is None:
+            continue
+        price = prices.get(signal.get('symbol'))
+        if not price:
+            continue
+        entries = signal.get('entry') or []
+        entry = float(entries[0]) if entries else price
+        by_id[position_id] = {
+            'id': position_id, 'symbol': signal['symbol'], 'side': signal['side'],
+            'source': signal.get('source'), 'signalUrl': signal.get('url'),
+            'entry': entry, 'targets': signal['targets'], 'stop': float(signal['stop']),
+            'openedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
+            'pnlPercent': 0.0, 'currentPrice': price,
+        }
+    for position in by_id.values():
+        if position.get('status') != 'OPEN':
+            continue
+        price = prices.get(position['symbol'])
+        if not price:
+            continue
+        position['currentPrice'] = price
+        is_long = position['side'] == 'LONG'
+        stop_hit = price <= position['stop'] if is_long else price >= position['stop']
+        target = float(position['targets'][0])
+        target_hit = price >= target if is_long else price <= target
+        entry = float(position['entry'])
+        position['pnlPercent'] = round(((price - entry) / entry) * (1 if is_long else -1) * 100, 4)
+        if stop_hit or target_hit:
+            exit_price = float(position['stop']) if stop_hit else target
+            position['exit'] = exit_price
+            position['closedAt'] = now
+            position['status'] = 'STOPPED' if stop_hit else 'TP1'
+            position['pnlPercent'] = round(((exit_price - entry) / entry) * (1 if is_long else -1) * 100, 4)
+    ordered = sorted(by_id.values(), key=lambda item: item.get('openedAt', 0), reverse=True)[:500]
+    await redis.set('paper:positions', json.dumps(ordered, ensure_ascii=False))
+
 async def background_sync() -> None:
     while True:
         try:
@@ -180,6 +227,7 @@ async def background_sync() -> None:
                 await sync_signals(decrypted(current['session']))
             else:
                 await sync_public_signals()
+            await update_paper_positions()
             current['lastSync'] = int(datetime.now(timezone.utc).timestamp() * 1000)
             current['lastError'] = None
             await save_state(current)
@@ -187,7 +235,7 @@ async def background_sync() -> None:
             current = await state()
             current['lastError'] = f'{type(exc).__name__}: {exc}'[:300]
             await save_state(current)
-        await asyncio.sleep(300)
+        await asyncio.sleep(60)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -257,6 +305,12 @@ async def status():
 async def signals():
     raw = await redis.get('telegram:signals')
     return {'sources': [f'@{channel}' for channel in CHANNELS], 'signals': json.loads(raw) if raw else []}
+
+@app.get('/api/paper')
+async def paper_positions():
+    raw = await redis.get('paper:positions')
+    positions = json.loads(raw) if raw else []
+    return {'positions': positions, 'open': sum(1 for p in positions if p.get('status') == 'OPEN')}
 
 @app.post('/api/telegram/reset')
 async def reset():
