@@ -58,6 +58,20 @@ def parse(post):
     if leverage: lev=leverage.group(1)+(f"–{leverage.group(2)}" if leverage.group(2) else "")
     return {"id":post["id"],"symbol":asset+"USDT","side":side,"leverage":lev,"entry":entry,"targets":targets,"stop":number(stop_m.group(1)) if stop_m else None,"time":post["time"] or datetime.now(timezone.utc).isoformat(),"url":f"https://t.me/{CHANNEL}/{post['id']}","parsed":bool(targets and stop_m),"raw":text[:1800]}
 
+def regex_posts(page):
+    posts=[]
+    marks=list(re.finditer(r'data-post=["\']'+re.escape(CHANNEL)+r'/(\d+)["\']',page,re.I))
+    for i,mark in enumerate(marks):
+        chunk=page[mark.end():marks[i+1].start() if i+1<len(marks) else len(page)]
+        post_id=mark.group(1)
+        body=re.search(r'tgme_widget_message_text[^>]*>([\s\S]*?)(?:</div>|<div class="tgme_widget_message_footer)',chunk,re.I)
+        if not body: continue
+        raw=re.sub(r'<br\s*/?>','\n',body.group(1),flags=re.I)
+        raw=re.sub(r'<[^>]+>','',raw)
+        tm=re.search(r'<time[^>]+datetime=["\']([^"\']+)',chunk,re.I)
+        posts.append({"id":post_id,"text":html.unescape(raw).strip(),"time":tm.group(1) if tm else None})
+    return posts
+
 def main():
     old={"signals":[]}
     if OUT.exists():
@@ -68,11 +82,13 @@ def main():
         req=urllib.request.Request(URL,headers={"User-Agent":"Mozilla/5.0 SignalLab/1.0","Accept-Language":"ru,en;q=0.8"})
         with urllib.request.urlopen(req,timeout=30) as r: page=r.read().decode("utf-8","replace")
         parser=TelegramHTML(); parser.feed(page)
-        parsed=[x for p in parser.posts if (x:=parse(p))]
+        posts=parser.posts or regex_posts(page)
+        if not posts: raise ValueError("Telegram returned no readable posts")
+        parsed=[x for p in posts if (x:=parse(p))]
         by_id={str(x["id"]):x for x in old.get("signals",[])}
         for x in parsed: by_id[str(x["id"])]=x
         result["signals"]=sorted(by_id.values(),key=lambda x:int(x["id"]),reverse=True)[:100]
-        result["status"]="ok"; result["error"]=None
+        result["status"]="ok"; result["error"]=None; result["posts_seen"]=len(posts); result["signals_seen"]=len(parsed)
     except Exception as exc: result["error"]=f"{type(exc).__name__}: {exc}"[:240]
     OUT.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
 
