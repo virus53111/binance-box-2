@@ -15,6 +15,7 @@ from typing import Any
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from redis.asyncio import Redis
@@ -276,6 +277,7 @@ async def lifespan(_: FastAPI):
     await redis.aclose()
 
 app = FastAPI(title='SignalLab Telegram', lifespan=lifespan)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['https://virus53111.github.io'],
