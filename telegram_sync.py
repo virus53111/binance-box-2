@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import html, json, re, urllib.request
+import asyncio, html, json, os, re
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -72,6 +72,26 @@ def regex_posts(page):
         posts.append({"id":post_id,"text":html.unescape(raw).strip(),"time":tm.group(1) if tm else None})
     return posts
 
+async def telegram_posts():
+    missing=[name for name in ("TG_API_ID","TG_API_HASH","TG_SESSION") if not os.environ.get(name)]
+    if missing:
+        raise RuntimeError("Missing GitHub secrets: "+", ".join(missing))
+    from telethon import TelegramClient
+    from telethon.sessions import StringSession
+    client=TelegramClient(StringSession(os.environ["TG_SESSION"]),int(os.environ["TG_API_ID"]),os.environ["TG_API_HASH"])
+    await client.connect()
+    try:
+        if not await client.is_user_authorized():
+            raise RuntimeError("TG_SESSION is not authorized")
+        entity=await client.get_entity(CHANNEL)
+        posts=[]
+        async for message in client.iter_messages(entity,limit=150):
+            if message.message:
+                posts.append({"id":str(message.id),"text":message.message,"time":message.date.isoformat() if message.date else None})
+        return posts
+    finally:
+        await client.disconnect()
+
 def main():
     old={"signals":[]}
     if OUT.exists():
@@ -79,10 +99,7 @@ def main():
         except: pass
     result={"source":URL,"updated_at":datetime.now(timezone.utc).isoformat(),"status":"error","error":None,"signals":old.get("signals",[])}
     try:
-        req=urllib.request.Request(URL,headers={"User-Agent":"Mozilla/5.0 SignalLab/1.0","Accept-Language":"ru,en;q=0.8"})
-        with urllib.request.urlopen(req,timeout=30) as r: page=r.read().decode("utf-8","replace")
-        parser=TelegramHTML(); parser.feed(page)
-        posts=parser.posts or regex_posts(page)
+        posts=asyncio.run(telegram_posts())
         if not posts: raise ValueError("Telegram returned no readable posts")
         parsed=[x for p in posts if (x:=parse(p))]
         by_id={str(x["id"]):x for x in old.get("signals",[])}
