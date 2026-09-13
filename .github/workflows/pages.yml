@@ -24,7 +24,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Read public Telegram channel
+      - name: Install Telegram client
+        run: python3 -m pip install --disable-pip-version-check 'telethon>=1.37,<2'
+      - name: Read Telegram channel
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          TG_SESSION: ${{ secrets.TG_SESSION }}
         run: python3 telegram_sync.py
       - name: Save new signals
         run: |
