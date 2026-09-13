@@ -195,10 +195,10 @@ async def start_login(payload: PhoneInput):
             'phone': phone,
             'phoneCodeHash': sent.phone_code_hash,
             'partialSession': encrypted(client.session.save()),
-            'codeViaApp': sent.is_app_hash,
+            'codeViaApp': type(sent.type).__name__ == 'SentCodeTypeApp',
             'updatedAt': int(datetime.now(timezone.utc).timestamp() * 1000),
         })
-        return {'ok': True, 'codeViaApp': sent.is_app_hash}
+        return {'ok': True, 'codeViaApp': type(sent.type).__name__ == 'SentCodeTypeApp'}
     except Exception as exc:
         message = f'{type(exc).__name__}: {exc}'
         await save_state({'status': 'disconnected', 'lastError': message[:300]})
