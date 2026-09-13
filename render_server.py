@@ -254,17 +254,31 @@ app.add_middleware(
 
 async def fetch_binance(path: str, params: dict[str, Any] | None = None) -> Any:
     from urllib.parse import urlencode
-    url = 'https://fapi.binance.com' + path
-    if params:
-        url += '?' + urlencode(params)
+    hosts = [
+        'https://fapi.binance.com',
+        'https://fapi1.binance.com',
+        'https://fapi2.binance.com',
+        'https://fapi3.binance.com',
+        'https://fapi4.binance.com',
+    ]
+    query = ('?' + urlencode(params)) if params else ''
     def request_json() -> Any:
-        request = urllib.request.Request(url, headers={'User-Agent': 'SignalLab/1.0'})
-        with urllib.request.urlopen(request, timeout=15) as response:
-            return json.loads(response.read().decode('utf-8'))
+        last_error: Exception | None = None
+        for host in hosts:
+            try:
+                request = urllib.request.Request(host + path + query, headers={
+                    'User-Agent': 'Mozilla/5.0 SignalLab/1.0',
+                    'Accept': 'application/json',
+                })
+                with urllib.request.urlopen(request, timeout=10) as response:
+                    return json.loads(response.read().decode('utf-8'))
+            except Exception as exc:
+                last_error = exc
+        raise last_error or RuntimeError('No Binance endpoint available')
     try:
         return await asyncio.to_thread(request_json)
     except Exception as exc:
-        raise HTTPException(502, f'Binance unavailable: {type(exc).__name__}') from exc
+        raise HTTPException(502, f'Binance unavailable: {type(exc).__name__}: {exc}'[:240]) from exc
 
 @app.get('/api/binance/fapi/v1/exchangeInfo')
 async def binance_exchange_info():
