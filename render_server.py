@@ -192,12 +192,19 @@ async def update_paper_positions() -> None:
     signals = json.loads(signals_raw) if signals_raw else []
     positions = json.loads(positions_raw) if positions_raw else []
     by_id = {item['id']: item for item in positions}
+    prices: dict[str, float] = {}
     try:
-        ticker_rows = await fetch_binance('/fapi/v1/ticker/price')
-        prices = {row['symbol']: float(row['price']) for row in ticker_rows if 'symbol' in row and 'price' in row}
-    except HTTPException:
+        mexc_rows = await fetch_mexc('/api/v1/contract/ticker')
+        prices.update({row['symbol'].replace('_', ''): float(row['lastPrice']) for row in (mexc_rows or []) if row.get('symbol') and row.get('lastPrice')})
+    except Exception:
+        pass
+    try:
         ticker_result = await fetch_bybit('/v5/market/tickers', {'category': 'linear'})
-        prices = {row['symbol']: float(row['lastPrice']) for row in ticker_result.get('list', []) if row.get('symbol') and row.get('lastPrice')}
+        for row in ticker_result.get('list', []):
+            if row.get('symbol') and row.get('lastPrice') and row['symbol'] not in prices:
+                prices[row['symbol']] = float(row['lastPrice'])
+    except Exception:
+        pass
     for signal in signals:
         position_id = f"{signal.get('source')}:{signal.get('id')}"
         if position_id in by_id or not signal.get('targets') or signal.get('stop') is None:
