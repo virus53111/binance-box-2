@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from cryptography.fernet import Fernet
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -203,6 +203,37 @@ app.add_middleware(
     allow_methods=['GET', 'POST', 'OPTIONS'],
     allow_headers=['Content-Type'],
 )
+
+async def fetch_binance(path: str, params: dict[str, Any] | None = None) -> Any:
+    from urllib.parse import urlencode
+    url = 'https://fapi.binance.com' + path
+    if params:
+        url += '?' + urlencode(params)
+    def request_json() -> Any:
+        request = urllib.request.Request(url, headers={'User-Agent': 'SignalLab/1.0'})
+        with urllib.request.urlopen(request, timeout=15) as response:
+            return json.loads(response.read().decode('utf-8'))
+    try:
+        return await asyncio.to_thread(request_json)
+    except Exception as exc:
+        raise HTTPException(502, f'Binance unavailable: {type(exc).__name__}') from exc
+
+@app.get('/api/binance/fapi/v1/exchangeInfo')
+async def binance_exchange_info():
+    return await fetch_binance('/fapi/v1/exchangeInfo')
+
+@app.get('/api/binance/fapi/v1/ticker/24hr')
+async def binance_ticker():
+    return await fetch_binance('/fapi/v1/ticker/24hr')
+
+@app.get('/api/binance/fapi/v1/klines')
+async def binance_klines(symbol: str, interval: str, limit: int = Query(240, ge=2, le=500)):
+    symbol = symbol.upper()
+    if not re.fullmatch(r'[A-Z0-9_]{3,24}', symbol):
+        raise HTTPException(400, 'Invalid symbol')
+    if interval not in {'1m', '5m', '15m', '1h', '4h', '1d'}:
+        raise HTTPException(400, 'Invalid interval')
+    return await fetch_binance('/fapi/v1/klines', {'symbol': symbol, 'interval': interval, 'limit': limit})
 
 @app.get('/health')
 async def health():
