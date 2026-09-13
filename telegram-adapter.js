@@ -8,7 +8,7 @@
       new window.telegram.sessions.StringSession(session),
       Number(apiId),
       apiHash,
-      { connectionRetries: 5, useWSS: true }
+      { connectionRetries: 2, requestRetries: 2, timeout: 10, useWSS: true }
     );
     await client.start({
       phoneNumber: askPhone,
