@@ -179,6 +179,24 @@ async def reset():
     current = await state()
     if current.get('status') == 'connected':
         raise HTTPException(409, 'Telegram уже подключён')
+    if current.get('status') == 'code_sent' and current.get('partialSession'):
+        client = TelegramClient(
+            StringSession(decrypted(current['partialSession'])),
+            API_ID,
+            API_HASH,
+            connection_retries=2,
+            timeout=12,
+        )
+        try:
+            await client.connect()
+            await client(functions.auth.CancelCodeRequest(
+                phone_number=current['phone'],
+                phone_code_hash=current['phoneCodeHash'],
+            ))
+        except Exception:
+            pass
+        finally:
+            await client.disconnect()
     await save_state({'status': 'disconnected'})
     return {'ok': True}
 
