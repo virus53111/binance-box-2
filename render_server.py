@@ -142,7 +142,7 @@ async def sync_public_signals() -> int:
         except Exception:
             continue
         blocks = list(re.finditer(
-            rf'data-post=["\\\']{re.escape(channel)}/(\\d+)["\\\']',
+            rf"data-post=['\\\"]{re.escape(channel)}/(\\d+)['\\\"]",
             page,
             re.IGNORECASE,
         ))
@@ -155,7 +155,7 @@ async def sync_public_signals() -> int:
             )
             if not body:
                 continue
-            text = re.sub(r'<br\\s*/?>', '\\nn', body.group(1), flags=re.IGNORECASE)
+            text = re.sub(r'<br\\s*/?>', '\\n', body.group(1), flags=re.IGNORECASE)
             text = html.unescape(re.sub(r'<[^>]+>', '', text)).strip()
             time_found = re.search(r'<time[^>]+datetime=["\\\']([^"\\\']+)', chunk, re.IGNORECASE)
             try:
