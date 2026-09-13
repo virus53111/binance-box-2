@@ -83,7 +83,7 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
             stop = line_nums[0] if line_nums else None
             in_targets = False
             continue
-        if re.search(r'^(?:[^A-ZА-Я0-9]*)(?:ДИАПАЗОН\s+ВХОДА|ВХОД||ВХОД|ENTRY)\s*:', line):
+        if re.search(r'^(?:[^A-ZА-Я0-9]*)(?:ДИАПАЗОН\s+ВХОДА|ВХОД|ENTRY)\s*:', line):
             entry = [] if re.search(r'РЫН|MARKET', line) else nums(line)[:2]
             in_targets = False
             continue
