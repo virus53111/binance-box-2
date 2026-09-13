@@ -38,6 +38,9 @@ class CodeInput(BaseModel):
     code: str
     password: str = ''
 
+class PasswordInput(BaseModel):
+    password: str
+
 def encrypted(value: str) -> str:
     return fernet.encrypt(value.encode()).decode()
 
@@ -347,6 +350,7 @@ async def status():
         'lastSync': current.get('lastSync'),
         'lastError': current.get('lastError'),
         'publicMode': current.get('status') != 'connected',
+        'needsPassword': current.get('status') == 'qr_password',
     }
 
 @app.get('/api/signals')
@@ -388,28 +392,27 @@ async def reset():
 
 async def finish_qr_login(client: TelegramClient, qr) -> None:
     global qr_client, qr_task
+    keep_client = False
     try:
         await qr.wait(timeout=120)
         saved = client.session.save()
         added = await sync_signals(saved)
-        await save_state({
-            'status': 'connected',
-            'session': encrypted(saved),
-            'lastSync': int(datetime.now(timezone.utc).timestamp() * 1000),
-            'lastError': None,
-            'added': added,
-        })
+        await save_state({'status': 'connected', 'session': encrypted(saved), 'lastSync': int(datetime.now(timezone.utc).timestamp() * 1000), 'lastError': None, 'added': added})
+    except SessionPasswordNeededError:
+        keep_client = True
+        await save_state({'status': 'qr_password', 'lastError': None})
     except asyncio.TimeoutError:
         current = await state()
-        current['lastError'] = 'Ссылка входа истекла. Нажмите «Войти без кода» ещё раз.'
+        current['lastError'] = 'QR истёк. Создайте новый QR.'
         await save_state(current)
     except Exception as exc:
         current = await state()
         current['lastError'] = f'{type(exc).__name__}: {exc}'[:300]
         await save_state(current)
     finally:
-        await client.disconnect()
-        qr_client = None
+        if not keep_client:
+            await client.disconnect()
+            qr_client = None
         qr_task = None
 
 @app.post('/api/telegram/qr')
@@ -431,6 +434,25 @@ async def qr_login():
     image.save(buffer, format='PNG')
     qr_image = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode()
     return {'ok': True, 'url': qr.url, 'qrImage': qr_image, 'expires': qr.expires.isoformat()}
+
+@app.post('/api/telegram/qr-password')
+async def qr_password(payload: PasswordInput):
+    global qr_client
+    current = await state()
+    if current.get('status') != 'qr_password' or qr_client is None:
+        raise HTTPException(409, 'Создайте и отсканируйте новый QR')
+    if not payload.password:
+        raise HTTPException(400, 'Введите пароль двухэтапной защиты')
+    try:
+        await qr_client.sign_in(password=payload.password)
+        saved = qr_client.session.save()
+        added = await sync_signals(saved)
+        await save_state({'status': 'connected', 'session': encrypted(saved), 'lastSync': int(datetime.now(timezone.utc).timestamp() * 1000), 'lastError': None})
+        await qr_client.disconnect()
+        qr_client = None
+        return {'ok': True, 'connected': True, 'added': added}
+    except Exception as exc:
+        raise HTTPException(400, f'{type(exc).__name__}: {exc}'[:300]) from exc
 
 @app.post('/api/telegram/start')
 async def start_login(payload: PhoneInput):
@@ -556,5 +578,5 @@ async def manual_sync():
 async def home():
     return '''<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SignalLab Telegram</title><style>
 :root{font-family:system-ui;color:#eef2ff;background:#060912;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#25184d,transparent 38%),#060912;min-height:100vh}.shell{max-width:680px;margin:auto;padding:24px 16px}.card{background:#101625;border:1px solid #29324a;border-radius:22px;padding:22px;margin:18px 0}h1{font-size:38px;margin:18px 0}.green{color:#75ead1}.badge{float:right;color:#9ca8bd}.online{color:#6be5b4}label{display:block;color:#aab4c8;margin:14px 0 7px}input,button{width:100%;height:54px;border-radius:14px;font-size:17px}input{background:#0a0f1d;color:#fff;border:1px solid #34405d;padding:0 15px}button{border:0;background:linear-gradient(120deg,#7869ff,#4bd8c8);font-weight:800;color:#07101d;margin-top:13px}.secondary{background:#222c44;color:#dfe6f5}.error{padding:13px;border-radius:12px;background:#3b1d2a;color:#ff9bb7}.muted{color:#8c97ab;line-height:1.55}.signal{border-top:1px solid #273149;padding:14px 0}.long{color:#63e8bd}.short{color:#ff86a2}</style></head><body><main class="shell"><span id="status" class="badge">Проверка…</span><p class="green">ИСТОЧНИК СИГНАЛОВ</p><h1>@Crypto_pravda1<br><span style="font-size:.72em">@signalyp</span></h1><p class="muted">Подключение один раз. Затем сервер автоматически загружает сигналы из обоих каналов каждые 5 минут.</p><section class="card" id="login"><h2>Подключить Telegram</h2><div id="phoneStep"><label>Номер Telegram</label><input id="phone" type="tel" placeholder="+371..."><button onclick="sendCode()">Получить код</button><button class="secondary" onclick="qrLogin()">Войти по QR без кода</button></div><div id="codeStep" hidden><label>Код из Telegram</label><input id="code" inputmode="numeric"><label id="passwordLabel" hidden>Пароль 2FA</label><input id="password" type="password" hidden><button onclick="verify()">Подключить</button><button class="secondary" onclick="qrLogin()">Войти без кода через Telegram</button><button class="secondary" onclick="resend()">Отправить код ещё раз / SMS</button><button class="secondary" onclick="resetLogin()">Ввести номер заново</button></div><p id="hint" class="muted"></p><p id="error" class="error" hidden></p></section><section class="card"><h2 id="count">Последние сигналы</h2><div id="signals"><p class="muted">Сигналов пока нет.</p></div></section><p class="muted">Не открывайте реальные сделки, пока каждый уровень не проверен вручную.</p></main><script>
-const el=id=>document.getElementById(id);const fail=e=>{const d=e&&e.detail?e.detail:(e&&e.message?e.message:String(e));el('error').textContent=d;el('error').hidden=false};async function call(path,options){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const d=await r.json();if(!r.ok)throw d;return d}async function load(){try{const s=await call('/api/status');el('status').textContent=s.connected?'● Подключено':'● Публичный режим';el('status').className=s.connected?'badge online':'badge';el('login').hidden=s.connected;el('phoneStep').hidden=s.awaitingCode;el('codeStep').hidden=!s.awaitingCode;if(s.lastError)fail(s.lastError);const d=await call('/api/signals');el('count').textContent=d.signals.length?'Последние сигналы: '+d.signals.length:'Сигналов пока нет';el('signals').innerHTML=d.signals.slice(0,30).map(x=>'<div class="signal"><b>'+x.symbol+'</b> <span class="'+x.side.toLowerCase()+'">'+x.side+'</span> <small>'+x.source+'</small><div class="muted">Entry: '+(x.entry.length?x.entry.join(' – '):'Market')+' · TP: '+(x.targets.join(' · ')||'—')+' · SL: '+(x.stop||'—')+'</div></div>').join('')||'<p class="muted">После подключения здесь появятся реальные сигналы.</p>'}catch(e){fail(e)}}async function sendCode(){try{el('error').hidden=true;const d=await call('/api/telegram/start',{method:'POST',body:JSON.stringify({phone:el('phone').value})});el('hint').textContent=d.codeViaApp?'Код отправлен в официальный чат Telegram.':'Код отправлен по SMS.';await load()}catch(e){fail(e)}}async function qrLogin(){try{el('error').hidden=true;el('hint').textContent='Создаю безопасную ссылку…';const d=await call('/api/telegram/qr',{method:'POST',body:'{}'});if(d.connected){await load();return}el('hint').innerHTML='<img src="'+d.qrImage+'" alt="Telegram QR" style="display:block;width:240px;max-width:100%;margin:16px auto;background:white;padding:10px;border-radius:16px"><b style="display:block;color:#75ead1;margin-bottom:8px">Откройте Telegram → Настройки → Устройства → Подключить устройство</b><span>Покажите этот QR на компьютере, планшете или телефоне знакомого и отсканируйте своим телефоном. Код не нужен.</span>'}catch(e){fail(e)}}async function resend(){try{el('error').hidden=true;const d=await call('/api/telegram/resend',{method:'POST',body:'{}'});el('hint').textContent=d.codeViaApp?'Код повторно отправлен в Telegram.':'Код отправлен другим способом.'}catch(e){fail(e)}}async function verify(){try{el('error').hidden=true;const d=await call('/api/telegram/verify',{method:'POST',body:JSON.stringify({code:el('code').value,password:el('password').value})});if(d.needsPassword){el('passwordLabel').hidden=false;el('password').hidden=false;fail('Введите пароль двухэтапной защиты.')}else await load()}catch(e){fail(e)}}async function resetLogin(){await call('/api/telegram/reset',{method:'POST',body:'{}'});await load()}load();setInterval(load,30000);
+const el=id=>document.getElementById(id);const fail=e=>{const d=e&&e.detail?e.detail:(e&&e.message?e.message:String(e));el('error').textContent=d;el('error').hidden=false};async function call(path,options){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const d=await r.json();if(!r.ok)throw d;return d}async function load(){try{const s=await call('/api/status');el('status').textContent=s.connected?'● Подключено':'● Публичный режим';el('status').className=s.connected?'badge online':'badge';el('login').hidden=s.connected;el('phoneStep').hidden=s.awaitingCode;el('codeStep').hidden=!s.awaitingCode;if(s.needsPassword){el('login').hidden=false;el('phoneStep').hidden=true;el('codeStep').hidden=true;el('hint').innerHTML='<label>Пароль двухэтапной защиты Telegram</label><input id="qrPassword" type="password" autocomplete="current-password"><button onclick="submitQrPassword()">Завершить подключение</button>'}if(s.lastError)fail(s.lastError);const d=await call('/api/signals');el('count').textContent=d.signals.length?'Последние сигналы: '+d.signals.length:'Сигналов пока нет';el('signals').innerHTML=d.signals.slice(0,30).map(x=>'<div class="signal"><b>'+x.symbol+'</b> <span class="'+x.side.toLowerCase()+'">'+x.side+'</span> <small>'+x.source+'</small><div class="muted">Entry: '+(x.entry.length?x.entry.join(' – '):'Market')+' · TP: '+(x.targets.join(' · ')||'—')+' · SL: '+(x.stop||'—')+'</div></div>').join('')||'<p class="muted">После подключения здесь появятся реальные сигналы.</p>'}catch(e){fail(e)}}async function submitQrPassword(){try{el('error').hidden=true;await call('/api/telegram/qr-password',{method:'POST',body:JSON.stringify({password:el('qrPassword').value})});el('hint').textContent='Telegram подключён. Загружаю сигналы…';await load()}catch(e){fail(e)}}async function sendCode(){try{el('error').hidden=true;const d=await call('/api/telegram/start',{method:'POST',body:JSON.stringify({phone:el('phone').value})});el('hint').textContent=d.codeViaApp?'Код отправлен в официальный чат Telegram.':'Код отправлен по SMS.';await load()}catch(e){fail(e)}}async function qrLogin(){try{el('error').hidden=true;el('hint').textContent='Создаю безопасную ссылку…';const d=await call('/api/telegram/qr',{method:'POST',body:'{}'});if(d.connected){await load();return}el('hint').innerHTML='<img src="'+d.qrImage+'" alt="Telegram QR" style="display:block;width:240px;max-width:100%;margin:16px auto;background:white;padding:10px;border-radius:16px"><b style="display:block;color:#75ead1;margin-bottom:8px">Откройте Telegram → Настройки → Устройства → Подключить устройство</b><span>Покажите этот QR на компьютере, планшете или телефоне знакомого и отсканируйте своим телефоном. Код не нужен.</span>'}catch(e){fail(e)}}async function resend(){try{el('error').hidden=true;const d=await call('/api/telegram/resend',{method:'POST',body:'{}'});el('hint').textContent=d.codeViaApp?'Код повторно отправлен в Telegram.':'Код отправлен другим способом.'}catch(e){fail(e)}}async function verify(){try{el('error').hidden=true;const d=await call('/api/telegram/verify',{method:'POST',body:JSON.stringify({code:el('code').value,password:el('password').value})});if(d.needsPassword){el('passwordLabel').hidden=false;el('password').hidden=false;fail('Введите пароль двухэтапной защиты.')}else await load()}catch(e){fail(e)}}async function resetLogin(){await call('/api/telegram/reset',{method:'POST',body:'{}'});await load()}load();setInterval(load,30000);
 </script></body></html>'''
