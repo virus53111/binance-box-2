@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from redis.asyncio import Redis
-from telethon import TelegramClient
+from telethon import TelegramClient, functions
 from telethon.errors import SessionPasswordNeededError
 from telethon.sessions import StringSession
 
@@ -196,6 +196,9 @@ async def start_login(payload: PhoneInput):
             'phoneCodeHash': sent.phone_code_hash,
             'partialSession': encrypted(client.session.save()),
             'codeViaApp': type(sent.type).__name__ == 'SentCodeTypeApp',
+            'deliveryType': type(sent.type).__name__,
+            'nextType': type(sent.next_type).__name__ if sent.next_type else None,
+            'timeout': sent.timeout,
             'updatedAt': int(datetime.now(timezone.utc).timestamp() * 1000),
         })
         return {'ok': True, 'codeViaApp': type(sent.type).__name__ == 'SentCodeTypeApp'}
@@ -203,6 +206,42 @@ async def start_login(payload: PhoneInput):
         message = f'{type(exc).__name__}: {exc}'
         await save_state({'status': 'disconnected', 'lastError': message[:300]})
         raise HTTPException(400, message[:300]) from exc
+    finally:
+        await client.disconnect()
+
+@app.post('/api/telegram/resend')
+async def resend_code():
+    current = await state()
+    if current.get('status') != 'code_sent':
+        raise HTTPException(409, 'Сначала запросите код')
+    client = TelegramClient(
+        StringSession(decrypted(current['partialSession'])),
+        API_ID,
+        API_HASH,
+        connection_retries=2,
+        timeout=12,
+    )
+    try:
+        await client.connect()
+        sent = await client(functions.auth.ResendCodeRequest(
+            phone_number=current['phone'],
+            phone_code_hash=current['phoneCodeHash'],
+        ))
+        current['phoneCodeHash'] = sent.phone_code_hash
+        current['partialSession'] = encrypted(client.session.save())
+        current['codeViaApp'] = type(sent.type).__name__ == 'SentCodeTypeApp'
+        current['deliveryType'] = type(sent.type).__name__
+        current['nextType'] = type(sent.next_type).__name__ if sent.next_type else None
+        current['timeout'] = sent.timeout
+        await save_state(current)
+        return {
+            'ok': True,
+            'codeViaApp': current['codeViaApp'],
+            'deliveryType': current['deliveryType'],
+            'nextType': current['nextType'],
+        }
+    except Exception as exc:
+        raise HTTPException(400, f'{type(exc).__name__}: {exc}'[:300]) from exc
     finally:
         await client.disconnect()
 
@@ -261,6 +300,6 @@ async def manual_sync():
 @app.get('/', response_class=HTMLResponse)
 async def home():
     return '''<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SignalLab Telegram</title><style>
-:root{font-family:system-ui;color:#eef2ff;background:#060912;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#25184d,transparent 38%),#060912;min-height:100vh}.shell{max-width:680px;margin:auto;padding:24px 16px}.card{background:#101625;border:1px solid #29324a;border-radius:22px;padding:22px;margin:18px 0}h1{font-size:38px;margin:18px 0}.green{color:#75ead1}.badge{float:right;color:#9ca8bd}.online{color:#6be5b4}label{display:block;color:#aab4c8;margin:14px 0 7px}input,button{width:100%;height:54px;border-radius:14px;font-size:17px}input{background:#0a0f1d;color:#fff;border:1px solid #34405d;padding:0 15px}button{border:0;background:linear-gradient(120deg,#7869ff,#4bd8c8);font-weight:800;color:#07101d;margin-top:13px}.secondary{background:#222c44;color:#dfe6f5}.error{padding:13px;border-radius:12px;background:#3b1d2a;color:#ff9bb7}.muted{color:#8c97ab;line-height:1.55}.signal{border-top:1px solid #273149;padding:14px 0}.long{color:#63e8bd}.short{color:#ff86a2}</style></head><body><main class="shell"><span id="status" class="badge">Проверка…</span><p class="green">ИСТОЧНИК СИГНАЛОВ</p><h1>@Crypto_pravda1</h1><p class="muted">Подключение один раз. Затем сервер автоматически загружает сигналы каждые 5 минут.</p><section class="card" id="login"><h2>Подключить Telegram</h2><div id="phoneStep"><label>Номер Telegram</label><input id="phone" type="tel" placeholder="+371..."><button onclick="sendCode()">Получить код</button></div><div id="codeStep" hidden><label>Код из Telegram</label><input id="code" inputmode="numeric"><label id="passwordLabel" hidden>Пароль 2FA</label><input id="password" type="password" hidden><button onclick="verify()">Подключить</button><button class="secondary" onclick="resetLogin()">Ввести номер заново</button></div><p id="hint" class="muted"></p><p id="error" class="error" hidden></p></section><section class="card"><h2 id="count">Последние сигналы</h2><div id="signals"><p class="muted">Сигналов пока нет.</p></div></section><p class="muted">Не открывайте реальные сделки, пока каждый уровень не проверен вручную.</p></main><script>
-const el=id=>document.getElementById(id);const fail=e=>{const d=e&&e.detail?e.detail:(e&&e.message?e.message:String(e));el('error').textContent=d;el('error').hidden=false};async function call(path,options){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const d=await r.json();if(!r.ok)throw d;return d}async function load(){try{const s=await call('/api/status');el('status').textContent=s.connected?'● Подключено':s.awaitingCode?'Ожидается код':'Не подключено';el('status').className=s.connected?'badge online':'badge';el('login').hidden=s.connected;el('phoneStep').hidden=s.awaitingCode;el('codeStep').hidden=!s.awaitingCode;if(s.lastError)fail(s.lastError);const d=await call('/api/signals');el('count').textContent=d.signals.length?'Последние сигналы: '+d.signals.length:'Сигналов пока нет';el('signals').innerHTML=d.signals.slice(0,30).map(x=>'<div class="signal"><b>'+x.symbol+'</b> <span class="'+x.side.toLowerCase()+'">'+x.side+'</span><div class="muted">Entry: '+(x.entry.length?x.entry.join(' – '):'Market')+' · TP: '+(x.targets.join(' · ')||'—')+' · SL: '+(x.stop||'—')+'</div></div>').join('')||'<p class="muted">После подключения здесь появятся реальные сигналы.</p>'}catch(e){fail(e)}}async function sendCode(){try{el('error').hidden=true;const d=await call('/api/telegram/start',{method:'POST',body:JSON.stringify({phone:el('phone').value})});el('hint').textContent=d.codeViaApp?'Код отправлен в официальный чат Telegram.':'Код отправлен по SMS.';await load()}catch(e){fail(e)}}async function verify(){try{el('error').hidden=true;const d=await call('/api/telegram/verify',{method:'POST',body:JSON.stringify({code:el('code').value,password:el('password').value})});if(d.needsPassword){el('passwordLabel').hidden=false;el('password').hidden=false;fail('Введите пароль двухэтапной защиты.')}else await load()}catch(e){fail(e)}}async function resetLogin(){await call('/api/telegram/reset',{method:'POST',body:'{}'});await load()}load();setInterval(load,30000);
+:root{font-family:system-ui;color:#eef2ff;background:#060912;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#25184d,transparent 38%),#060912;min-height:100vh}.shell{max-width:680px;margin:auto;padding:24px 16px}.card{background:#101625;border:1px solid #29324a;border-radius:22px;padding:22px;margin:18px 0}h1{font-size:38px;margin:18px 0}.green{color:#75ead1}.badge{float:right;color:#9ca8bd}.online{color:#6be5b4}label{display:block;color:#aab4c8;margin:14px 0 7px}input,button{width:100%;height:54px;border-radius:14px;font-size:17px}input{background:#0a0f1d;color:#fff;border:1px solid #34405d;padding:0 15px}button{border:0;background:linear-gradient(120deg,#7869ff,#4bd8c8);font-weight:800;color:#07101d;margin-top:13px}.secondary{background:#222c44;color:#dfe6f5}.error{padding:13px;border-radius:12px;background:#3b1d2a;color:#ff9bb7}.muted{color:#8c97ab;line-height:1.55}.signal{border-top:1px solid #273149;padding:14px 0}.long{color:#63e8bd}.short{color:#ff86a2}</style></head><body><main class="shell"><span id="status" class="badge">Проверка…</span><p class="green">ИСТОЧНИК СИГНАЛОВ</p><h1>@Crypto_pravda1</h1><p class="muted">Подключение один раз. Затем сервер автоматически загружает сигналы каждые 5 минут.</p><section class="card" id="login"><h2>Подключить Telegram</h2><div id="phoneStep"><label>Номер Telegram</label><input id="phone" type="tel" placeholder="+371..."><button onclick="sendCode()">Получить код</button></div><div id="codeStep" hidden><label>Код из Telegram</label><input id="code" inputmode="numeric"><label id="passwordLabel" hidden>Пароль 2FA</label><input id="password" type="password" hidden><button onclick="verify()">Подключить</button><button class="secondary" onclick="resend()">Отправить код ещё раз / SMS</button><button class="secondary" onclick="resetLogin()">Ввести номер заново</button></div><p id="hint" class="muted"></p><p id="error" class="error" hidden></p></section><section class="card"><h2 id="count">Последние сигналы</h2><div id="signals"><p class="muted">Сигналов пока нет.</p></div></section><p class="muted">Не открывайте реальные сделки, пока каждый уровень не проверен вручную.</p></main><script>
+const el=id=>document.getElementById(id);const fail=e=>{const d=e&&e.detail?e.detail:(e&&e.message?e.message:String(e));el('error').textContent=d;el('error').hidden=false};async function call(path,options){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const d=await r.json();if(!r.ok)throw d;return d}async function load(){try{const s=await call('/api/status');el('status').textContent=s.connected?'● Подключено':s.awaitingCode?'Ожидается код':'Не подключено';el('status').className=s.connected?'badge online':'badge';el('login').hidden=s.connected;el('phoneStep').hidden=s.awaitingCode;el('codeStep').hidden=!s.awaitingCode;if(s.lastError)fail(s.lastError);const d=await call('/api/signals');el('count').textContent=d.signals.length?'Последние сигналы: '+d.signals.length:'Сигналов пока нет';el('signals').innerHTML=d.signals.slice(0,30).map(x=>'<div class="signal"><b>'+x.symbol+'</b> <span class="'+x.side.toLowerCase()+'">'+x.side+'</span><div class="muted">Entry: '+(x.entry.length?x.entry.join(' – '):'Market')+' · TP: '+(x.targets.join(' · ')||'—')+' · SL: '+(x.stop||'—')+'</div></div>').join('')||'<p class="muted">После подключения здесь появятся реальные сигналы.</p>'}catch(e){fail(e)}}async function sendCode(){try{el('error').hidden=true;const d=await call('/api/telegram/start',{method:'POST',body:JSON.stringify({phone:el('phone').value})});el('hint').textContent=d.codeViaApp?'Код отправлен в официальный чат Telegram.':'Код отправлен по SMS.';await load()}catch(e){fail(e)}}async function resend(){try{el('error').hidden=true;const d=await call('/api/telegram/resend',{method:'POST',body:'{}'});el('hint').textContent=d.codeViaApp?'Код повторно отправлен в Telegram.':'Код отправлен другим способом.'}catch(e){fail(e)}}async function verify(){try{el('error').hidden=true;const d=await call('/api/telegram/verify',{method:'POST',body:JSON.stringify({code:el('code').value,password:el('password').value})});if(d.needsPassword){el('passwordLabel').hidden=false;el('password').hidden=false;fail('Введите пароль двухэтапной защиты.')}else await load()}catch(e){fail(e)}}async function resetLogin(){await call('/api/telegram/reset',{method:'POST',body:'{}'});await load()}load();setInterval(load,30000);
 </script></body></html>'''
