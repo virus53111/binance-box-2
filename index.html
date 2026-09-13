@@ -33,7 +33,7 @@
       <aside class="watchlist panel">
         <div class="aside-title"><span data-i18n="markets">Все фьючерсы</span><span id="marketCount" class="count">—</span></div>
         <div class="market-search"><input id="marketSearch" type="search" placeholder="BTC, ETH, SOL…" aria-label="Search futures"><span>⌕</span></div>
-        <div id="marketList" class="market-list"><div class="mini-loading">Загрузка Binance Futures…</div></div>
+        <div id="marketList" class="market-list"><div class="mini-loading">Загрузка Bybit Futures…</div></div>
         <div class="source-card">
           <div class="source-top"><span class="tg">➤</span><div><b>КриптоПравда</b><small>@Crypto_pravda1</small></div><i id="sourceDot"></i></div>
           <div class="source-stats"><div><small>Status</small><b id="sourceStatus">SYNCING</b></div><div><small>Signals</small><b id="sourceCount">0</b></div></div>
@@ -43,7 +43,7 @@
       <section class="workspace">
         <div class="risk-warning"><b data-i18n="marketMonitor">Рыночный монитор</b><span data-i18n="noExecution">Данные Binance USDT‑M Futures. Telegram проверяется каждые 5 минут; это не мгновенная торговая система.</span></div>
         <div class="stats-row">
-          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>BINANCE FUTURES</b><span data-i18n="publicMarket">USDT‑M perpetual</span></div>
+          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>BYBIT FUTURES</b><span data-i18n="publicMarket">USDT‑M perpetual</span></div>
           <div class="metric"><small data-i18n="selectedInterval">Интервал</small><b id="metricInterval">15m</b><span data-i18n="candleInterval">Интервал свечи</span></div>
           <div class="metric"><small data-i18n="lastUpdate">Последнее обновление</small><b id="lastUpdate">—</b><span>UTC</span></div>
           <div class="metric"><small data-i18n="connection">Соединение</small><b id="connectionState">CONNECTING</b><span id="connectionDetail">REST + WebSocket</span></div>
@@ -60,7 +60,7 @@
             <div id="chartLoading" class="chart-loading"><span></span><span data-i18n="loading">Загрузка рынка…</span></div>
             <div id="chartError" class="chart-error hidden"><b data-i18n="dataUnavailable">Данные недоступны</b><span data-i18n="doNotTrade">Не используйте график для принятия торговых решений.</span><button id="retry" data-i18n="retry">Повторить</button></div>
           </div>
-          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">BINANCE FUTURES · CONNECTING</b></div>
+          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">BYBIT FUTURES · CONNECTING</b></div>
         </div>
 
         <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки: этап 2</b><span data-i18n="paperReason">Сначала проверяем точность получения и разбора сигналов. Автоматическое исполнение пока не включено.</span></div>
@@ -78,6 +78,6 @@
   <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
   <script src="telegram-client.js?v=3"></script>
   <script src="telegram-adapter.js?v=3"></script>
-  <script src="app-v2.js?v=4"></script>
+  <script src="app-v2.js?v=5"></script>
 </body>
 </html>
