@@ -180,6 +180,13 @@ async def sync_public_signals() -> int:
     return added
 
 async def update_paper_positions() -> None:
+    now = int(datetime.now(timezone.utc).timestamp() * 1000)
+    version = await redis.get('paper:version')
+    if version != '3':
+        await redis.delete('paper:positions')
+        await redis.set('paper:started_at', str(now))
+        await redis.set('paper:version', '3')
+    started_at = int(await redis.get('paper:started_at') or now)
     signals_raw = await redis.get('telegram:signals')
     positions_raw = await redis.get('paper:positions')
     signals = json.loads(signals_raw) if signals_raw else []
@@ -191,16 +198,22 @@ async def update_paper_positions() -> None:
     except HTTPException:
         ticker_result = await fetch_bybit('/v5/market/tickers', {'category': 'linear'})
         prices = {row['symbol']: float(row['lastPrice']) for row in ticker_result.get('list', []) if row.get('symbol') and row.get('lastPrice')}
-    now = int(datetime.now(timezone.utc).timestamp() * 1000)
     for signal in signals:
         position_id = f"{signal.get('source')}:{signal.get('id')}"
         if position_id in by_id or not signal.get('targets') or signal.get('stop') is None:
+            continue
+        if int(signal.get('publishedAt') or 0) < started_at:
             continue
         price = prices.get(signal.get('symbol'))
         if not price:
             continue
         entries = signal.get('entry') or []
         entry = float(entries[0]) if entries else price
+        first_target = float(signal['targets'][0])
+        stop = float(signal['stop'])
+        is_long = signal['side'] == 'LONG'
+        if (is_long and not (stop < entry < first_target)) or ((not is_long) and not (first_target < entry < stop)):
+            continue
         by_id[position_id] = {
             'id': position_id, 'symbol': signal['symbol'], 'side': signal['side'],
             'source': signal.get('source'), 'signalUrl': signal.get('url'),
