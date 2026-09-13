@@ -309,30 +309,51 @@ async def fetch_bybit(endpoint: str, params: dict[str, Any]) -> Any:
     url = 'https://api.bybit.com' + endpoint + '?' + urlencode(params)
     def request_json() -> Any:
         request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 SignalLab/1.0', 'Accept': 'application/json'})
-        with urllib.request.urlopen(request, timeout=15) as response:
+        with urllib.request.urlopen(request, timeout=12) as response:
             payload = json.loads(response.read().decode('utf-8'))
             if payload.get('retCode') != 0:
                 raise RuntimeError(payload.get('retMsg', 'Bybit error'))
             return payload['result']
     return await asyncio.to_thread(request_json)
 
+async def fetch_mexc(endpoint: str, params: dict[str, Any] | None = None) -> Any:
+    from urllib.parse import urlencode
+    url = 'https://contract.mexc.com' + endpoint + (('?' + urlencode(params)) if params else '')
+    def request_json() -> Any:
+        request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 SignalLab/1.0', 'Accept': 'application/json'})
+        with urllib.request.urlopen(request, timeout=12) as response:
+            payload = json.loads(response.read().decode('utf-8'))
+            if payload.get('success') is False:
+                raise RuntimeError(payload.get('message', 'MEXC error'))
+            return payload.get('data')
+    return await asyncio.to_thread(request_json)
+
 @app.get('/api/binance/fapi/v1/exchangeInfo')
 async def binance_exchange_info():
     try:
-        return await fetch_binance('/fapi/v1/exchangeInfo')
-    except HTTPException:
+        result = await fetch_mexc('/api/v1/contract/detail')
+        symbols = []
+        for item in result or []:
+            raw = item.get('symbol', '')
+            if raw.endswith('_USDT'):
+                base = raw[:-5]
+                tick = str(item.get('priceUnit') or '0.0001')
+                symbols.append({'symbol': base + 'USDT', 'baseAsset': base, 'quoteAsset': 'USDT', 'contractType': 'PERPETUAL', 'status': 'TRADING', 'exchange': 'MEXC', 'filters': [{'filterType': 'PRICE_FILTER', 'tickSize': tick}]})
+        return {'symbols': symbols, 'source': 'MEXC'}
+    except Exception:
         result = await fetch_bybit('/v5/market/instruments-info', {'category': 'linear', 'limit': 1000})
         symbols = []
         for item in result.get('list', []):
             if item.get('quoteCoin') == 'USDT' and item.get('contractType') == 'LinearPerpetual' and item.get('status') == 'Trading':
-                symbols.append({'symbol': item['symbol'], 'baseAsset': item['baseCoin'], 'quoteAsset': 'USDT', 'contractType': 'PERPETUAL', 'status': 'TRADING', 'filters': [{'filterType': 'PRICE_FILTER', 'tickSize': item.get('priceFilter', {}).get('tickSize', '0.01')}]})
-        return {'symbols': symbols, 'source': 'BYBIT_FALLBACK'}
+                symbols.append({'symbol': item['symbol'], 'baseAsset': item['baseCoin'], 'quoteAsset': 'USDT', 'contractType': 'PERPETUAL', 'status': 'TRADING', 'exchange': 'BYBIT', 'filters': [{'filterType': 'PRICE_FILTER', 'tickSize': item.get('priceFilter', {}).get('tickSize', '0.01')}]})
+        return {'symbols': symbols, 'source': 'BYBIT'}
 
 @app.get('/api/binance/fapi/v1/ticker/24hr')
 async def binance_ticker():
     try:
-        return await fetch_binance('/fapi/v1/ticker/24hr')
-    except HTTPException:
+        result = await fetch_mexc('/api/v1/contract/ticker')
+        return [{'symbol': x.get('symbol', '').replace('_', ''), 'lastPrice': x.get('lastPrice', '0'), 'priceChangePercent': str(float(x.get('riseFallRate') or 0) * 100), 'quoteVolume': x.get('amount24', '0')} for x in (result or []) if x.get('symbol', '').endswith('_USDT')]
+    except Exception:
         result = await fetch_bybit('/v5/market/tickers', {'category': 'linear'})
         return [{'symbol': x['symbol'], 'lastPrice': x.get('lastPrice', '0'), 'priceChangePercent': str(float(x.get('price24hPcnt', 0)) * 100), 'quoteVolume': x.get('turnover24h', '0')} for x in result.get('list', [])]
 
@@ -343,15 +364,18 @@ async def binance_klines(symbol: str, interval: str, limit: int = Query(240, ge=
         raise HTTPException(400, 'Invalid symbol')
     if interval not in {'1m', '5m', '15m', '1h', '4h', '1d'}:
         raise HTTPException(400, 'Invalid interval')
+    mexc_symbol = symbol[:-4] + '_USDT' if symbol.endswith('USDT') else symbol
+    mexc_interval = {'1m': 'Min1', '5m': 'Min5', '15m': 'Min15', '1h': 'Min60', '4h': 'Hour4', '1d': 'Day1'}[interval]
+    seconds = {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '4h': 14400, '1d': 86400}[interval]
+    now_s = int(datetime.now(timezone.utc).timestamp())
     try:
-        return await fetch_binance('/fapi/v1/klines', {'symbol': symbol, 'interval': interval, 'limit': limit})
-    except HTTPException:
+        data = await fetch_mexc(f'/api/v1/contract/kline/{mexc_symbol}', {'interval': mexc_interval, 'start': now_s - seconds * limit, 'end': now_s})
+        times = data.get('time', [])
+        return [[int(times[i]) * 1000, data['open'][i], data['high'][i], data['low'][i], data['close'][i], data['vol'][i], int(times[i]) * 1000, '0'] for i in range(len(times))]
+    except Exception:
         bybit_interval = {'1m': '1', '5m': '5', '15m': '15', '1h': '60', '4h': '240', '1d': 'D'}[interval]
         result = await fetch_bybit('/v5/market/kline', {'category': 'linear', 'symbol': symbol, 'interval': bybit_interval, 'limit': limit})
-        rows = []
-        for x in reversed(result.get('list', [])):
-            rows.append([int(x[0]), x[1], x[2], x[3], x[4], x[5], int(x[0]), x[6] if len(x) > 6 else '0'])
-        return rows
+        return [[int(x[0]), x[1], x[2], x[3], x[4], x[5], int(x[0]), x[6] if len(x) > 6 else '0'] for x in reversed(result.get('list', []))]
 
 @app.get('/health')
 async def health():
