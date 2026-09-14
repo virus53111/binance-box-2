@@ -95,6 +95,8 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
             continue
         if in_targets:
             targets.extend(nums(line))
+    if channel.lower() == 'binancekillers' and (not targets or stop is None):
+        return None
     return {
         'id': str(message_id),
         'symbol': symbol,
