@@ -25,7 +25,7 @@ from telethon import TelegramClient, functions
 from telethon.errors import SessionPasswordNeededError
 from telethon.sessions import StringSession
 
-CHANNELS = ['Crypto_pravda1', 'signalyp']
+CHANNELS = ['Crypto_pravda1', 'signalyp', 'binancekillers']
 API_ID = int(os.environ['TG_API_ID'])
 API_HASH = os.environ['TG_API_HASH']
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://red-daj76lmk1f9s73chi24g:6379')
