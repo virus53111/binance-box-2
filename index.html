@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#070a12"><link rel="apple-touch-icon" href="app-icon.svg"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090d18'/%3E%3Cpath d='M12 42l12-13 9 8 19-22' fill='none' stroke='%2381f4c1' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='15' r='5' fill='%23a98bff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
   <link rel="stylesheet" href="safety.css" />
   <link rel="stylesheet" href="futures.css" />
 </head>
@@ -63,6 +63,24 @@
           <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">MEXC + BYBIT · CONNECTING</b></div>
         </div>
 
+        <section class="health-panel panel">
+          <div class="mini-panel-title"><span>ЗДОРОВЬЕ СИСТЕМЫ</span><small id="healthUpdated">Проверка…</small></div>
+          <div class="health-grid">
+            <div><i id="healthServer"></i><span>Сервер</span></div>
+            <div><i id="healthTelegram"></i><span>Сигналы</span></div>
+            <div><i id="healthMarket"></i><span>Цены</span></div>
+            <div><i id="healthPush"></i><span>Уведомления</span></div>
+          </div>
+        </section>
+        <section class="portfolio-panel panel">
+          <div class="mini-panel-title"><span>ВИРТУАЛЬНЫЙ ПОРТФЕЛЬ</span><small>Риск 1% на сделку</small></div>
+          <div class="portfolio-values">
+            <div><small>Старт</small><b id="portfolioInitial">$1 000.00</b></div>
+            <div><small>Сейчас</small><b id="portfolioCurrent">$1 000.00</b></div>
+            <div><small>Результат</small><b id="portfolioPnl">$0.00</b></div>
+          </div>
+          <canvas id="equityChart" aria-label="График виртуального баланса"></canvas>
+        </section>
         <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки: этап 2</b><span data-i18n="paperReason">Сначала проверяем точность получения и разбора сигналов. Автоматическое исполнение пока не включено.</span></div>
       </section>
 
@@ -94,6 +112,6 @@
   <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
   <script src="telegram-client.js?v=3"></script>
   <script src="telegram-adapter.js?v=3"></script>
-  <script src="app-v2.js?v=18"></script>
+  <script src="app-v2.js?v=19"></script>
 </body>
 </html>
