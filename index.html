@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#070a12"><link rel="apple-touch-icon" href="app-icon.svg"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090d18'/%3E%3Cpath d='M12 42l12-13 9 8 19-22' fill='none' stroke='%2381f4c1' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='15' r='5' fill='%23a98bff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=9" />
   <link rel="stylesheet" href="safety.css" />
   <link rel="stylesheet" href="futures.css" />
 </head>
@@ -52,7 +52,7 @@
         <div class="chart-card panel">
           <div class="chart-head">
             <div class="instrument"><span id="pairIcon" class="coin-icon btc">₿</span><div><h1 id="pairName">Bitcoin <small>BTC / USDT</small></h1><div><b id="livePrice">—</b><em id="liveChange">—</em></div></div></div>
-            <div class="timeframes" role="group" aria-label="Timeframe"><button data-interval="1m">1m</button><button data-interval="5m">5m</button><button data-interval="15m" class="active">15m</button><button data-interval="1h">1H</button><button data-interval="4h">4H</button><button data-interval="1d">1D</button></div>
+            <div class="chart-controls"><button id="chartStyle" class="chart-style" type="button" aria-label="Стиль графика" aria-pressed="true">NEON</button><div class="timeframes" role="group" aria-label="Timeframe"><button data-interval="1m">1m</button><button data-interval="5m">5m</button><button data-interval="15m" class="active">15m</button><button data-interval="1h">1H</button><button data-interval="4h">4H</button><button data-interval="1d">1D</button></div></div>
           </div>
           <div class="chart-wrap">
             <div id="ohlc" class="ohlc">O — · H — · L — · C —</div>
@@ -112,6 +112,6 @@
   <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
   <script src="telegram-client.js?v=3"></script>
   <script src="telegram-adapter.js?v=3"></script>
-  <script src="app-v2.js?v=21"></script>
+  <script src="app-v2.js?v=22"></script>
 </body>
 </html>
