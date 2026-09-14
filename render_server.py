@@ -253,6 +253,12 @@ async def update_paper_positions() -> list[dict[str, Any]]:
                 prices[row['symbol']] = float(row['lastPrice'])
     except Exception:
         pass
+    if prices:
+        await redis.set('health:market_at', str(now))
+    initial_balance = float(await redis.get('paper:initial_balance') or 1000)
+    await redis.setnx('paper:initial_balance', '1000')
+    closed_pnl = sum(float(p.get('pnlUsd') or 0) for p in positions if p.get('status') != 'OPEN')
+    balance_for_risk = max(0.0, initial_balance + closed_pnl)
     for signal in signals:
         position_id = f"{signal.get('source')}:{signal.get('id')}"
         if position_id in by_id or not signal.get('targets') or signal.get('stop') is None:
@@ -269,12 +275,20 @@ async def update_paper_positions() -> list[dict[str, Any]]:
         is_long = signal['side'] == 'LONG'
         if (is_long and not (stop < entry < first_target)) or ((not is_long) and not (first_target < entry < stop)):
             continue
+        stop_distance = abs(entry - stop) / entry
+        if stop_distance <= 0:
+            continue
+        risk_usd = balance_for_risk * 0.01
+        notional = risk_usd / stop_distance
+        leverage = int(signal.get('leverageMin') or 1)
         by_id[position_id] = {
             'id': position_id, 'symbol': signal['symbol'], 'side': signal['side'],
             'source': signal.get('source'), 'signalUrl': signal.get('url'),
             'entry': entry, 'targets': signal['targets'], 'stop': float(signal['stop']),
             'openedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
-            'pnlPercent': 0.0, 'currentPrice': price,
+            'pnlPercent': 0.0, 'pnlUsd': 0.0, 'currentPrice': price,
+            'riskPercent': 1.0, 'riskUsd': round(risk_usd, 2), 'notional': round(notional, 2),
+            'leverage': leverage, 'marginUsed': round(notional / max(leverage, 1), 2),
         }
         events.append({'title': 'MURDILIMAX · Новый сигнал', 'body': f"{signal['symbol']} {signal['side']} · Entry {entry} · TP1 {first_target} · SL {stop}", 'tag': position_id, 'url': './'})
     for position in by_id.values():
@@ -290,12 +304,18 @@ async def update_paper_positions() -> list[dict[str, Any]]:
         target_hit = price >= target if is_long else price <= target
         entry = float(position['entry'])
         position['pnlPercent'] = round(((price - entry) / entry) * (1 if is_long else -1) * 100, 4)
+        if not position.get('notional'):
+            distance = abs(entry - float(position['stop'])) / entry
+            position['notional'] = round((initial_balance * 0.01) / distance, 2) if distance else 0
+            position['riskPercent'] = 1.0
+        position['pnlUsd'] = round(float(position.get('notional') or 0) * position['pnlPercent'] / 100, 2)
         if stop_hit or target_hit:
             exit_price = float(position['stop']) if stop_hit else target
             position['exit'] = exit_price
             position['closedAt'] = now
             position['status'] = 'STOPPED' if stop_hit else 'TP1'
             position['pnlPercent'] = round(((exit_price - entry) / entry) * (1 if is_long else -1) * 100, 4)
+            position['pnlUsd'] = round(float(position.get('notional') or 0) * position['pnlPercent'] / 100, 2)
             event_name = 'TP1 сработал' if target_hit else 'Stop Loss'
             events.append({'title': f'MURDILIMAX · {event_name}', 'body': f"{position['symbol']} {position['side']} · {position['pnlPercent']:+.2f}%", 'tag': position['id'] + ':' + position['status'], 'url': './'})
     ordered = sorted(by_id.values(), key=lambda item: item.get('openedAt', 0), reverse=True)[:500]
@@ -477,6 +497,39 @@ async def push_subscribe(payload: PushInput):
     by_endpoint[subscription['endpoint']] = subscription
     await redis.set('push:subscriptions', json.dumps(list(by_endpoint.values())[-100:]))
     return {'ok': True}
+
+@app.get('/api/system-health')
+async def system_health():
+    current = await state()
+    now = int(datetime.now(timezone.utc).timestamp() * 1000)
+    last_sync = int(current.get('lastSync') or 0)
+    market_at = int(await redis.get('health:market_at') or 0)
+    raw_subscriptions = await redis.get('push:subscriptions')
+    subscriptions = json.loads(raw_subscriptions) if raw_subscriptions else []
+    return {
+        'server': {'ok': True, 'updatedAt': now},
+        'telegram': {'ok': current.get('status') == 'connected' and now - last_sync < 180000, 'updatedAt': last_sync},
+        'market': {'ok': market_at > 0 and now - market_at < 180000, 'updatedAt': market_at},
+        'notifications': {'ok': len(subscriptions) > 0, 'subscriptions': len(subscriptions)},
+    }
+
+@app.get('/api/portfolio')
+async def portfolio():
+    initial = float(await redis.get('paper:initial_balance') or 1000)
+    raw = await redis.get('paper:positions')
+    positions = json.loads(raw) if raw else []
+    closed = sorted([p for p in positions if p.get('status') != 'OPEN'], key=lambda p: p.get('closedAt') or 0)
+    balance = initial
+    points = [{'time': int(await redis.get('paper:started_at') or 0), 'balance': round(balance, 2)}]
+    for position in closed:
+        balance += float(position.get('pnlUsd') or 0)
+        points.append({'time': position.get('closedAt'), 'balance': round(balance, 2)})
+    unrealized = sum(float(p.get('pnlUsd') or 0) for p in positions if p.get('status') == 'OPEN')
+    return {
+        'initialBalance': initial, 'closedBalance': round(balance, 2),
+        'unrealizedPnl': round(unrealized, 2), 'currentBalance': round(balance + unrealized, 2),
+        'riskPercent': 1.0, 'points': points,
+    }
 
 @app.get('/api/paper')
 async def paper_positions():
