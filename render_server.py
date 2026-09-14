@@ -13,10 +13,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from pywebpush import WebPushException, webpush
 from redis.asyncio import Redis
 from telethon import TelegramClient, functions
 from telethon.errors import SessionPasswordNeededError
@@ -40,6 +43,9 @@ class CodeInput(BaseModel):
 
 class PasswordInput(BaseModel):
     password: str
+
+class PushInput(BaseModel):
+    subscription: dict[str, Any]
 
 def encrypted(value: str) -> str:
     return fernet.encrypt(value.encode()).decode()
@@ -179,7 +185,46 @@ async def sync_public_signals() -> int:
     await redis.set('telegram:public_sync', str(int(datetime.now(timezone.utc).timestamp() * 1000)))
     return added
 
-async def update_paper_positions() -> None:
+async def get_vapid_keys() -> tuple[str, str]:
+    private_pem = await redis.get('push:vapid_private')
+    if private_pem:
+        key = serialization.load_pem_private_key(private_pem.encode(), password=None)
+    else:
+        key = ec.generate_private_key(ec.SECP256R1())
+        private_pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode()
+        await redis.set('push:vapid_private', private_pem)
+    public_numbers = key.public_key().public_numbers()
+    raw_public = b'\x04' + public_numbers.x.to_bytes(32, 'big') + public_numbers.y.to_bytes(32, 'big')
+    public_key = base64.urlsafe_b64encode(raw_public).decode().rstrip('=')
+    return private_pem, public_key
+
+async def send_push_events(events: list[dict[str, Any]]) -> None:
+    if not events:
+        return
+    raw = await redis.get('push:subscriptions')
+    subscriptions = json.loads(raw) if raw else []
+    if not subscriptions:
+        return
+    private_pem, _ = await get_vapid_keys()
+    alive = []
+    for subscription in subscriptions:
+        valid = True
+        for event in events:
+            try:
+                await asyncio.to_thread(webpush, subscription_info=subscription, data=json.dumps(event, ensure_ascii=False), vapid_private_key=private_pem, vapid_claims={'sub': 'mailto:notifications@murdilimax.app'})
+            except WebPushException as exc:
+                status = getattr(getattr(exc, 'response', None), 'status_code', None)
+                if status in {404, 410}:
+                    valid = False
+                break
+            except Exception:
+                break
+        if valid:
+            alive.append(subscription)
+    await redis.set('push:subscriptions', json.dumps(alive))
+
+async def update_paper_positions() -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
     now = int(datetime.now(timezone.utc).timestamp() * 1000)
     version = await redis.get('paper:version')
     if version != '3':
@@ -228,6 +273,7 @@ async def update_paper_positions() -> None:
             'openedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
             'pnlPercent': 0.0, 'currentPrice': price,
         }
+        events.append({'title': 'MURDILIMAX · Новый сигнал', 'body': f"{signal['symbol']} {signal['side']} · Entry {entry} · TP1 {first_target} · SL {stop}", 'tag': position_id, 'url': './'})
     for position in by_id.values():
         if position.get('status') != 'OPEN':
             continue
@@ -247,8 +293,11 @@ async def update_paper_positions() -> None:
             position['closedAt'] = now
             position['status'] = 'STOPPED' if stop_hit else 'TP1'
             position['pnlPercent'] = round(((exit_price - entry) / entry) * (1 if is_long else -1) * 100, 4)
+            event_name = 'TP1 сработал' if target_hit else 'Stop Loss'
+            events.append({'title': f'MURDILIMAX · {event_name}', 'body': f"{position['symbol']} {position['side']} · {position['pnlPercent']:+.2f}%", 'tag': position['id'] + ':' + position['status'], 'url': './'})
     ordered = sorted(by_id.values(), key=lambda item: item.get('openedAt', 0), reverse=True)[:500]
     await redis.set('paper:positions', json.dumps(ordered, ensure_ascii=False))
+    return events
 
 async def background_sync() -> None:
     while True:
@@ -258,7 +307,8 @@ async def background_sync() -> None:
                 await sync_signals(decrypted(current['session']))
             else:
                 await sync_public_signals()
-            await update_paper_positions()
+            events = await update_paper_positions()
+            await send_push_events(events)
             current['lastSync'] = int(datetime.now(timezone.utc).timestamp() * 1000)
             current['lastError'] = None
             await save_state(current)
