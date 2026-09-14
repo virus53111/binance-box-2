@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090d18'/%3E%3Cpath d='M12 42l12-13 9 8 19-22' fill='none' stroke='%2381f4c1' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='15' r='5' fill='%23a98bff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
   <link rel="stylesheet" href="safety.css" />
   <link rel="stylesheet" href="futures.css" />
 </head>
@@ -81,11 +81,19 @@
     <div><span>Открыто</span><b id="statOpen">0</b></div>
     <div><span>TP1</span><b id="statWins" class="green">0</b></div>
     <div><span>Stop Loss</span><b id="statLosses" class="red">0</b></div>
+    <div class="stats-actions"><button id="archiveOpen">Архив</button><button id="soundEnable" aria-label="Включить звук">🔔</button></div>
   </aside>
+
+  <div id="archiveModal" class="archive-modal hidden">
+    <section class="archive-card">
+      <header><div><small>ИСТОРИЯ</small><h2>Архив сделок</h2></div><button id="archiveClose" aria-label="Закрыть">×</button></header>
+      <div id="archiveList" class="archive-list"><p>Закрытых сделок пока нет.</p></div>
+    </section>
+  </div>
 
   <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
   <script src="telegram-client.js?v=3"></script>
   <script src="telegram-adapter.js?v=3"></script>
-  <script src="app-v2.js?v=9"></script>
+  <script src="app-v2.js?v=12"></script>
 </body>
 </html>
