@@ -1,0 +1,4 @@
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
+self.addEventListener('push',event=>{let data={};try{data=event.data?event.data.json():{}}catch{data={title:'MURDILIMAX',body:event.data?.text()||'Новое уведомление'}}event.waitUntil(self.registration.showNotification(data.title||'MURDILIMAX',{body:data.body||'',icon:'app-icon.svg',badge:'app-icon.svg',tag:data.tag||'murdilimax-event',data:{url:data.url||'./'}}))});
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const client of list){if('focus'in client)return client.focus()}return clients.openWindow(event.notification.data?.url||'./')}))});
