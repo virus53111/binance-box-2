@@ -1,6 +1,6 @@
 {
   "source": "https://t.me/s/Crypto_pravda1",
-  "updated_at": "2026-09-14T05:20:25.304570+00:00",
+  "updated_at": "2026-09-14T05:23:06.531710+00:00",
   "status": "error",
   "error": "RuntimeError: Missing GitHub secrets: TG_API_ID, TG_API_HASH, TG_SESSION",
   "signals": []
