@@ -458,6 +458,23 @@ async def signals():
     raw = await redis.get('telegram:signals')
     return {'sources': [f'@{channel}' for channel in CHANNELS], 'signals': json.loads(raw) if raw else []}
 
+@app.get('/api/push/key')
+async def push_public_key():
+    _, public_key = await get_vapid_keys()
+    return {'publicKey': public_key}
+
+@app.post('/api/push/subscribe')
+async def push_subscribe(payload: PushInput):
+    subscription = payload.subscription
+    if not subscription.get('endpoint') or not subscription.get('keys', {}).get('p256dh') or not subscription.get('keys', {}).get('auth'):
+        raise HTTPException(400, 'Invalid push subscription')
+    raw = await redis.get('push:subscriptions')
+    subscriptions = json.loads(raw) if raw else []
+    by_endpoint = {item.get('endpoint'): item for item in subscriptions}
+    by_endpoint[subscription['endpoint']] = subscription
+    await redis.set('push:subscriptions', json.dumps(list(by_endpoint.values())[-100:]))
+    return {'ok': True}
+
 @app.get('/api/paper')
 async def paper_positions():
     raw = await redis.get('paper:positions')
