@@ -120,6 +120,7 @@ async def sync_signals(session_text: str) -> int:
             raise RuntimeError('Telegram session expired')
         existing_raw = await redis.get('telegram:signals')
         existing = json.loads(existing_raw) if existing_raw else []
+        existing = [item for item in existing if item.get('source') != '@binancekillers' or (item.get('targets') and item.get('stop') is not None)]
         by_id = {f"{item.get('source')}:{item['id']}": item for item in existing}
         added = 0
         for channel in CHANNELS:
