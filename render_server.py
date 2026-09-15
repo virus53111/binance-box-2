@@ -226,6 +226,44 @@ async def send_push_events(events: list[dict[str, Any]]) -> None:
             alive.append(subscription)
     await redis.set('push:subscriptions', json.dumps(alive))
 
+async def fetch_minute_extremes(symbol: str, since_ms: int, now_ms: int) -> dict[str, float] | None:
+    """Return high/low from one-minute futures candles since the last paper check."""
+    since_ms = max(0, int(since_ms))
+    start_s = max(0, since_ms // 1000 - 60)
+    end_s = now_ms // 1000
+    mexc_symbol = symbol[:-4] + '_USDT' if symbol.endswith('USDT') else symbol
+    try:
+        data = await fetch_mexc(
+            f'/api/v1/contract/kline/{mexc_symbol}',
+            {'interval': 'Min1', 'start': start_s, 'end': end_s},
+        )
+        times = data.get('time', []) if isinstance(data, dict) else []
+        rows = [
+            (int(times[i]) * 1000, float(data['high'][i]), float(data['low'][i]), float(data['close'][i]))
+            for i in range(len(times))
+            if int(times[i]) * 1000 + 60000 >= since_ms
+        ]
+        if rows:
+            return {'high': max(row[1] for row in rows), 'low': min(row[2] for row in rows), 'last': rows[-1][3]}
+    except Exception:
+        pass
+    try:
+        minutes = max(2, min(1000, (now_ms - since_ms) // 60000 + 3))
+        result = await fetch_bybit(
+            '/v5/market/kline',
+            {'category': 'linear', 'symbol': symbol, 'interval': '1', 'limit': int(minutes)},
+        )
+        rows = [
+            (int(row[0]), float(row[2]), float(row[3]), float(row[4]))
+            for row in reversed(result.get('list', []))
+            if int(row[0]) + 60000 >= since_ms
+        ]
+        if rows:
+            return {'high': max(row[1] for row in rows), 'low': min(row[2] for row in rows), 'last': rows[-1][3]}
+    except Exception:
+        pass
+    return None
+
 async def update_paper_positions() -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     now = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -285,7 +323,7 @@ async def update_paper_positions() -> list[dict[str, Any]]:
             'id': position_id, 'symbol': signal['symbol'], 'side': signal['side'],
             'source': signal.get('source'), 'signalUrl': signal.get('url'),
             'entry': entry, 'targets': signal['targets'], 'stop': float(signal['stop']),
-            'openedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
+            'openedAt': now, 'lastCheckedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
             'pnlPercent': 0.0, 'pnlUsd': 0.0, 'currentPrice': price,
             'riskPercent': 1.0, 'riskUsd': round(risk_usd, 2), 'notional': round(notional, 2),
             'leverage': leverage, 'marginUsed': round(notional / max(leverage, 1), 2),
@@ -299,9 +337,16 @@ async def update_paper_positions() -> list[dict[str, Any]]:
             continue
         position['currentPrice'] = price
         is_long = position['side'] == 'LONG'
-        stop_hit = price <= position['stop'] if is_long else price >= position['stop']
         target = float(position['targets'][0])
-        target_hit = price >= target if is_long else price <= target
+        checked_from = int(position.get('lastCheckedAt') or position.get('openedAt') or now)
+        candle_range = await fetch_minute_extremes(position['symbol'], checked_from, now)
+        range_high = candle_range['high'] if candle_range else price
+        range_low = candle_range['low'] if candle_range else price
+        stop_hit = range_low <= float(position['stop']) if is_long else range_high >= float(position['stop'])
+        target_hit = range_high >= target if is_long else range_low <= target
+        position['lastCheckedAt'] = now
+        position['checkedHigh'] = range_high
+        position['checkedLow'] = range_low
         entry = float(position['entry'])
         position['pnlPercent'] = round(((price - entry) / entry) * (1 if is_long else -1) * 100, 4)
         if not position.get('notional'):
@@ -316,7 +361,9 @@ async def update_paper_positions() -> list[dict[str, Any]]:
             position['status'] = 'STOPPED' if stop_hit else 'TP1'
             position['pnlPercent'] = round(((exit_price - entry) / entry) * (1 if is_long else -1) * 100, 4)
             position['pnlUsd'] = round(float(position.get('notional') or 0) * position['pnlPercent'] / 100, 2)
-            event_name = 'TP1 сработал' if target_hit else 'Stop Loss'
+            position['hitSource'] = '1m-candle' if candle_range else 'last-price'
+            position['bothLevelsTouched'] = bool(stop_hit and target_hit)
+            event_name = 'Stop Loss' if position['status'] == 'STOPPED' else 'TP1 сработал'
             events.append({'title': f'MURDILIMAX · {event_name}', 'body': f"{position['symbol']} {position['side']} · {position['pnlPercent']:+.2f}%", 'tag': position['id'] + ':' + position['status'], 'url': './'})
     ordered = sorted(by_id.values(), key=lambda item: item.get('openedAt', 0), reverse=True)[:500]
     await redis.set('paper:positions', json.dumps(ordered, ensure_ascii=False))
