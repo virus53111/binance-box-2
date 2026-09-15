@@ -25,7 +25,8 @@ from telethon import TelegramClient, functions
 from telethon.errors import SessionPasswordNeededError
 from telethon.sessions import StringSession
 
-CHANNELS = ['Crypto_pravda1', 'signalyp', 'binancekillers']
+CHANNELS = ['Crypto_pravda1', 'signalyp', 'binancekillers', 'binance_360']
+CHANNEL_CUTOFFS = {'binance_360': 1789453029014}
 API_ID = int(os.environ['TG_API_ID'])
 API_HASH = os.environ['TG_API_HASH']
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://red-daj76lmk1f9s73chi24g:6379')
@@ -89,13 +90,13 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
             stop = line_nums[0] if line_nums else None
             in_targets = False
             continue
-        if re.search(r'^(?:[^A-ZА-Я0-9]*)(?:ДИАПАЗОН\s+ВХОДА|ВХОД|ENTRY)\s*:', line):
+        if re.search(r'^(?:[^A-ZА-Я0-9]*)(?:ДИАПАЗОН\s+ВХОДА|ВХОД|ENTRY(?:\s+ZONE)?)\s*:', line):
             entry = [] if re.search(r'РЫН|MARKET', line) else nums(line)[:2]
             in_targets = False
             continue
         if in_targets:
             targets.extend(nums(line))
-    if channel.lower() == 'binancekillers' and (not targets or stop is None):
+    if channel.lower() in {'binancekillers', 'binance_360'} and (not entry or not targets or stop is None):
         return None
     return {
         'id': str(message_id),
@@ -128,7 +129,10 @@ async def sync_signals(session_text: str) -> int:
             for message in messages:
                 if not message.message:
                     continue
-                parsed = parse_signal(channel, message.id, message.message, message.date or datetime.now(timezone.utc))
+                published = message.date or datetime.now(timezone.utc)
+                if int(published.timestamp() * 1000) < CHANNEL_CUTOFFS.get(channel.lower(), 0):
+                    continue
+                parsed = parse_signal(channel, message.id, message.message, published)
                 key = f"{parsed['source']}:{parsed['id']}" if parsed else ''
                 if parsed:
                     if key not in by_id:
@@ -178,6 +182,8 @@ async def sync_public_signals() -> int:
                 published = datetime.fromisoformat(time_found.group(1).replace('Z', '+00:00')) if time_found else datetime.now(timezone.utc)
             except ValueError:
                 published = datetime.now(timezone.utc)
+            if int(published.timestamp() * 1000) < CHANNEL_CUTOFFS.get(channel.lower(), 0):
+                continue
             parsed = parse_signal(channel, int(found.group(1)), text, published)
             key = f"{parsed['source']}:{parsed['id']}" if parsed else ''
             if parsed and key not in by_id:
