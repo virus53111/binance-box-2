@@ -3,12 +3,10 @@ name: Sync Telegram and deploy Signal Lab
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -24,23 +22,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Telegram client
-        run: python3 -m pip install --disable-pip-version-check 'telethon>=1.37,<2'
-      - name: Read Telegram channel
-        env:
-          TG_API_ID: ${{ secrets.TG_API_ID }}
-          TG_API_HASH: ${{ secrets.TG_API_HASH }}
-          TG_SESSION: ${{ secrets.TG_SESSION }}
-        run: python3 telegram_sync.py
-      - name: Save new signals
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add signals.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Update Crypto_pravda1 signals [skip ci]'
-            git push
-          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
