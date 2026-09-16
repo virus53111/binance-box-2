@@ -83,7 +83,7 @@ def parse_signal(channel: str, message_id: int, text: str, published: datetime) 
     stop = None
     in_targets = False
     for line in [line.strip() for line in upper.splitlines() if line.strip()]:
-        if re.search(r'ТЕЙК|TARGET|ЦЕЛ', line):
+        if re.search(r'ТЕЙК|TARGET|TAKE\s+PROFITS?|ЦЕЛ', line):
             in_targets = True
         if re.search(r'[СC]ТОП|STOP|\bSL\b', line):
             line_nums = nums(line)
@@ -404,7 +404,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title='SignalLab Telegram', lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['https://virus53111.github.io'],
+    allow_origins=['https://virus53111.github.io', 'https://murdilimax.com', 'https://www.murdilimax.com'],
     allow_methods=['GET', 'POST', 'OPTIONS'],
     allow_headers=['Content-Type'],
 )
