@@ -344,10 +344,35 @@ async def update_paper_positions() -> list[dict[str, Any]]:
             events.append({'title': 'MURDILIMAX · Новый сигнал', 'body': f"{signal['symbol']} {signal['side']} · Entry {actual_entry:.8g} · TP1 {first_target} · SL {stop}", 'tag': position_id, 'url': './'})
         else:
             events.append({'title': 'MURDILIMAX · Сигнал ожидает входа', 'body': f"{signal['symbol']} {signal['side']} · зона {entry_min:.8g}–{entry_max:.8g}", 'tag': position_id + ':PENDING', 'url': './'})
+    signal_by_position = {f"{item.get('source')}:{item.get('id')}": item for item in signals}
     for position in by_id.values():
         price = prices.get(position['symbol'])
         if not price:
             continue
+        if position.get('source') == '@binance_360' and position.get('status') == 'OPEN' and 'entryZone' not in position:
+            original_signal = signal_by_position.get(position.get('id'))
+            legacy_entries = [float(value) for value in ((original_signal or {}).get('entry') or [])]
+            if legacy_entries:
+                position['entryZone'] = legacy_entries
+                position['entryMin'] = min(legacy_entries)
+                position['entryMax'] = max(legacy_entries)
+                position['waitingFromPrice'] = price
+                position['lastCheckedAt'] = now
+                if position['entryMin'] <= price <= position['entryMax']:
+                    position['entry'] = price
+                    position['openedAt'] = now
+                    distance = abs(price - float(position['stop'])) / price
+                    risk_usd = balance_for_risk * 0.01
+                    position['notional'] = round(risk_usd / distance, 2) if distance > 0 else 0
+                    position['marginUsed'] = round(float(position['notional']) / max(int(position.get('leverage') or 1), 1), 2)
+                else:
+                    position['status'] = 'PENDING'
+                    position['entry'] = None
+                    position['openedAt'] = None
+                    position['notional'] = 0
+                    position['marginUsed'] = 0
+                    position['pnlPercent'] = 0
+                    position['pnlUsd'] = 0
         if position.get('status') == 'PENDING':
             entry_min = position.get('entryMin')
             entry_max = position.get('entryMax')
