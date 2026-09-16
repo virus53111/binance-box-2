@@ -443,7 +443,11 @@ async def update_paper_positions() -> list[dict[str, Any]]:
             position['bothLevelsTouched'] = bool(stop_hit and target_hit)
             event_name = 'Stop Loss' if position['status'] == 'STOPPED' else 'TP1 сработал'
             events.append({'title': f'MURDILIMAX · {event_name}', 'body': f"{position['symbol']} {position['side']} · {position['pnlPercent']:+.2f}%", 'tag': position['id'] + ':' + position['status'], 'url': './'})
-    ordered = sorted(by_id.values(), key=lambda item: item.get('openedAt', 0), reverse=True)[:500]
+    ordered = sorted(
+        by_id.values(),
+        key=lambda item: int(item.get('openedAt') or item.get('createdAt') or 0),
+        reverse=True,
+    )[:500]
     await redis.set('paper:positions', json.dumps(ordered, ensure_ascii=False))
     return events
 
