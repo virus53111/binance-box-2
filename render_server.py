@@ -64,6 +64,14 @@ async def save_state(value: dict[str, Any]) -> None:
 def nums(text: str) -> list[float]:
     return [float(x.replace(',', '.')) for x in re.findall(r'\d+(?:[.,]\d+)?', text)]
 
+def signal_timestamp(item: dict[str, Any]) -> int:
+    """Return a stable timestamp even for legacy or partially written signals."""
+    value = item.get('publishedAt')
+    try:
+        return int(float(value)) if value is not None else 0
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
 def parse_signal(channel: str, message_id: int, text: str, published: datetime) -> dict[str, Any] | None:
     upper = text.upper().replace('\r', '')
     found = re.search(r'(?:#|\$)?([A-Z0-9]{2,15})(?:\s*/\s*USDT|USDT)?\s+(LONG|SHORT)\b', upper)
@@ -138,7 +146,7 @@ async def sync_signals(session_text: str) -> int:
                     if key not in by_id:
                         added += 1
                     by_id[key] = parsed
-        ordered = sorted(by_id.values(), key=lambda item: item['publishedAt'], reverse=True)[:300]
+        ordered = sorted(by_id.values(), key=signal_timestamp, reverse=True)[:300]
         await redis.set('telegram:signals', json.dumps(ordered, ensure_ascii=False))
         return added
     finally:
@@ -189,7 +197,7 @@ async def sync_public_signals() -> int:
             if parsed and key not in by_id:
                 by_id[key] = parsed
                 added += 1
-    ordered = sorted(by_id.values(), key=lambda item: item['publishedAt'], reverse=True)[:300]
+    ordered = sorted(by_id.values(), key=signal_timestamp, reverse=True)[:300]
     await redis.set('telegram:signals', json.dumps(ordered, ensure_ascii=False))
     await redis.set('telegram:public_sync', str(int(datetime.now(timezone.utc).timestamp() * 1000)))
     return added
