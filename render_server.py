@@ -312,34 +312,73 @@ async def update_paper_positions() -> list[dict[str, Any]]:
         price = prices.get(signal.get('symbol'))
         if not price:
             continue
-        entries = signal.get('entry') or []
-        entry = float(entries[0]) if entries else price
+        entries = [float(value) for value in (signal.get('entry') or [])]
+        entry_min = min(entries) if entries else None
+        entry_max = max(entries) if entries else None
+        in_entry_zone = not entries or entry_min <= price <= entry_max
+        reference_entry = price if not entries else (entry_min + entry_max) / 2
         first_target = float(signal['targets'][0])
         stop = float(signal['stop'])
         is_long = signal['side'] == 'LONG'
-        if (is_long and not (stop < entry < first_target)) or ((not is_long) and not (first_target < entry < stop)):
+        if (is_long and not (stop < reference_entry < first_target)) or ((not is_long) and not (first_target < reference_entry < stop)):
             continue
-        stop_distance = abs(entry - stop) / entry
-        if stop_distance <= 0:
-            continue
+        status = 'OPEN' if in_entry_zone else 'PENDING'
+        actual_entry = price if status == 'OPEN' else None
         risk_usd = balance_for_risk * 0.01
-        notional = risk_usd / stop_distance
+        stop_distance = abs(actual_entry - stop) / actual_entry if actual_entry else 0
+        notional = risk_usd / stop_distance if stop_distance > 0 else 0
         leverage = int(signal.get('leverageMin') or 1)
         by_id[position_id] = {
             'id': position_id, 'symbol': signal['symbol'], 'side': signal['side'],
             'source': signal.get('source'), 'signalUrl': signal.get('url'),
-            'entry': entry, 'targets': signal['targets'], 'stop': float(signal['stop']),
-            'openedAt': now, 'lastCheckedAt': now, 'status': 'OPEN', 'exit': None, 'closedAt': None,
+            'entry': actual_entry, 'entryZone': entries, 'entryMin': entry_min, 'entryMax': entry_max,
+            'targets': signal['targets'], 'stop': stop,
+            'createdAt': now, 'openedAt': now if status == 'OPEN' else None,
+            'lastCheckedAt': now, 'status': status, 'exit': None, 'closedAt': None,
             'pnlPercent': 0.0, 'pnlUsd': 0.0, 'currentPrice': price,
-            'riskPercent': 1.0, 'riskUsd': round(risk_usd, 2), 'notional': round(notional, 2),
-            'leverage': leverage, 'marginUsed': round(notional / max(leverage, 1), 2),
+            'waitingFromPrice': price, 'riskPercent': 1.0, 'riskUsd': round(risk_usd, 2),
+            'notional': round(notional, 2), 'leverage': leverage,
+            'marginUsed': round(notional / max(leverage, 1), 2),
         }
-        events.append({'title': 'MURDILIMAX · Новый сигнал', 'body': f"{signal['symbol']} {signal['side']} · Entry {entry} · TP1 {first_target} · SL {stop}", 'tag': position_id, 'url': './'})
+        if status == 'OPEN':
+            events.append({'title': 'MURDILIMAX · Новый сигнал', 'body': f"{signal['symbol']} {signal['side']} · Entry {actual_entry:.8g} · TP1 {first_target} · SL {stop}", 'tag': position_id, 'url': './'})
+        else:
+            events.append({'title': 'MURDILIMAX · Сигнал ожидает входа', 'body': f"{signal['symbol']} {signal['side']} · зона {entry_min:.8g}–{entry_max:.8g}", 'tag': position_id + ':PENDING', 'url': './'})
     for position in by_id.values():
-        if position.get('status') != 'OPEN':
-            continue
         price = prices.get(position['symbol'])
         if not price:
+            continue
+        if position.get('status') == 'PENDING':
+            entry_min = position.get('entryMin')
+            entry_max = position.get('entryMax')
+            checked_from = int(position.get('lastCheckedAt') or position.get('createdAt') or now)
+            candle_range = await fetch_minute_extremes(position['symbol'], checked_from, now)
+            range_high = candle_range['high'] if candle_range else price
+            range_low = candle_range['low'] if candle_range else price
+            touched = entry_min is not None and entry_max is not None and range_high >= float(entry_min) and range_low <= float(entry_max)
+            position['lastCheckedAt'] = now
+            position['currentPrice'] = price
+            if not touched:
+                continue
+            if float(entry_min) <= price <= float(entry_max):
+                actual_entry = price
+            elif float(position.get('waitingFromPrice') or price) > float(entry_max):
+                actual_entry = float(entry_max)
+            else:
+                actual_entry = float(entry_min)
+            stop = float(position['stop'])
+            distance = abs(actual_entry - stop) / actual_entry
+            risk_usd = balance_for_risk * 0.01
+            notional = risk_usd / distance if distance > 0 else 0
+            position.update({
+                'status': 'OPEN', 'entry': actual_entry, 'openedAt': now,
+                'lastCheckedAt': now, 'pnlPercent': 0.0, 'pnlUsd': 0.0,
+                'riskUsd': round(risk_usd, 2), 'notional': round(notional, 2),
+                'marginUsed': round(notional / max(int(position.get('leverage') or 1), 1), 2),
+            })
+            events.append({'title': 'MURDILIMAX · Вход исполнен', 'body': f"{position['symbol']} {position['side']} · Entry {actual_entry:.8g}", 'tag': position['id'] + ':OPEN', 'url': './'})
+            continue
+        if position.get('status') != 'OPEN':
             continue
         position['currentPrice'] = price
         is_long = position['side'] == 'LONG'
@@ -588,7 +627,7 @@ async def portfolio():
 async def paper_positions():
     raw = await redis.get('paper:positions')
     positions = json.loads(raw) if raw else []
-    return {'positions': positions, 'open': sum(1 for p in positions if p.get('status') == 'OPEN')}
+    return {'positions': positions, 'open': sum(1 for p in positions if p.get('status') == 'OPEN'), 'pending': sum(1 for p in positions if p.get('status') == 'PENDING')}
 
 @app.post('/api/telegram/reset')
 async def reset():
