@@ -1,0 +1,18 @@
+{
+  "name": "Live Earth",
+  "short_name": "Live Earth",
+  "description": "Interactive TikTok LIVE world where gifts create and upgrade permanent places on Earth.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#01040a",
+  "theme_color": "#01040a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
