@@ -1,128 +1,36 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="MURDILIMAX — мониторинг криптовалютных сигналов, реальные графики MEXC и Bybit, виртуальные сделки и статистика TP1 и Stop Loss." />
-  <meta name="keywords" content="крипто сигналы, сигналы криптовалют, Telegram сигналы, Bitcoin график, виртуальная торговля, crypto signals, MURDILIMAX" />
-  <meta name="robots" content="index,follow,max-image-preview:large" />
-  <link rel="canonical" href="https://murdilimax.com/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://murdilimax.com/" />
-  <meta property="og:title" content="MURDILIMAX — криптовалютные сигналы и виртуальная торговля" />
-  <meta property="og:description" content="Реальные графики, Telegram-сигналы, точки входа, TP/SL и статистика виртуальных сделок." />
-  <meta property="og:image" content="https://murdilimax.com/app-icon.svg" />
-  <meta name="twitter:card" content="summary" />
-  <title>MURDILIMAX — криптовалютные сигналы, графики и виртуальные сделки</title>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"MURDILIMAX","url":"https://murdilimax.com/","applicationCategory":"FinanceApplication","operatingSystem":"Web","description":"Мониторинг криптовалютных Telegram-сигналов, рыночные графики и статистика виртуальных сделок.","inLanguage":["ru","en"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#070a12"><link rel="apple-touch-icon" href="/app-icon.svg"><link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=10" />
-  <link rel="stylesheet" href="safety.css" />
-  <link rel="stylesheet" href="futures.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#01040a" />
+  <meta name="description" content="Live Earth — claim a permanent place on Earth from TikTok LIVE gifts." />
+  <title>Live Earth</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#01040a;font-family:Inter,system-ui,sans-serif;color:#eaf8ff}body{position:relative}.shell{position:fixed;inset:0;background:radial-gradient(circle at 50% 44%,#0a2638 0,#020912 45%,#01040a 76%)}.loader{position:absolute;inset:0;display:grid;place-items:center;z-index:1;transition:opacity .45s ease}.loader-card{text-align:center}.earth{width:68px;height:68px;margin:0 auto 18px;border:1px solid rgba(100,220,255,.42);border-radius:50%;box-shadow:0 0 40px rgba(66,202,255,.18),inset -12px -8px 24px rgba(0,0,0,.65);background:radial-gradient(circle at 34% 28%,#2c7794 0,#0d4564 27%,#08283c 56%,#03101c 100%);animation:spin 3s linear infinite}.loader b{display:block;font-size:14px;letter-spacing:.2em}.loader small{display:block;margin-top:7px;color:#66869b;font-size:10px;letter-spacing:.08em}@keyframes spin{to{transform:rotate(360deg)}}iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#01040a;z-index:2}.fallback{position:fixed;right:12px;bottom:12px;z-index:3;opacity:0;pointer-events:none;transition:opacity .4s}.fallback.show{opacity:1;pointer-events:auto}.fallback a{display:inline-flex;padding:8px 11px;border-radius:999px;text-decoration:none;color:#9ee8ff;background:rgba(2,11,20,.82);border:1px solid rgba(100,220,255,.2);font-size:10px;backdrop-filter:blur(10px)}
+  </style>
 </head>
 <body>
-  <div class="ambient a1"></div><div class="ambient a2"></div>
   <div class="shell">
-    <header>
-      <button class="brand" data-pair="BTCUSDT" aria-label="MURDILIMAX home">
-        <span class="mark">⌁</span><span>MURDILI<span>MAX</span></span>
-      </button>
-      <div class="market-status"><i></i><span data-i18n="marketLive">Рынок онлайн</span><b id="latency">— ms</b></div>
-      <div class="header-actions">
-        <button id="connectTelegram" class="outline"><span>➤</span><span>Сигналы подключены</span></button>
-        <button id="refreshSignals" class="outline"><span>↻</span><span data-i18n="refreshSignals">Обновить сигналы</span></button><button id="installApp" class="outline"><span>⇩</span><span>Установить</span></button>
-        <button id="lang" class="lang">EN</button>
-        <button class="avatar" aria-label="Profile">AP</button>
-      </div>
-    </header>
-
-    <main>
-      <aside class="watchlist panel">
-        <div class="aside-title"><span data-i18n="markets">Все фьючерсы</span><span id="marketCount" class="count">—</span></div>
-        <div class="market-search"><input id="marketSearch" type="search" placeholder="BTC, ETH, SOL…" aria-label="Search futures"><span>⌕</span></div>
-        <div id="marketList" class="market-list"><div class="mini-loading">Загрузка MEXC / Bybit…</div></div>
-        <div class="source-card">
-          <div class="source-top"><span class="tg">➤</span><div><b>MURDILIMAX Signals</b><small>@Crypto_pravda1</small></div><i id="sourceDot"></i></div>
-          <div class="source-stats"><div><small>Status</small><b id="sourceStatus">SYNCING</b></div><div><small>Signals</small><b id="sourceCount">0</b></div></div>
-        </div>
-      </aside>
-
-      <section class="workspace">
-        <div class="risk-warning"><b data-i18n="marketMonitor">Рыночный монитор</b><span data-i18n="noExecution">Данные Binance USDT‑M Futures. Telegram проверяется каждые 5 минут; это не мгновенная торговая система.</span></div>
-        <div class="stats-row">
-          <div class="metric"><small data-i18n="dataSource">Источник данных</small><b>MEXC + BYBIT</b><span data-i18n="publicMarket">USDT‑M perpetual</span></div>
-          <div class="metric"><small data-i18n="selectedInterval">Интервал</small><b id="metricInterval">15m</b><span data-i18n="candleInterval">Интервал свечи</span></div>
-          <div class="metric"><small data-i18n="lastUpdate">Последнее обновление</small><b id="lastUpdate">—</b><span>UTC</span></div>
-          <div class="metric"><small data-i18n="connection">Соединение</small><b id="connectionState">CONNECTING</b><span id="connectionDetail">REST + WebSocket</span></div>
-        </div>
-
-        <div class="chart-card panel">
-          <div class="chart-head">
-            <div class="instrument"><span id="pairIcon" class="coin-icon btc">₿</span><div><h1 id="pairName">Bitcoin <small>BTC / USDT</small></h1><div><b id="livePrice">—</b><em id="liveChange">—</em></div></div></div>
-            <div class="chart-controls"><button id="chartStyle" class="chart-style" type="button" aria-label="Стиль графика" aria-pressed="true">NEON</button><div class="timeframes" role="group" aria-label="Timeframe"><button data-interval="1m">1m</button><button data-interval="5m">5m</button><button data-interval="15m" class="active">15m</button><button data-interval="1h">1H</button><button data-interval="4h">4H</button><button data-interval="1d">1D</button></div></div>
-          </div>
-          <div class="chart-wrap">
-            <div id="ohlc" class="ohlc">O — · H — · L — · C —</div>
-            <canvas id="chart"></canvas>
-            <div id="chartLoading" class="chart-loading"><span></span><span data-i18n="loading">Загрузка рынка…</span></div>
-            <div id="chartError" class="chart-error hidden"><b data-i18n="dataUnavailable">Данные недоступны</b><span data-i18n="doNotTrade">Не используйте график для принятия торговых решений.</span><button id="retry" data-i18n="retry">Повторить</button></div>
-          </div>
-          <div class="chart-foot"><span><i class="legend price"></i><span data-i18n="price">Цена</span></span><span id="candleCount">180 candles</span><span data-i18n="utcTime">Время UTC</span><b id="feedStatus">MEXC + BYBIT · CONNECTING</b></div>
-        </div>
-
-        <section class="health-panel panel">
-          <div class="mini-panel-title"><span>ЗДОРОВЬЕ СИСТЕМЫ</span><small id="healthUpdated">Проверка…</small></div>
-          <div class="health-grid">
-            <div><i id="healthServer"></i><span>Сервер</span></div>
-            <div><i id="healthTelegram"></i><span>Сигналы</span></div>
-            <div><i id="healthMarket"></i><span>Цены</span></div>
-            <div><i id="healthPush"></i><span>Уведомления</span></div>
-          </div>
-        </section>
-        <section class="portfolio-panel panel">
-          <div class="mini-panel-title"><span>ВИРТУАЛЬНЫЙ ПОРТФЕЛЬ</span><small>Риск 1% на сделку</small></div>
-          <div class="portfolio-values">
-            <div><small>Старт</small><b id="portfolioInitial">$1 000.00</b></div>
-            <div><small>Сейчас</small><b id="portfolioCurrent">$1 000.00</b></div>
-            <div><small>Результат</small><b id="portfolioPnl">$0.00</b></div>
-          </div>
-          <canvas id="equityChart" aria-label="График виртуального баланса"></canvas>
-        </section>
-        <div class="positions panel empty-state"><b data-i18n="paperPaused">Виртуальные сделки: этап 2</b><span data-i18n="paperReason">Сначала проверяем точность получения и разбора сигналов. Автоматическое исполнение пока не включено.</span></div>
-      </section>
-
-      <aside class="signals panel">
-        <div class="aside-title"><span data-i18n="liveSignals">Сигналы</span><span id="signalCount" class="count">0</span><button>•••</button></div>
-        <div class="auto-card"><div><span>➤</span><div><b>MURDILIMAX Signals</b><small id="syncTime">Синхронизация…</small></div></div><p data-i18n="signalSafety">Публичный канал проверяется автоматически. Задержка GitHub может превышать 5 минут.</p></div>
-        <div id="signalList" class="signals-empty"><span>➤</span><b data-i18n="noSignals">Нет сигналов</b><p data-i18n="noSignalsText">Сейчас сайт показывает только реальные рыночные данные Binance.</p></div>
-        <div class="disclaimer" data-i18n="disclaimer">Виртуальная торговля. Не финансовая рекомендация.</div>
-      </aside>
-    </main>
+    <div id="loader" class="loader"><div class="loader-card"><div class="earth"></div><b>LIVE EARTH</b><small>LOADING THE WORLD</small></div></div>
+    <iframe id="liveEarth" title="Live Earth" allow="autoplay; fullscreen; clipboard-read; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <div id="fallback" class="fallback"><a id="directLink" href="#" target="_blank" rel="noreferrer">Open Live Earth directly</a></div>
   </div>
-
-  <aside id="tradeStats" class="trade-stats">
-    <div class="trade-stats-title">СТАТИСТИКА СИГНАЛОВ</div>
-    <div><span>Всего</span><b id="statTotal">0</b></div>
-    <div><span>Открыто</span><b id="statOpen">0</b></div>
-    <div><span>Ждёт входа</span><b id="statPending">0</b></div>
-    <div><span>TP1</span><b id="statWins" class="green">0</b></div>
-    <div><span>Stop Loss</span><b id="statLosses" class="red">0</b></div>
-    <div class="stats-actions"><button id="archiveOpen">Архив</button><button id="pushEnable">Увед.</button><button id="soundEnable" aria-label="Включить или выключить звук">🔊</button></div>
-  </aside>
-
-  <div id="archiveModal" class="archive-modal hidden">
-    <section class="archive-card">
-      <header><div><small>ИСТОРИЯ</small><h2>Архив сделок</h2></div><button id="archiveClose" aria-label="Закрыть">×</button></header>
-      <div id="archiveList" class="archive-list"><p>Закрытых сделок пока нет.</p></div>
-    </section>
-  </div>
-
-  <div id="toast" class="toast hidden"><span class="pulse">✦</span><div><small data-i18n="newSignal">НОВЫЙ СИГНАЛ</small><b id="toastTitle">—</b><span data-i18n="tapOpen">Нажмите, чтобы открыть график</span></div><button aria-label="Close">×</button></div>
-  <script src="telegram-client.js?v=3"></script>
-  <script src="telegram-adapter.js?v=3"></script>
-  <script src="app-v2.js?v=23"></script>
+  <script>
+    (function(){
+      var base='https://live-earth-ssnx8x.v2.appdeploy.ai/';
+      var query=window.location.search||'';
+      var hash=window.location.hash||'';
+      var url=base+query+hash;
+      var frame=document.getElementById('liveEarth');
+      var loader=document.getElementById('loader');
+      var fallback=document.getElementById('fallback');
+      var direct=document.getElementById('directLink');
+      direct.href=url;
+      frame.src=url;
+      frame.addEventListener('load',function(){loader.style.opacity='0';setTimeout(function(){loader.style.display='none'},500)});
+      setTimeout(function(){fallback.classList.add('show')},4500);
+    })();
+  </script>
 </body>
 </html>
