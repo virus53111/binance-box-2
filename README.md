@@ -1,10 +1,10 @@
 # Live Earth
 
-This repository now serves **murdilimax.com** as the public shell for the Live Earth TikTok LIVE globe.
+Native GitHub Pages + Render version of Live Earth. The public frontend is built from this repository and served at **murdilimax.com**. The API is a Node/Express service on Render, with PostgreSQL for durable viewer places and Server-Sent Events for realtime gift updates.
 
-The interactive application, realtime gift logic and persistent world data are hosted by the Live Earth backend. GitHub Pages keeps the custom domain and serves the full-screen entry page.
-
-Public modes:
-- `https://murdilimax.com/` — Live Earth
+Public views:
+- `https://murdilimax.com/` — interactive globe
 - `https://murdilimax.com/?obs=1` — OBS vertical scene
-- `https://murdilimax.com/?control=1` — owner setup/control
+- `https://murdilimax.com/?control=1` — owner setup
+
+The TikTok connector runs locally on the streaming Mac and forwards LIVE gift/chat events to the Render API using a private rotating bridge token.
