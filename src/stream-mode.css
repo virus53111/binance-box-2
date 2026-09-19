@@ -1,0 +1,26 @@
+.portrait-stream-body { margin: 0; overflow: hidden !important; background: #010309; overscroll-behavior: none; }
+.portrait-stream .world { width: 100vw; height: 100dvh; min-height: 100dvh; }
+.portrait-stream .obs-world .gift-scale,
+.portrait-stream .obs-world .explore-panel,
+.portrait-stream .obs-world .leaderboard,
+.portrait-stream .obs-world .live-instruction { display: none !important; }
+.portrait-stream .obs-world .world-stats { top: auto !important; right: 8px !important; bottom: 6.5vh !important; gap: 4px !important; }
+.portrait-stream .obs-world .world-stats div { width: 82px !important; padding: 6px 8px !important; }
+.portrait-stream .obs-world .world-stats b { font-size: 14px !important; }
+.portrait-stream .obs-world .world-stats span { font-size: 6px !important; }
+.portrait-stream .obs-world .live-head { top: 10px !important; width: 94vw !important; }
+.portrait-stream .obs-world .live-brand { padding: 6px 10px !important; font-size: 9px !important; }
+.portrait-stream .obs-world .arrival-card { bottom: 13vh !important; width: 88vw !important; padding: 14px 16px !important; }
+.portrait-stream .live-onboarding.is-obs .live-guide { top: 58px !important; width: 94vw !important; padding: 7px 7px 8px !important; border-radius: 14px !important; }
+.portrait-stream .live-onboarding.is-obs .live-follow-cta { top: 174px !important; max-width: 91vw !important; min-height: 28px !important; padding: 6px 9px !important; }
+.stream-launch { position: fixed; z-index: 9999; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(330px, 86vw); padding: 13px 16px; border: 1px solid rgba(101,226,255,.45); border-radius: 18px; background: linear-gradient(145deg, rgba(2,20,31,.96), rgba(2,8,16,.96)); color: #fff; box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 38px rgba(78,221,255,.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); text-align: center; }
+.stream-launch b { display: block; font-size: 13px; letter-spacing: .08em; }
+.stream-launch span { display: block; margin-top: 4px; color: #8eb2c4; font-size: 10px; }
+@media (max-width: 720px) {
+  .portrait-stream .live-onboarding.is-obs .live-guide-title { font-size: 7.5px !important; }
+  .portrait-stream .live-onboarding.is-obs .live-guide-step b { font-size: 6.8px !important; }
+  .portrait-stream .live-onboarding.is-obs .live-guide-step span { font-size: 6px !important; }
+  .portrait-stream .live-onboarding.is-obs .live-level-strip b { font-size: 6.2px !important; }
+  .portrait-stream .live-onboarding.is-obs .live-level-strip span { font-size: 5.7px !important; }
+  .portrait-stream .live-onboarding.is-obs .follow-label { font-size: 6.8px !important; }
+}
