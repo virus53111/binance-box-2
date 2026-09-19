@@ -20,8 +20,23 @@ const copy = {
   followSuffix: '· COME BACK NEXT LIVE TO KEEP BUILDING',
 };
 
+async function lockPortraitForStream() {
+  if (!isObs) return;
+  try {
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (value: string) => Promise<void> };
+    if (orientation?.lock) await orientation.lock('portrait-primary');
+  } catch {
+    /* Browsers that do not allow orientation locking still respect the PWA manifest. */
+  }
+}
+
 function addOnboarding() {
   if (isControl || document.querySelector('.live-onboarding')) return;
+
+  if (isObs) {
+    document.documentElement.classList.add('portrait-stream');
+    void lockPortraitForStream();
+  }
 
   const layer = document.createElement('div');
   layer.className = `live-onboarding${isObs ? ' is-obs' : ''}`;
