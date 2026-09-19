@@ -1,8 +1,13 @@
 {
   "name": "live-earth-api",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": { "start": "node index.js" },
-  "dependencies": { "cors": "^2.8.5", "express": "^5.1.0", "pg": "^8.13.1" }
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "pg": "^8.13.1",
+    "tiktok-live-connector": "2.1.1-beta1"
+  }
 }
