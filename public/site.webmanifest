@@ -1,1 +1,16 @@
-{"name":"Live Earth","short_name":"Live Earth","start_url":"/","display":"standalone","background_color":"#01040a","theme_color":"#01040a","icons":[{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "name": "Live Earth Stream",
+  "short_name": "Live Earth",
+  "id": "/",
+  "start_url": "/?obs=1",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#01040a",
+  "theme_color": "#01040a",
+  "categories": ["entertainment", "social"],
+  "icons": [
+    {"src":"/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
