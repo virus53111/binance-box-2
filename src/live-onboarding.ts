@@ -64,18 +64,25 @@ function addOnboarding() {
   const label = layer.querySelector<HTMLElement>('.follow-label');
   if (!follow || !label) return;
 
-  fetch(`${API_BASE}/api/control/status`)
-    .then(response => (response.ok ? response.json() : Promise.reject()))
-    .then((status: { tiktokUsername?: string }) => {
+  let shownUsername = '';
+  const refreshFollow = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/control/status`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('status unavailable');
+      const status = await response.json() as { tiktokUsername?: string };
       const username = String(status?.tiktokUsername || '').replace(/^@/, '').trim();
-      if (!username) return;
+      if (!username || username === shownUsername) return;
+      shownUsername = username;
       label.textContent = `${copy.followPrefix} @${username} ${copy.followSuffix}`;
       follow.href = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
       follow.setAttribute('aria-label', `TikTok @${username}`);
-    })
-    .catch(() => {
-      follow.removeAttribute('href');
-    });
+    } catch {
+      if (!shownUsername) follow.removeAttribute('href');
+    }
+  };
+
+  void refreshFollow();
+  window.setInterval(() => { void refreshFollow(); }, 5000);
 }
 
 if (document.readyState === 'loading') {
