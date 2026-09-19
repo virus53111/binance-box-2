@@ -10,6 +10,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#01040a" />
   <meta name="color-scheme" content="dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Live Earth" />
+  <meta name="screen-orientation" content="portrait" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <meta name="description" content="Live Earth turns TikTok LIVE gifts into permanent places on a cinematic 3D Earth. Choose a city, send a gift, watch the globe fly there, and upgrade your place over time." />
   <link rel="canonical" href="https://murdilimax.com/" />
@@ -29,6 +34,9 @@
     html body { overflow-x: hidden !important; overflow-y: auto !important; }
     .control { height: 100vh !important; overflow-x: hidden !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     @supports (height: 100dvh) { .control { height: 100dvh !important; } }
+    @media (orientation: portrait) {
+      html, body, #root { width: 100%; height: 100%; }
+    }
   </style>
 </head>
 <body>
