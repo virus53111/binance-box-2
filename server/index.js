@@ -1,7 +1,13 @@
 import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+
+const require = createRequire(import.meta.url);
+const { TikTokLiveConnection, WebcastEvent = {} } = require('tiktok-live-connector');
+const CHAT_EVENT = WebcastEvent.CHAT || 'chat';
+const GIFT_EVENT = WebcastEvent.GIFT || 'gift';
 
 const { Pool } = pg;
 const PORT = Number(process.env.PORT || 8787);
@@ -34,6 +40,21 @@ const locate = (cityName, seed) => {
 const levelFor = coins => coins >= 5000 ? 6 : coins >= 1000 ? 5 : coins >= 500 ? 4 : coins >= 50 ? 3 : coins >= 10 ? 2 : 1;
 const hashToken = value => crypto.createHash('sha256').update(value).digest('hex');
 const rowToPlace = row => ({ id: row.tiktok_user_id, tiktokUserId: row.tiktok_user_id, username: row.username, city: row.city, lat: Number(row.lat), lon: Number(row.lon), totalCoins: Number(row.total_coins), totalGifts: Number(row.total_gifts), level: Number(row.level), lastGift: row.last_gift, updatedAt: Number(row.updated_at) });
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const connectorState = {
+  connection: null,
+  username: '',
+  roomId: '',
+  status: 'idle',
+  online: false,
+  connecting: false,
+  lastSeen: 0,
+  lastError: '',
+  retryTimer: null,
+  heartbeatTimer: null,
+  generation: 0,
+};
 
 async function init() {
   if (!pool) { console.warn('DATABASE_URL is not configured. Running in temporary memory mode.'); return; }
@@ -125,12 +146,228 @@ function sameSecret(a,b) { if (!a || !b) return false; const x=Buffer.from(Strin
 function requireAdmin(req,res,next) { if (!ADMIN_KEY) return res.status(503).json({ error:'ADMIN_KEY is not configured' }); if (!sameSecret(req.get('x-admin-key'),ADMIN_KEY)) return res.status(401).json({ error:'Unauthorized' }); next(); }
 async function requireBridge(req,res,next) { const config = await getConfig(); const token = String(req.get('x-bridge-token') || ''); if (!token || hashToken(token) !== config.bridgeTokenHash) return res.status(401).json({ error:'Invalid bridge token' }); next(); }
 
-app.get('/api/health', async (_req,res) => { try { if (pool) await pool.query('SELECT 1'); res.json({ ok:true, storage:pool?'postgres':'memory' }); } catch (error) { res.status(503).json({ ok:false,error:String(error) }); } });
+function connectorStatusPayload() {
+  return {
+    mode: 'server',
+    status: connectorState.status,
+    online: connectorState.online,
+    connecting: connectorState.connecting,
+    username: connectorState.username,
+    roomId: connectorState.roomId,
+    lastSeen: connectorState.lastSeen,
+    lastError: connectorState.lastError,
+  };
+}
+
+function clearConnectorTimers() {
+  if (connectorState.retryTimer) clearTimeout(connectorState.retryTimer);
+  if (connectorState.heartbeatTimer) clearInterval(connectorState.heartbeatTimer);
+  connectorState.retryTimer = null;
+  connectorState.heartbeatTimer = null;
+}
+
+async function stopConnector() {
+  clearConnectorTimers();
+  connectorState.generation += 1;
+  const connection = connectorState.connection;
+  connectorState.connection = null;
+  connectorState.online = false;
+  connectorState.connecting = false;
+  connectorState.roomId = '';
+  connectorState.status = connectorState.username ? 'waiting' : 'idle';
+  if (connection) {
+    try {
+      const result = connection.disconnect?.();
+      if (result && typeof result.then === 'function') await result.catch(() => {});
+    } catch {}
+  }
+}
+
+function scheduleConnector(delayMs = 1500) {
+  if (connectorState.retryTimer) clearTimeout(connectorState.retryTimer);
+  connectorState.retryTimer = setTimeout(() => { void ensureServerConnector(); }, delayMs);
+}
+
+async function touchConnectorSeen() {
+  connectorState.lastSeen = Date.now();
+  try { await setConfig({ bridgeLastSeen: connectorState.lastSeen }); } catch {}
+}
+
+function userIdentity(data) {
+  const user = data?.user || data || {};
+  const tiktokUserId = String(user?.userId || data?.userId || user?.uniqueId || data?.uniqueId || '');
+  const username = String(user?.uniqueId || data?.uniqueId || 'viewer').replace(/^@/, '').slice(0,80);
+  return { tiktokUserId, username };
+}
+
+function attachServerHandlers(connection, generation) {
+  connection.on(CHAT_EVENT, async data => {
+    if (generation !== connectorState.generation) return;
+    await touchConnectorSeen();
+    const comment = String(data?.comment || '').trim();
+    const match = comment.match(/^CITY\s+(.{2,40})$/i);
+    if (!match) return;
+    const { tiktokUserId, username } = userIdentity(data);
+    if (!tiktokUserId) return;
+    try {
+      const place = await chooseCity(tiktokUserId, username, match[1]);
+      if (!place) return;
+      console.log(`SERVER CITY: @${username} -> ${place.city}`);
+    } catch (error) {
+      console.warn(`SERVER CITY failed for @${username}:`, error?.message || error);
+    }
+  });
+
+  connection.on(GIFT_EVENT, async data => {
+    if (generation !== connectorState.generation) return;
+    await touchConnectorSeen();
+    const gift = data?.gift || data?.extendedGiftInfo || {};
+    const giftType = Number(gift?.giftType ?? data?.giftType ?? 0);
+    if (giftType === 1 && !Boolean(data?.repeatEnd)) return;
+    const { tiktokUserId, username } = userIdentity(data);
+    if (!tiktokUserId) return;
+    const quantity = Math.max(1, Number(data?.repeatCount || 1));
+    const unitCoins = Math.max(1, Number(gift?.diamondCount ?? gift?.diamond_count ?? data?.diamondCount ?? 1));
+    const giftName = String(gift?.name || data?.giftName || `Gift ${data?.giftId || ''}`).trim().slice(0,80);
+    try {
+      const place = await applyGift({ tiktokUserId, username, coins:unitCoins, quantity, giftName });
+      const world = await snapshot();
+      broadcast({ place, stats:world.stats });
+      console.log(`SERVER GIFT: @${username} -> ${giftName} x${quantity} (${unitCoins * quantity} points)`);
+    } catch (error) {
+      console.error(`SERVER GIFT failed for @${username}:`, error?.message || error);
+    }
+  });
+}
+
+async function ensureServerConnector() {
+  let username = '';
+  try {
+    const config = await getConfig();
+    username = String(config.tiktokUsername || '').replace(/^@/,'').trim();
+  } catch (error) {
+    connectorState.lastError = String(error?.message || error || 'Could not read TikTok config');
+    connectorState.status = 'error';
+    scheduleConnector(5000);
+    return;
+  }
+
+  if (!username) {
+    connectorState.username = '';
+    connectorState.status = 'idle';
+    connectorState.online = false;
+    connectorState.connecting = false;
+    return;
+  }
+
+  if (connectorState.connection && connectorState.username === username && (connectorState.online || connectorState.connecting)) return;
+
+  if (connectorState.connection && connectorState.username !== username) await stopConnector();
+
+  clearConnectorTimers();
+  const generation = connectorState.generation + 1;
+  connectorState.generation = generation;
+  connectorState.username = username;
+  connectorState.status = 'connecting';
+  connectorState.online = false;
+  connectorState.connecting = true;
+  connectorState.lastError = '';
+
+  const connection = new TikTokLiveConnection(username, {
+    processInitialData: false,
+    fetchRoomInfoOnConnect: true,
+    enableExtendedGiftInfo: false,
+    disableEulerFallbacks: true
+  });
+  connectorState.connection = connection;
+  attachServerHandlers(connection, generation);
+
+  connection.once('disconnected', () => {
+    if (generation !== connectorState.generation) return;
+    clearConnectorTimers();
+    connectorState.connection = null;
+    connectorState.online = false;
+    connectorState.connecting = false;
+    connectorState.roomId = '';
+    connectorState.status = 'waiting';
+    connectorState.lastError = 'TikTok LIVE ended or connection dropped';
+    console.log(`SERVER TikTok connector disconnected from @${username}. Retrying...`);
+    scheduleConnector(5000);
+  });
+
+  try {
+    const state = await connection.connect();
+    if (generation !== connectorState.generation) {
+      try { await connection.disconnect?.(); } catch {}
+      return;
+    }
+    connectorState.online = true;
+    connectorState.connecting = false;
+    connectorState.status = 'online';
+    connectorState.roomId = String(state?.roomId || '');
+    connectorState.lastError = '';
+    await touchConnectorSeen();
+    connectorState.heartbeatTimer = setInterval(() => { void touchConnectorSeen(); }, 20000);
+    console.log(`SERVER TikTok connector ONLINE @${username} · room ${connectorState.roomId || 'unknown'}`);
+  } catch (error) {
+    if (generation !== connectorState.generation) return;
+    clearConnectorTimers();
+    connectorState.connection = null;
+    connectorState.online = false;
+    connectorState.connecting = false;
+    connectorState.roomId = '';
+    connectorState.status = 'waiting';
+    connectorState.lastError = String(error?.message || error || 'Waiting for TikTok LIVE').slice(0,240);
+    console.log(`SERVER waiting for TikTok LIVE @${username}: ${connectorState.lastError}`);
+    scheduleConnector(5000);
+  }
+}
+
+async function restartServerConnector() {
+  await stopConnector();
+  await delay(250);
+  scheduleConnector(250);
+}
+
+app.get('/api/health', async (_req,res) => {
+  try {
+    if (pool) await pool.query('SELECT 1');
+    res.json({ ok:true, storage:pool?'postgres':'memory', connector:connectorStatusPayload() });
+  } catch (error) {
+    res.status(503).json({ ok:false,error:String(error), connector:connectorStatusPayload() });
+  }
+});
 app.get('/api/world', async (_req,res) => res.json(await snapshot()));
-app.get('/api/events', (req,res) => { res.setHeader('Content-Type','text/event-stream'); res.setHeader('Cache-Control','no-cache'); res.setHeader('Connection','keep-alive'); res.flushHeaders(); res.write(': live-earth\n\n'); clients.add(res); const keepAlive=setInterval(()=>res.write(': ping\n\n'),20000); req.on('close',()=>{ clearInterval(keepAlive); clients.delete(res); }); });
-app.get('/api/control/status', async (_req,res) => { const config=await getConfig(); res.json({ tiktokUsername:config.tiktokUsername, bridgeLastSeen:config.bridgeLastSeen, bridgeOnline:Boolean(config.bridgeLastSeen && Date.now()-config.bridgeLastSeen<45000), storage:pool?'postgres':'memory' }); });
+app.get('/api/events', (req,res) => {
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.setHeader('Connection','keep-alive');
+  res.flushHeaders();
+  res.write(': live-earth\n\n');
+  clients.add(res);
+  const keepAlive=setInterval(()=>res.write(': ping\n\n'),20000);
+  req.on('close',()=>{ clearInterval(keepAlive); clients.delete(res); });
+});
+app.get('/api/control/status', async (_req,res) => {
+  const config=await getConfig();
+  const serverOnline = connectorState.online && connectorState.username === String(config.tiktokUsername || '').replace(/^@/,'').trim();
+  res.json({
+    tiktokUsername:config.tiktokUsername,
+    bridgeLastSeen:serverOnline ? connectorState.lastSeen : config.bridgeLastSeen,
+    bridgeOnline:serverOnline,
+    storage:pool?'postgres':'memory',
+    connector:connectorStatusPayload()
+  });
+});
 app.post('/api/control/verify', requireAdmin, (_req,res) => res.json({ ok:true }));
-app.post('/api/control/connect', requireAdmin, async (req,res) => { const username=String(req.body?.tiktokUsername || '').replace(/^@/,'').trim().slice(0,64); if(!username) return res.status(400).json({error:'TikTok username is required'}); const token=crypto.randomBytes(24).toString('hex'); await setConfig({ tiktokUsername:username, bridgeTokenHash:hashToken(token), bridgeLastSeen:0 }); res.json({ token, tiktokUsername:username }); });
+app.post('/api/control/connect', requireAdmin, async (req,res) => {
+  const username=String(req.body?.tiktokUsername || '').replace(/^@/,'').trim().slice(0,64);
+  if(!username) return res.status(400).json({error:'TikTok username is required'});
+  const token=crypto.randomBytes(24).toString('hex');
+  await setConfig({ tiktokUsername:username, bridgeTokenHash:hashToken(token), bridgeLastSeen:0 });
+  void restartServerConnector();
+  res.json({ token, tiktokUsername:username, serverManaged:true, message:'Server connector enabled. No Mac, Terminal or OBS connector is required.' });
+});
 app.post('/api/control/simulate', requireAdmin, async (req,res) => {
   const coins=Math.max(1,Number(req.body?.coins || 1));
   const giftName=String(req.body?.giftName || 'Rose').slice(0,80);
@@ -140,9 +377,39 @@ app.post('/api/control/simulate', requireAdmin, async (req,res) => {
   broadcast({place,stats:world.stats,preview:true});
   res.json({ok:true,place,preview:true});
 });
-app.post('/api/bridge/heartbeat', requireBridge, async (_req,res) => { const bridgeLastSeen=Date.now(); await setConfig({bridgeLastSeen}); res.json({ok:true,bridgeLastSeen}); });
-app.post('/api/gifts/ingest', requireBridge, async (req,res) => { const type=String(req.body?.type || 'gift'); const tiktokUserId=String(req.body?.tiktokUserId || '').slice(0,100); const username=String(req.body?.username || 'viewer').replace(/^@/,'').slice(0,80); if(!tiktokUserId) return res.status(400).json({error:'tiktokUserId is required'}); if(type==='city'){ const place=await chooseCity(tiktokUserId,username,String(req.body?.city || '').slice(0,80)); if(!place) return res.status(400).json({error:'Unknown city'}); return res.json({ok:true,city:place.city}); } const place=await applyGift({tiktokUserId,username,coins:req.body?.coins,quantity:req.body?.quantity,giftName:String(req.body?.giftName || 'Gift').slice(0,80)}); const world=await snapshot(); broadcast({place,stats:world.stats}); res.json({ok:true,place}); });
+app.post('/api/bridge/heartbeat', requireBridge, async (_req,res) => {
+  const bridgeLastSeen=Date.now();
+  await setConfig({bridgeLastSeen});
+  res.json({ok:true,bridgeLastSeen});
+});
+app.post('/api/gifts/ingest', requireBridge, async (req,res) => {
+  const type=String(req.body?.type || 'gift');
+  const tiktokUserId=String(req.body?.tiktokUserId || '').slice(0,100);
+  const username=String(req.body?.username || 'viewer').replace(/^@/,'').slice(0,80);
+  if(!tiktokUserId) return res.status(400).json({error:'tiktokUserId is required'});
+  if(type==='city'){
+    const place=await chooseCity(tiktokUserId,username,String(req.body?.city || '').slice(0,80));
+    if(!place) return res.status(400).json({error:'Unknown city'});
+    return res.json({ok:true,city:place.city});
+  }
+  const place=await applyGift({tiktokUserId,username,coins:req.body?.coins,quantity:req.body?.quantity,giftName:String(req.body?.giftName || 'Gift').slice(0,80)});
+  const world=await snapshot();
+  broadcast({place,stats:world.stats});
+  res.json({ok:true,place});
+});
 app.use((error,_req,res,_next) => { console.error(error); res.status(500).json({error:'Server error'}); });
 
 await init();
-app.listen(PORT,'0.0.0.0',()=>console.log(`Live Earth API listening on ${PORT} · storage=${pool?'postgres':'memory'} · persistent-names=on`));
+const server = app.listen(PORT,'0.0.0.0',()=>{
+  console.log(`Live Earth API listening on ${PORT} · storage=${pool?'postgres':'memory'} · persistent-names=on · connector=server`);
+  scheduleConnector(700);
+});
+
+const shutdown = async () => {
+  try { await stopConnector(); } catch {}
+  try { await pool?.end(); } catch {}
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 1500).unref();
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
