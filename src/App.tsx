@@ -493,7 +493,8 @@ function ControlPanel() {
 function App() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('control') === '1') return <ControlPanel />;
-  return <LiveWorld obs={params.get('obs') === '1'} />;
+  const streamMode = params.get('stream') === '1';
+  return <LiveWorld obs={streamMode || params.get('obs') === '1'} />;
 }
 
 export default App;
