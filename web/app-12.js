@@ -1,61 +1,174 @@
-// NEXUS ALPHA MARKET MAP — interactive global/Pump.fun/Vetted/Pre-CEX bubble universe.
+// NEXUS ALPHA — premium dense crypto bubble map. No MEXC/RAVE/PUMP-radar UI.
 (function(){
- if(window.__nexusMarketMapLoaded)return;window.__nexusMarketMapLoaded=true;
- const MM={kind:'market',start:0,period:'24h',items:[],bubbles:[],loading:false,updatedAt:0,total:0,global:null,resizeTimer:null};
- state.marketMap=MM;
- Object.assign(I18N.ru,{marketMap:'MARKET MAP',marketMapSub:'Весь рынок + Pump.fun + DEX + PRE-CEX на одной интерактивной карте',marketTop:'ТОП РЫНКА',pumpMap:'PUMP.FUN',dexMap:'DEX VETTED',preCexMap:'PRE-CEX',mapEmpty:'Нет данных для этой карты сейчас.',mapRank:'Ранг',mapCap:'Капитализация',mapVolume:'Объём 24ч',mapSource:'Источник'});
- Object.assign(I18N.en,{marketMap:'MARKET MAP',marketMapSub:'Global market + Pump.fun + DEX + PRE-CEX in one interactive map',marketTop:'MARKET TOP',pumpMap:'PUMP.FUN',dexMap:'DEX VETTED',preCexMap:'PRE-CEX',mapEmpty:'No data for this map right now.',mapRank:'Rank',mapCap:'Market cap',mapVolume:'24h volume',mapSource:'Source'});
- function mapText(ru,en){return state.lang==='ru'?ru:en}
- function ensureMarketMode(){
-  const switcher=document.getElementById('radarModeSwitch');if(!switcher)return false;
-  if(!switcher.querySelector('[data-mode="map"]'))switcher.insertAdjacentHTML('afterbegin',`<button class="mode-btn map" data-mode="map"><span>◉</span><b>MARKET MAP</b><small>${mapText('весь рынок · Pump.fun · DEX · PRE-CEX','global · Pump.fun · DEX · PRE-CEX')}</small></button>`);
-  const mexc=switcher.querySelector('[data-mode="mexc"]');if(mexc){const b=mexc.querySelector('b'),s=mexc.querySelector('small');if(b)b.textContent='MEXC RAVE';if(s)s.textContent=mapText('поиск редких 10×–100× структур','rare 10×–100× structure hunt')}
-  switcher.querySelectorAll('.mode-btn').forEach(btn=>btn.onclick=()=>switchRadarMode(btn.dataset.mode));
-  if(!document.getElementById('marketMapWorkspace')){
-   switcher.insertAdjacentHTML('afterend',`<section id="marketMapWorkspace" class="market-map-workspace">
-    <div class="map-toolbar panel">
-     <div class="map-kinds" id="mapKinds"><button class="active" data-kind="market">◎ ${mapText('ТОП РЫНКА','MARKET TOP')}</button><button data-kind="pump">◌ PUMP.FUN</button><button data-kind="dex">◈ DEX VETTED</button><button data-kind="precex">⚡ PRE-CEX</button></div>
-     <div class="map-periods" id="mapPeriods"><button data-period="1h">1H</button><button class="active" data-period="24h">24H</button><button data-period="7d">7D</button></div>
+  if(window.__nexusMarketMapLoaded)return;window.__nexusMarketMapLoaded=true;
+  const MM={kind:'market',start:0,period:'24h',items:[],nodes:[],loading:false,updatedAt:0,total:0,refreshTimer:null};
+  state.marketMap=MM;
+  const ru=()=>state.lang==='ru';
+  const tx=(a,b)=>ru()?a:b;
+  const money=v=>{v=Number(v)||0;if(v>=1e12)return'$'+(v/1e12).toFixed(2)+'T';if(v>=1e9)return'$'+(v/1e9).toFixed(2)+'B';if(v>=1e6)return'$'+(v/1e6).toFixed(2)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(1)+'K';return'$'+v.toLocaleString(undefined,{maximumFractionDigits:2})};
+  const price=v=>{v=Number(v)||0;if(!v)return'—';if(v>=1000)return'$'+v.toLocaleString(undefined,{maximumFractionDigits:2});if(v>=1)return'$'+v.toLocaleString(undefined,{maximumFractionDigits:4});if(v>=.01)return'$'+v.toFixed(5);return'$'+v.toPrecision(4)};
+  const htmlEsc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  document.body.classList.add('nexus-map-only');
+
+  // Remove legacy visual modules from this session as well as from future loads.
+  document.getElementById('radarModeSwitch')?.remove();
+  document.getElementById('extremeWorkspace')?.remove();
+  document.querySelectorAll('.mexc-panel,.extreme-panel,.radar-mode-switch').forEach(x=>x.remove());
+
+  const shell=document.querySelector('main.shell');
+  if(!shell)return;
+  const map=document.createElement('section');
+  map.id='nexusMarketMap';map.className='nexus-market-map';
+  map.innerHTML=`
+    <div class="nm-top">
+      <div class="nm-kinds" id="nmKinds">
+        <button class="active" data-kind="market">${tx('РЫНОК','MARKET')}</button>
+        <button data-kind="pump">PUMP.FUN</button>
+        <button data-kind="dex">DEX VETTED</button>
+        <button data-kind="precex">PRE-CEX</button>
+      </div>
+      <div class="nm-status"><i></i><span id="nmStatus">LIVE</span></div>
     </div>
-    <div class="map-range-wrap panel"><div class="map-ranges" id="mapRanges"></div><div class="map-meta" id="mapMeta">—</div></div>
-    <article class="panel bubble-panel"><div class="bubble-head"><div><span class="panel-kicker">NEXUS VISUAL INTELLIGENCE</span><h2 id="mapTitle">MARKET TOP · #1–100</h2><p id="mapSubtitle">${mapText('Размер = капитализация · цвет = движение цены','Size = market cap · color = price move')}</p></div><div class="map-legend"><span class="lg up"></span><small>UP</small><span class="lg flat"></span><small>FLAT</small><span class="lg down"></span><small>DOWN</small></div></div><div id="bubbleStage" class="bubble-stage"><canvas id="bubbleCanvas"></canvas><div id="mapLoading" class="map-loading">SCANNING MARKET…</div><div id="bubbleTip" class="bubble-tip"></div></div></article>
-    <aside id="marketMapDetail" class="map-detail"></aside>
-   </section>`);
-   buildRanges();wireMapControls();
+    <div class="nm-ranks" id="nmRanks"></div>
+    <div class="nm-heading">
+      <div><small id="nmEyebrow">NEXUS MARKET MAP</small><h1 id="nmTitle">TOP #1–100</h1></div>
+      <div class="nm-meta" id="nmMeta">—</div>
+    </div>
+    <div class="nm-stage" id="nmStage">
+      <div class="nm-grid"></div>
+      <div class="nm-bubbles" id="nmBubbles"></div>
+      <div class="nm-loading" id="nmLoading"><span></span>${tx('ЗАГРУЖАЕМ РЫНОК','LOADING MARKET')}</div>
+      <div class="nm-empty" id="nmEmpty"></div>
+    </div>
+    <div class="nm-bottom">
+      <div class="nm-periods" id="nmPeriods">
+        <button data-period="1h">1H</button><button class="active" data-period="24h">24H</button><button data-period="7d">7D</button>
+      </div>
+      <div class="nm-legend"><span class="up"></span>UP <span class="flat"></span>FLAT <span class="down"></span>DOWN</div>
+    </div>
+    <div class="nm-sheet" id="nmSheet"><button class="nm-sheet-close" id="nmSheetClose">×</button><div id="nmSheetBody"></div></div>`;
+  shell.prepend(map);
+
+  function buildRanks(){
+    const box=document.getElementById('nmRanks');if(!box)return;
+    box.innerHTML=Array.from({length:10},(_,i)=>`<button data-start="${i*100}" class="${i===0?'active':''}">${i*100+1}–${i*100+100}</button>`).join('');
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{MM.start=Number(b.dataset.start)||0;box.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));loadMap()});
   }
-  return true;
- }
- function buildRanges(){const box=document.getElementById('mapRanges');if(!box)return;box.innerHTML=Array.from({length:10},(_,i)=>`<button data-start="${i*100}" class="${i===0?'active':''}">${i*100+1}–${i*100+100}</button>`).join('');box.querySelectorAll('button').forEach(b=>b.onclick=()=>{MM.start=Number(b.dataset.start)||0;box.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));loadCurrentMap()})}
- function wireMapControls(){document.querySelectorAll('#mapKinds button').forEach(b=>b.onclick=()=>{MM.kind=b.dataset.kind;document.querySelectorAll('#mapKinds button').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('mapRanges')?.classList.toggle('disabled',MM.kind!=='market');loadCurrentMap()});document.querySelectorAll('#mapPeriods button').forEach(b=>b.onclick=()=>{MM.period=b.dataset.period;document.querySelectorAll('#mapPeriods button').forEach(x=>x.classList.toggle('active',x===b));renderBubbleMap()});const c=document.getElementById('bubbleCanvas');if(c){c.addEventListener('pointermove',bubblePointerMove);c.addEventListener('pointerleave',()=>hideTip());c.addEventListener('click',bubbleClick)}}
- const priorSwitch=window.switchRadarMode;
- window.switchRadarMode=switchRadarMode=function(mode){
-  if(mode==='map'){
-   state.radarMode='map';document.body.classList.remove('mode-mexc');document.body.classList.add('mode-map');document.querySelectorAll('.mode-btn').forEach(x=>x.classList.toggle('active',x.dataset.mode==='map'));document.getElementById('marketMapWorkspace')?.classList.add('show');loadCurrentMap();return;
+  buildRanks();
+
+  document.querySelectorAll('#nmKinds button').forEach(b=>b.onclick=()=>{
+    MM.kind=b.dataset.kind;document.querySelectorAll('#nmKinds button').forEach(x=>x.classList.toggle('active',x===b));
+    document.getElementById('nmRanks').classList.toggle('hidden',MM.kind!=='market');loadMap();
+  });
+  document.querySelectorAll('#nmPeriods button').forEach(b=>b.onclick=()=>{MM.period=b.dataset.period;document.querySelectorAll('#nmPeriods button').forEach(x=>x.classList.toggle('active',x===b));render()});
+  document.getElementById('nmSheetClose').onclick=()=>document.getElementById('nmSheet').classList.remove('show');
+
+  function coinLogo(c){
+    if(c.image)return c.image;
+    if(c.logo)return c.logo;
+    if(c.nameid)return`https://c2.coinlore.com/img/25x25/${encodeURIComponent(c.nameid)}.png`;
+    return'';
   }
-  document.body.classList.remove('mode-map');document.getElementById('marketMapWorkspace')?.classList.remove('show');return priorSwitch(mode);
- };
- function coinChange(x){if(MM.kind==='market')return Number(MM.period==='1h'?x.change1h:MM.period==='7d'?x.change7d:x.change24h)||0;const d=x.raw?.dex||{};if(MM.period==='1h')return Number(d.changeH1??d.changeM5??0)||0;if(MM.period==='7d')return Number(d.changeH24??d.change24h??0)||0;return Number(d.changeH24??d.change24h??d.changeH1??d.changeM5??0)||0}
- function tokenToMap(tk,kind){const cap=Number(tk.dex?.marketCap||tk.pump?.marketCapUsd||tk.dex?.fdv||0)||0,liq=Number(tk.dex?.liquidityUsd||0)||0;return{id:tk.mint,symbol:String(tk.symbol||'?').toUpperCase(),name:tk.name||tk.symbol||'Token',rank:0,price:Number(tk.dex?.priceUsd||0)||0,marketCap:cap||liq*3,volume24:Number(tk.dex?.volumeH24||tk.dex?.volumeH6||tk.dex?.volumeH1||0)||0,raw:tk,kind,liquidity:liq}}
- async function loadCurrentMap(){if(MM.loading)return;MM.loading=true;showLoading(true);try{
-  if(MM.kind==='market'){const r=await fetch(`${API_BASE}/api/market-map?start=${MM.start}&limit=100`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();MM.items=d.coins||[];MM.total=d.total||0;MM.global=d.global||null;MM.updatedAt=d.generatedAt||Date.now()}
-  else if(MM.kind==='pump'){const r=await fetch(`${API_BASE}/api/radar-v3?limit=500&maxAgeHours=24`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();MM.items=(d.tokens||[]).filter(t=>t.pump||String(t.source||'').toLowerCase().includes('pump')).map(t=>tokenToMap(t,'pump')).sort((a,b)=>b.marketCap-a.marketCap).slice(0,140);MM.updatedAt=d.generatedAt||Date.now()}
-  else {const r=await fetch(`${API_BASE}/api/vetted?limit=300`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();let rows=d.tokens||[];if(MM.kind==='precex')rows=rows.filter(t=>t.vetted?.cex?.preCexCandidate||t.vetted?.cex?.projectClaimDetected);MM.items=rows.map(t=>tokenToMap(t,MM.kind));MM.updatedAt=d.generatedAt||Date.now()}
-  renderBubbleMap();updateMapMeta();
- }catch(e){MM.items=[];renderBubbleMap();const m=document.getElementById('mapMeta');if(m)m.textContent=`${mapText('Ошибка','Error')}: ${e.message}`}finally{MM.loading=false;showLoading(false)}}
- function showLoading(on){const el=document.getElementById('mapLoading');if(el)el.classList.toggle('show',on)}
- function updateMapMeta(){const meta=document.getElementById('mapMeta'),title=document.getElementById('mapTitle'),sub=document.getElementById('mapSubtitle');if(meta)meta.textContent=`${MM.items.length} ${mapText('активов','assets')} · ${new Date(MM.updatedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;if(title){if(MM.kind==='market')title.textContent=`MARKET TOP · #${MM.start+1}–${MM.start+100}`;else if(MM.kind==='pump')title.textContent='PUMP.FUN · LIVE MAP';else if(MM.kind==='precex')title.textContent='PRE-CEX · VETTED MAP';else title.textContent='DEX · VETTED MAP'}if(sub)sub.textContent=MM.kind==='market'?mapText('Размер = капитализация · цвет = движение цены','Size = market cap · color = price move'):mapText('Размер = market cap/ликвидность · цвет = движение · клик = NEXUS-анализ','Size = market cap/liquidity · color = move · tap = NEXUS analysis')}
- function bubbleRadius(item,minLog,maxLog,w,h){const v=Math.log10(Math.max(1,item.marketCap||item.liquidity||1)),n=maxLog>minLog?(v-minLog)/(maxLog-minLog):.4,small=w<620,minR=small?10:12,maxR=Math.min(small?48:76,Math.min(w,h)*.13);return minR+(maxR-minR)*Math.pow(Math.max(0,Math.min(1,n)),.72)}
- function layoutBubbles(items,w,h){if(!items.length)return[];const logs=items.map(x=>Math.log10(Math.max(1,x.marketCap||x.liquidity||1))),lo=Math.min(...logs),hi=Math.max(...logs),cx=w/2,cy=h/2,golden=2.399963229728653;const nodes=items.map((item,i)=>{const r=bubbleRadius(item,lo,hi,w,h),rad=Math.sqrt(i+1)*Math.min(w,h)*.045,a=i*golden;return{item,r,x:cx+Math.cos(a)*rad,y:cy+Math.sin(a)*rad,vx:0,vy:0}});for(let iter=0;iter<150;iter++){for(let i=0;i<nodes.length;i++){const a=nodes[i];a.vx+=(cx-a.x)*.0008;a.vy+=(cy-a.y)*.0008;for(let j=i+1;j<nodes.length;j++){const b=nodes[j],dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy)||.01,min=a.r+b.r+2;if(dist<min){const push=(min-dist)/dist*.52,px=dx*push,py=dy*push;a.vx-=px;b.vx+=px;a.vy-=py;b.vy+=py}}}for(const n of nodes){n.vx*=.72;n.vy*=.72;n.x+=n.vx;n.y+=n.vy;n.x=Math.max(n.r+3,Math.min(w-n.r-3,n.x));n.y=Math.max(n.r+3,Math.min(h-n.r-3,n.y))}}return nodes}
- function colorFor(change){const a=Math.min(1,Math.abs(change)/15);if(change>.15)return{fill:`rgba(${Math.round(20+30*a)},${Math.round(86+95*a)},${Math.round(62+55*a)},.92)`,stroke:`rgba(92,255,168,${.45+.45*a})`,text:'#eafff3',glow:'rgba(65,255,145,.35)'};if(change<-.15)return{fill:`rgba(${Math.round(91+70*a)},${Math.round(32+15*a)},${Math.round(43+20*a)},.92)`,stroke:`rgba(255,103,120,${.45+.45*a})`,text:'#fff1f3',glow:'rgba(255,70,90,.28)'};return{fill:'rgba(36,43,53,.94)',stroke:'rgba(166,184,199,.35)',text:'#e7edf3',glow:'rgba(120,160,190,.12)'}}
- function renderBubbleMap(){const canvas=document.getElementById('bubbleCanvas'),stage=document.getElementById('bubbleStage');if(!canvas||!stage)return;const rect=stage.getBoundingClientRect(),w=Math.max(300,rect.width),h=Math.max(500,Math.min(820,window.innerHeight*.68)),dpr=Math.min(2,window.devicePixelRatio||1);canvas.style.width=w+'px';canvas.style.height=h+'px';canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);if(!MM.items.length){ctx.fillStyle='rgba(180,195,205,.6)';ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillText(mapText('Нет данных для этой карты','No data for this map'),w/2,h/2);MM.bubbles=[];return}MM.bubbles=layoutBubbles(MM.items,w,h);for(const n of MM.bubbles){const ch=coinChange(n.item),c=colorFor(ch);ctx.save();ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=c.fill;ctx.shadowBlur=n.r>30?18:8;ctx.shadowColor=c.glow;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=c.stroke;ctx.lineWidth=n.r>35?2:1;ctx.stroke();ctx.clip();if(n.r>=16){ctx.fillStyle=c.text;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`800 ${Math.max(8,Math.min(18,n.r*.28))}px system-ui`;ctx.fillText(n.item.symbol.slice(0,8),n.x,n.y-(n.r>=25?5:0));if(n.r>=22){ctx.font=`700 ${Math.max(7,Math.min(14,n.r*.22))}px system-ui`;ctx.fillStyle=ch>=0?'#8fffc5':'#ff9aa8';ctx.fillText(`${ch>=0?'+':''}${ch.toFixed(Math.abs(ch)>=100?0:1)}%`,n.x,n.y+Math.min(15,n.r*.28))}}ctx.restore()}}
- function pointFromEvent(e){const c=document.getElementById('bubbleCanvas'),r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
- function hitBubble(e){const p=pointFromEvent(e);let best=null;for(const n of MM.bubbles){if(Math.hypot(p.x-n.x,p.y-n.y)<=n.r){best=n;break}}return best}
- function bubblePointerMove(e){const n=hitBubble(e);if(!n){hideTip();return}const tip=document.getElementById('bubbleTip'),stage=document.getElementById('bubbleStage');if(!tip||!stage)return;const ch=coinChange(n.item);tip.innerHTML=`<b>${esc(n.item.name)} · ${esc(n.item.symbol)}</b><span>${n.item.rank?'#'+n.item.rank+' · ':''}${formatPrice(n.item.price||0)} · ${ch>=0?'+':''}${ch.toFixed(2)}%</span>`;const p=pointFromEvent(e);tip.style.left=Math.min(stage.clientWidth-190,p.x+12)+'px';tip.style.top=Math.max(8,p.y-46)+'px';tip.classList.add('show')}
- function hideTip(){document.getElementById('bubbleTip')?.classList.remove('show')}
- function bubbleClick(e){const n=hitBubble(e);if(!n)return;if(n.item.raw){renderDetail(n.item.raw);return}showMarketCoin(n.item)}
- function showMarketCoin(c){const box=document.getElementById('marketMapDetail');if(!box)return;const ch=coinChange(c);box.innerHTML=`<button class="map-detail-close" type="button">×</button><div class="map-detail-rank">#${c.rank}</div><h3>${esc(c.name)} <small>${esc(c.symbol)}</small></h3><div class="map-detail-price">${formatPrice(c.price)}</div><div class="map-detail-change ${ch>=0?'up':'down'}">${MM.period.toUpperCase()} ${ch>=0?'+':''}${ch.toFixed(2)}%</div><div class="map-detail-grid"><div><span>${mapText('Капитализация','Market cap')}</span><b>${formatMoney(c.marketCap)}</b></div><div><span>${mapText('Объём 24ч','24h volume')}</span><b>${formatMoney(c.volume24)}</b></div><div><span>1H</span><b>${c.change1h>=0?'+':''}${c.change1h.toFixed(2)}%</b></div><div><span>24H</span><b>${c.change24h>=0?'+':''}${c.change24h.toFixed(2)}%</b></div><div><span>7D</span><b>${c.change7d>=0?'+':''}${c.change7d.toFixed(2)}%</b></div><div><span>${mapText('Ранг','Rank')}</span><b>#${c.rank}</b></div></div><p>${mapText('Глобальные рыночные данные. Для DEX/Pump.fun токенов используйте соответствующие вкладки — там доступна глубокая NEXUS-проверка.','Global market data. Use DEX/Pump.fun tabs for deep NEXUS analysis.')}</p>`;box.classList.add('show');box.querySelector('.map-detail-close').onclick=()=>box.classList.remove('show')}
- const style=document.createElement('style');style.textContent=`.market-map-workspace{display:none;margin:12px 0 0}.market-map-workspace.show{display:block}.mode-btn.map.active{border-color:rgba(93,228,255,.55);background:linear-gradient(135deg,rgba(93,228,255,.07),rgba(115,242,184,.025));box-shadow:inset 0 0 35px rgba(93,228,255,.06)}body.mode-map .control-deck,body.mode-map .workspace,body.mode-map .extreme-workspace,body.mode-map #statGrid{display:none!important}.map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;margin-bottom:8px}.map-kinds,.map-periods,.map-ranges{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.map-kinds::-webkit-scrollbar,.map-periods::-webkit-scrollbar,.map-ranges::-webkit-scrollbar{display:none}.map-kinds button,.map-periods button,.map-ranges button{white-space:nowrap;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.018);color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.06em;padding:8px 10px}.map-kinds button.active,.map-periods button.active,.map-ranges button.active{color:#c8f8ff;border-color:rgba(93,228,255,.4);background:rgba(93,228,255,.07)}.map-range-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;margin-bottom:8px}.map-ranges.disabled{opacity:.25;pointer-events:none}.map-meta{font-size:8px;color:var(--muted);white-space:nowrap}.bubble-panel{overflow:hidden}.bubble-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 16px 9px}.bubble-head h2{margin:4px 0 2px;font-size:16px}.bubble-head p{margin:0;color:var(--muted);font-size:8px}.map-legend{display:flex;align-items:center;gap:5px;margin-top:5px}.map-legend small{font-size:7px;color:var(--muted)}.lg{width:7px;height:7px;border-radius:50%}.lg.up{background:#59efad;box-shadow:0 0 10px rgba(89,239,173,.5)}.lg.flat{background:#82909c}.lg.down{background:#ff6379;box-shadow:0 0 10px rgba(255,99,121,.45)}.bubble-stage{position:relative;min-height:500px;background:radial-gradient(circle at 50% 42%,rgba(25,61,75,.12),transparent 50%),#080c12;overflow:hidden}.bubble-stage canvas{display:block;touch-action:manipulation}.map-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(7,10,15,.72);backdrop-filter:blur(4px);font-size:10px;letter-spacing:.16em;color:#8feeff;z-index:4}.map-loading.show{display:flex}.bubble-tip{position:absolute;display:none;z-index:5;pointer-events:none;background:rgba(7,11,16,.95);border:1px solid rgba(93,228,255,.24);border-radius:9px;padding:7px 9px;min-width:165px;box-shadow:0 8px 30px rgba(0,0,0,.35)}.bubble-tip.show{display:block}.bubble-tip b,.bubble-tip span{display:block}.bubble-tip b{font-size:9px}.bubble-tip span{font-size:8px;color:var(--muted);margin-top:3px}.map-detail{display:none;position:fixed;z-index:70;right:18px;bottom:18px;width:min(390px,calc(100vw - 28px));padding:18px;border:1px solid rgba(93,228,255,.25);border-radius:16px;background:rgba(7,11,17,.97);box-shadow:0 24px 70px rgba(0,0,0,.55);backdrop-filter:blur(18px)}.map-detail.show{display:block}.map-detail-close{position:absolute;right:10px;top:9px;border:0;background:none;color:var(--muted);font-size:24px}.map-detail-rank{font-size:9px;color:#64e8ff;letter-spacing:.1em}.map-detail h3{font-size:18px;margin:5px 0}.map-detail h3 small{font-size:10px;color:var(--muted)}.map-detail-price{font-size:24px;font-weight:850}.map-detail-change{font-size:11px;margin:3px 0 12px}.map-detail-change.up{color:#70f0b3}.map-detail-change.down{color:#ff788a}.map-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.map-detail-grid>div{border:1px solid var(--line);border-radius:9px;padding:8px;background:rgba(255,255,255,.018)}.map-detail-grid span,.map-detail-grid b{display:block}.map-detail-grid span{font-size:7px;color:var(--muted)}.map-detail-grid b{font-size:10px;margin-top:4px}.map-detail p{font-size:8px;line-height:1.5;color:var(--muted);margin:12px 0 0}@media(max-width:700px){.radar-mode-switch{grid-template-columns:1fr!important}.map-toolbar{display:block}.map-periods{margin-top:8px}.map-range-wrap{display:block}.map-meta{margin-top:7px}.bubble-head{display:block}.map-legend{margin-top:8px}.bubble-stage{min-height:560px}.map-detail{left:14px;right:14px;bottom:12px;width:auto}.map-detail-grid{grid-template-columns:repeat(2,1fr)}}`;document.head.appendChild(style);
- window.addEventListener('resize',()=>{clearTimeout(MM.resizeTimer);MM.resizeTimer=setTimeout(()=>{if(state.radarMode==='map')renderBubbleMap()},180)});
- function bootMap(){if(!ensureMarketMode()){setTimeout(bootMap,350);return}switchRadarMode('map')}
- setTimeout(bootMap,700);
+  function tokenToItem(tk,kind){
+    const d=tk.dex||{},cap=Number(d.marketCap||d.fdv||tk.pump?.marketCapUsd||0)||0,liq=Number(d.liquidityUsd||0)||0;
+    return{id:tk.mint,symbol:String(tk.symbol||'?').toUpperCase(),name:tk.name||tk.symbol||'Token',price:Number(d.priceUsd||0)||0,marketCap:cap||liq*2.5,volume24:Number(d.volumeH24||d.volumeH6||d.volumeH1||0)||0,change1h:Number(d.changeH1||d.changeM5||0)||0,change24h:Number(d.changeH24||d.change24h||d.changeH1||0)||0,change7d:Number(d.changeH24||d.change24h||0)||0,image:tk.image||tk.logo||'',liquidity:liq,raw:tk,kind};
+  }
+  function change(c){return Number(MM.period==='1h'?c.change1h:MM.period==='7d'?c.change7d:c.change24h)||0}
+  function showLoad(v){document.getElementById('nmLoading')?.classList.toggle('show',v)}
+  async function loadMap(){
+    if(MM.loading)return;MM.loading=true;showLoad(true);document.getElementById('nmEmpty').textContent='';
+    try{
+      if(MM.kind==='market'){
+        const r=await fetch(`${API_BASE}/api/market-map?start=${MM.start}&limit=100`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();MM.items=d.coins||[];MM.total=d.total||0;MM.updatedAt=d.generatedAt||Date.now();
+      }else if(MM.kind==='pump'){
+        const r=await fetch(`${API_BASE}/api/radar-v3?limit=600&maxAgeHours=24`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();MM.items=(d.tokens||[]).filter(t=>t.pump||String(t.source||'').toLowerCase().includes('pump')).map(t=>tokenToItem(t,'pump')).sort((a,b)=>b.marketCap-a.marketCap).slice(0,160);MM.updatedAt=d.generatedAt||Date.now();
+      }else{
+        const r=await fetch(`${API_BASE}/api/vetted?limit=400`,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();let rows=d.tokens||[];if(MM.kind==='precex')rows=rows.filter(t=>t.vetted?.cex?.preCexCandidate||t.vetted?.cex?.projectClaimDetected);MM.items=rows.map(t=>tokenToItem(t,MM.kind)).sort((a,b)=>b.marketCap-a.marketCap).slice(0,160);MM.updatedAt=d.generatedAt||Date.now();
+      }
+      updateHead();render();
+    }catch(e){MM.items=[];render();document.getElementById('nmEmpty').textContent=tx('Источник временно недоступен','Source temporarily unavailable')+' · '+e.message;}
+    finally{MM.loading=false;showLoad(false)}
+  }
+  function updateHead(){
+    const title=document.getElementById('nmTitle'),meta=document.getElementById('nmMeta'),eye=document.getElementById('nmEyebrow');
+    if(MM.kind==='market'){title.textContent=`TOP #${MM.start+1}–${MM.start+100}`;eye.textContent='NEXUS MARKET MAP'}
+    else if(MM.kind==='pump'){title.textContent='PUMP.FUN · LIVE';eye.textContent=tx('НОВЫЕ ТОКЕНЫ','NEW TOKENS')}
+    else if(MM.kind==='dex'){title.textContent='DEX VETTED';eye.textContent=tx('ПРОВЕРЕННЫЕ DEX-АКТИВЫ','VETTED DEX ASSETS')}
+    else {title.textContent='PRE-CEX';eye.textContent=tx('ЕЩЁ НЕ НА КРУПНЫХ CEX','NOT ON MAJOR CEX')}
+    meta.textContent=`${MM.items.length} ${tx('активов','assets')} · ${new Date(MM.updatedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  function radiusSet(items,w,h){
+    const vals=items.map(x=>Math.log10(Math.max(1,x.marketCap||x.liquidity||x.volume24||1))),lo=Math.min(...vals),hi=Math.max(...vals),count=Math.max(1,items.length);
+    const unit=Math.sqrt((w*h)/count),mobile=w<620,minR=Math.max(mobile?8:10,unit*.27),maxR=Math.min(mobile?46:72,unit*(mobile?1.18:1.42));
+    return items.map((x,i)=>{const v=vals[i],n=hi>lo?(v-lo)/(hi-lo):.5;return minR+(maxR-minR)*Math.pow(Math.max(0,Math.min(1,n)),.56)});
+  }
+  function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0)/4294967295}
+  function layout(items,w,h){
+    if(!items.length)return[];const rs=radiusSet(items,w,h),cx=w/2,cy=h/2,golden=2.399963229728653;
+    const nodes=items.map((item,i)=>{const a=i*golden+hash(item.id||item.symbol)*2.2,spread=Math.sqrt(i+1)*Math.min(w,h)*.027;return{item,r:rs[i],x:cx+Math.cos(a)*spread,y:cy+Math.sin(a)*spread,vx:0,vy:0}});
+    nodes.sort((a,b)=>b.r-a.r);
+    for(let k=0;k<230;k++){
+      for(let i=0;i<nodes.length;i++){
+        const a=nodes[i];a.vx+=(cx-a.x)*.0016;a.vy+=(cy-a.y)*.0012;
+        for(let j=i+1;j<nodes.length;j++){
+          const b=nodes[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001,min=a.r+b.r+1.4;
+          if(d<min){const force=(min-d)/d*.49,px=dx*force,py=dy*force;a.vx-=px;b.vx+=px;a.vy-=py;b.vy+=py}
+        }
+      }
+      for(const n of nodes){n.vx*=.62;n.vy*=.62;n.x+=n.vx;n.y+=n.vy;n.x=Math.max(n.r+2,Math.min(w-n.r-2,n.x));n.y=Math.max(n.r+2,Math.min(h-n.r-2,n.y))}
+    }
+    return nodes;
+  }
+  function palette(ch){
+    const a=Math.min(1,Math.abs(ch)/18);
+    if(ch>.08)return{edge:`rgba(65,255,144,${.52+a*.4})`,fill:`rgba(${18+Math.round(a*16)},${72+Math.round(a*65)},${48+Math.round(a*34)},.88)`,glow:`rgba(45,255,130,${.13+a*.32})`,pct:'#91ffc5'};
+    if(ch<-.08)return{edge:`rgba(255,82,104,${.5+a*.42})`,fill:`rgba(${83+Math.round(a*52)},${24+Math.round(a*15)},${35+Math.round(a*22)},.9)`,glow:`rgba(255,55,82,${.12+a*.3})`,pct:'#ff9aa9'};
+    return{edge:'rgba(148,164,183,.32)',fill:'rgba(24,29,36,.94)',glow:'rgba(115,145,175,.09)',pct:'#aeb9c5'};
+  }
+  function render(){
+    const stage=document.getElementById('nmStage'),box=document.getElementById('nmBubbles');if(!stage||!box)return;
+    const w=Math.max(300,stage.clientWidth),h=Math.max(540,stage.clientHeight);MM.nodes=layout(MM.items,w,h);box.replaceChildren();
+    if(!MM.items.length){document.getElementById('nmEmpty').textContent=tx('Сейчас здесь нет данных','No data here right now');return}else document.getElementById('nmEmpty').textContent='';
+    const frag=document.createDocumentFragment();
+    for(const n of MM.nodes){
+      const c=n.item,ch=change(c),p=palette(ch),d=n.r*2,b=document.createElement('button');b.className='nm-bubble';b.type='button';
+      b.style.cssText=`width:${d}px;height:${d}px;left:${n.x-n.r}px;top:${n.y-n.r}px;--edge:${p.edge};--fill:${p.fill};--glow:${p.glow};--pct:${p.pct};`;
+      const logo=coinLogo(c),r=n.r;let inner='';
+      if(logo&&r>=10)inner+=`<img src="${htmlEsc(logo)}" alt="" loading="lazy" onerror="this.style.display='none'">`;
+      if(r>=19)inner+=`<strong>${htmlEsc(c.symbol.slice(0,r<27?5:8))}</strong>`;
+      if(r>=27)inner+=`<span>${ch>=0?'+':''}${ch.toFixed(Math.abs(ch)>=100?0:1)}%</span>`;
+      b.innerHTML=inner||`<strong>${htmlEsc(c.symbol.slice(0,4))}</strong>`;
+      b.setAttribute('aria-label',`${c.name} ${ch>=0?'+':''}${ch.toFixed(2)}%`);b.onclick=()=>openItem(c);frag.appendChild(b);
+    }
+    box.appendChild(frag);
+  }
+  function openItem(c){
+    if(c.raw&&typeof renderDetail==='function'){renderDetail(c.raw);return}
+    const sheet=document.getElementById('nmSheet'),body=document.getElementById('nmSheetBody'),ch=change(c),logo=coinLogo(c);if(!sheet||!body)return;
+    body.innerHTML=`<div class="nm-coin-head">${logo?`<img src="${htmlEsc(logo)}" alt="" onerror="this.style.display='none'">`:''}<div><small>#${c.rank||'—'}</small><h2>${htmlEsc(c.name)}</h2><b>${htmlEsc(c.symbol)}</b></div><strong class="${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(2)}%</strong></div><div class="nm-info"><div><span>${tx('Цена','Price')}</span><b>${price(c.price)}</b></div><div><span>${tx('Капитализация','Market cap')}</span><b>${money(c.marketCap)}</b></div><div><span>${tx('Объём 24ч','24h volume')}</span><b>${money(c.volume24)}</b></div><div><span>1H</span><b>${Number(c.change1h)>=0?'+':''}${Number(c.change1h||0).toFixed(2)}%</b></div><div><span>24H</span><b>${Number(c.change24h)>=0?'+':''}${Number(c.change24h||0).toFixed(2)}%</b></div><div><span>7D</span><b>${Number(c.change7d)>=0?'+':''}${Number(c.change7d||0).toFixed(2)}%</b></div></div>`;
+    sheet.classList.add('show');
+  }
+
+  const style=document.createElement('style');style.id='nexusMapPremiumStyle';style.textContent=`
+    body.nexus-map-only{background:#030507!important;overflow-x:hidden}.nexus-map-only .noise,.nexus-map-only .aurora{display:none!important}
+    .nexus-map-only .hero-strip,.nexus-map-only #marketRegimeBar,.nexus-map-only #statGrid,.nexus-map-only .control-deck,.nexus-map-only .workspace,.nexus-map-only .seo-about,.nexus-map-only .truth-bar,.nexus-map-only #extremeWorkspace,.nexus-map-only .radar-mode-switch{display:none!important}
+    .nexus-map-only .shell{width:100%;max-width:none;padding:0!important;margin:0!important}.nexus-map-only .topbar{background:rgba(3,5,7,.94)!important;border-bottom:1px solid rgba(255,255,255,.07)!important;backdrop-filter:blur(18px);position:sticky;top:0;z-index:50}.nexus-map-only #methodBtn{display:none!important}
+    .nexus-market-map{width:100%;min-height:calc(100dvh - 72px);background:radial-gradient(circle at 50% 20%,rgba(19,35,43,.28),transparent 36%),#030507;color:#f6f8fb;padding:9px 10px 12px;box-sizing:border-box}
+    .nm-top{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:1500px;margin:0 auto 7px}.nm-kinds{display:flex;gap:6px;overflow:auto;scrollbar-width:none}.nm-kinds::-webkit-scrollbar,.nm-ranks::-webkit-scrollbar{display:none}.nm-kinds button,.nm-ranks button,.nm-periods button{border:1px solid rgba(255,255,255,.09);background:#090d12;color:#8693a2;border-radius:999px;padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:.04em;white-space:nowrap}.nm-kinds button.active{color:#fff;border-color:rgba(80,240,184,.42);background:linear-gradient(180deg,rgba(37,105,82,.3),rgba(12,29,24,.45));box-shadow:0 0 18px rgba(64,255,178,.08)}.nm-status{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:900;color:#64efb3;letter-spacing:.1em}.nm-status i{width:6px;height:6px;border-radius:50%;background:#55f0ad;box-shadow:0 0 10px #55f0ad}
+    .nm-ranks{max-width:1500px;margin:0 auto 5px;display:flex;gap:5px;overflow:auto;padding-bottom:2px}.nm-ranks.hidden{display:none}.nm-ranks button{padding:6px 10px;font-size:9px}.nm-ranks button.active{color:#dffef3;border-color:rgba(94,226,255,.34);background:rgba(66,184,220,.1)}
+    .nm-heading{max-width:1500px;margin:0 auto 4px;display:flex;align-items:end;justify-content:space-between;padding:0 4px}.nm-heading small{font-size:8px;letter-spacing:.22em;color:#5ee7ff;font-weight:900}.nm-heading h1{font-size:17px;line-height:1;margin:4px 0 0;letter-spacing:.02em}.nm-meta{font-size:8px;color:#6f7c89;white-space:nowrap}
+    .nm-stage{position:relative;max-width:1500px;margin:0 auto;height:calc(100dvh - 235px);min-height:570px;max-height:980px;overflow:hidden;border-radius:14px;background:radial-gradient(circle at 50% 45%,rgba(20,31,38,.45),rgba(3,5,7,.92) 57%,#020304 100%);border:1px solid rgba(255,255,255,.055);box-shadow:inset 0 0 90px rgba(0,0,0,.72),0 12px 40px rgba(0,0,0,.25)}.nm-grid{position:absolute;inset:0;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(circle,#000 20%,transparent 86%)}.nm-bubbles{position:absolute;inset:0}
+    .nm-bubble{position:absolute;border:0;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;overflow:hidden;cursor:pointer;color:#fff;background:radial-gradient(circle at 36% 28%,rgba(255,255,255,.075),transparent 27%),var(--fill);box-shadow:inset 0 0 0 1.3px var(--edge),inset 0 0 18px rgba(255,255,255,.025),0 0 15px var(--glow);transition:transform .12s ease,filter .12s ease;will-change:transform}.nm-bubble:active{transform:scale(.92)}.nm-bubble:hover{filter:brightness(1.18);z-index:5}.nm-bubble img{width:30%;height:30%;max-width:27px;max-height:27px;min-width:10px;min-height:10px;border-radius:50%;object-fit:cover;margin-bottom:1px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}.nm-bubble strong{font-size:clamp(7px,1.5vw,15px);line-height:1;font-weight:900;text-shadow:0 1px 3px #000;max-width:88%;overflow:hidden;text-overflow:ellipsis}.nm-bubble span{font-size:clamp(6px,1.25vw,12px);line-height:1;color:var(--pct);font-weight:850;text-shadow:0 1px 2px #000}
+    .nm-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;gap:9px;background:rgba(3,5,7,.68);z-index:8;font-size:10px;letter-spacing:.12em;color:#93a5b5;backdrop-filter:blur(2px)}.nm-loading.show{display:flex}.nm-loading span{width:13px;height:13px;border:2px solid rgba(93,228,255,.18);border-top-color:#5de4ff;border-radius:50%;animation:nmspin .7s linear infinite}@keyframes nmspin{to{transform:rotate(360deg)}}.nm-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:10px;color:#6f7d89;text-align:center;pointer-events:none}
+    .nm-bottom{max-width:1500px;margin:7px auto 0;display:flex;align-items:center;justify-content:space-between;gap:10px}.nm-periods{display:flex;gap:6px}.nm-periods button{min-width:58px;border-radius:9px;font-size:11px}.nm-periods button.active{color:#fff;background:#e85058;border-color:#e85058;box-shadow:0 0 18px rgba(232,80,88,.18)}.nm-legend{font-size:8px;color:#687481;display:flex;align-items:center;gap:5px}.nm-legend span{width:7px;height:7px;border-radius:50%}.nm-legend .up{background:#52efad;box-shadow:0 0 7px #52efad}.nm-legend .flat{background:#788593}.nm-legend .down{background:#f65a72;box-shadow:0 0 7px #f65a72}
+    .nm-sheet{position:fixed;z-index:90;left:50%;bottom:14px;width:min(560px,calc(100% - 20px));transform:translate(-50%,125%);opacity:0;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(8,12,17,.97);box-shadow:0 18px 70px rgba(0,0,0,.65);padding:18px;box-sizing:border-box;transition:.22s ease;backdrop-filter:blur(24px)}.nm-sheet.show{transform:translate(-50%,0);opacity:1}.nm-sheet-close{position:absolute;right:10px;top:8px;background:none;border:0;color:#8996a3;font-size:25px}.nm-coin-head{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding-right:24px}.nm-coin-head img{width:42px;height:42px;border-radius:50%}.nm-coin-head small,.nm-coin-head b{display:block;color:#768493;font-size:9px}.nm-coin-head h2{margin:2px 0;font-size:19px}.nm-coin-head>strong{font-size:18px}.nm-coin-head .pos{color:#62efb4}.nm-coin-head .neg{color:#ff7185}.nm-info{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:15px}.nm-info>div{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.018);padding:9px;border-radius:10px}.nm-info span{display:block;font-size:7px;color:#6e7a87;text-transform:uppercase}.nm-info b{display:block;margin-top:4px;font-size:11px}
+    @media(max-width:760px){.nexus-map-only .topbar{padding:10px 12px}.nexus-map-only .brand-copy small{display:none}.nexus-map-only .latency-chip{display:none}.nexus-market-map{padding:7px 6px 10px}.nm-top{margin-bottom:5px}.nm-kinds button{padding:7px 10px;font-size:9px}.nm-ranks{margin-bottom:3px}.nm-ranks button{padding:5px 9px}.nm-heading{padding:0 2px}.nm-heading h1{font-size:15px}.nm-heading small{font-size:7px}.nm-stage{height:calc(100dvh - 220px);min-height:520px;border-radius:10px}.nm-bubble strong{font-size:9px}.nm-bubble span{font-size:7px}.nm-bottom{margin-top:5px}.nm-periods button{min-width:49px;padding:7px 10px}.nm-legend{display:none}.nm-info{grid-template-columns:repeat(2,1fr)}}
+  `;document.head.appendChild(style);
+
+  let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(render,140)});
+  document.getElementById('langBtn')?.addEventListener('click',()=>setTimeout(()=>{document.querySelector('#nmKinds [data-kind="market"]').textContent=tx('РЫНОК','MARKET');updateHead()},80));
+  document.title='NEXUS ALPHA — Live Crypto Market Map';
+  const md=document.querySelector('meta[name="description"]');if(md)md.content='NEXUS ALPHA — interactive live crypto market map with top 1–1000, Pump.fun, vetted DEX and PRE-CEX views.';
+  loadMap();MM.refreshTimer=setInterval(loadMap,60_000);
 })();
