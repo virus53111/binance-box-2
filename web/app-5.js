@@ -8,6 +8,7 @@ renderAll = function renderAllWithAlphaArchive() {
       const live = current.get(archived.mint);
       if (live) {
         if (!live.intel && archived.intel) live.intel = archived.intel;
+        if (!live.dormant && archived.dormant) live.dormant = archived.dormant;
       } else {
         state.data.tokens.push(archived);
       }
@@ -18,7 +19,7 @@ renderAll = function renderAllWithAlphaArchive() {
 
 async function refreshAlphaArchive() {
   try {
-    const response = await fetch(`${API_BASE}/api/radar-v2?limit=400&maxAgeHours=720`, { cache:'no-store' });
+    const response = await fetch(`${API_BASE}/api/radar-v3?limit=700&maxAgeHours=8760`, { cache:'no-store' });
     if (!response.ok) return;
     const payload = await response.json();
     const existingIntel = new Map((state.data?.tokens || []).filter(token => token.intel).map(token => [token.mint, token.intel]));
@@ -28,6 +29,7 @@ async function refreshAlphaArchive() {
       state.data.stats = payload.stats || state.data.stats;
       state.data.sources = payload.sources || state.data.sources;
       state.data.alerts = payload.alerts || state.data.alerts;
+      state.data.dormant = payload.dormant || state.data.dormant;
     }
     renderAll();
     if (typeof refreshIntel === 'function') refreshIntel().catch(()=>{});
@@ -59,17 +61,17 @@ async function refreshNexusRichRegime() {
   } catch {}
 }
 
-Object.assign(I18N.ru,{projectNews:'PROJECT NEWS',noFiltered:'Сейчас подходящих токенов нет.',noPrime:'Сейчас нет токенов, прошедших строгий PRIME-порог. Радар продолжает наблюдение.',noPreCex:'Сейчас нет PRE-CEX сигналов. Мониторинг официальных каналов проектов и CEX продолжается.',noProjectNews:'Новых заявлений о листинге в каналах проектов пока нет.',projectClaim:'ЗАЯВЛЕНИЕ ПРОЕКТА',notCexConfirmed:'НЕ ПОДТВЕРЖДЕНО CEX',intelUnavailable:'Источник временно недоступен — это не считается отсутствием сигнала.'});
-Object.assign(I18N.en,{projectNews:'PROJECT NEWS',noFiltered:'No matching tokens right now.',noPrime:'No token currently passes the strict PRIME threshold. Monitoring continues.',noPreCex:'No PRE-CEX signal right now. Project-channel and CEX monitoring continues.',noProjectNews:'No new listing claims detected in project channels yet.',projectClaim:'PROJECT CLAIM',notCexConfirmed:'NOT CEX CONFIRMED',intelUnavailable:'Source temporarily unavailable — this is not treated as absence of a signal.'});
+Object.assign(I18N.ru,{projectNews:'PROJECT NEWS',dormant:'DORMANT',noFiltered:'Сейчас подходящих токенов нет.',noPrime:'Сейчас нет токенов, прошедших строгий PRIME-порог. Радар продолжает наблюдение.',noPreCex:'Сейчас нет PRE-CEX сигналов. Мониторинг официальных каналов проектов и CEX продолжается.',noProjectNews:'Новых заявлений о листинге в каналах проектов пока нет.',noDormant:'Сейчас нет старых DEX-токенов в Dormant Alpha выборке. Радар продолжает собирать активные пулы возрастом до года.',projectClaim:'ЗАЯВЛЕНИЕ ПРОЕКТА',notCexConfirmed:'НЕ ПОДТВЕРЖДЕНО CEX',intelUnavailable:'Источник временно недоступен — это не считается отсутствием сигнала.'});
+Object.assign(I18N.en,{projectNews:'PROJECT NEWS',dormant:'DORMANT',noFiltered:'No matching tokens right now.',noPrime:'No token currently passes the strict PRIME threshold. Monitoring continues.',noPreCex:'No PRE-CEX signal right now. Project-channel and CEX monitoring continues.',noProjectNews:'No new listing claims detected in project channels yet.',noDormant:'No older DEX token is in the Dormant Alpha set right now. The radar keeps accumulating active pools up to one year old.',projectClaim:'PROJECT CLAIM',notCexConfirmed:'NOT CEX CONFIRMED',intelUnavailable:'Source temporarily unavailable — this is not treated as absence of a signal.'});
 
-function nexusEmptyMessage(){if(!state.connected)return t('connecting');if(state.tier==='prime')return t('noPrime');if(state.tier==='precex')return t('noPreCex');if(state.tier==='projectnews')return t('noProjectNews');return t('noFiltered')}
+function nexusEmptyMessage(){if(!state.connected)return t('connecting');if(state.tier==='prime')return t('noPrime');if(state.tier==='precex')return t('noPreCex');if(state.tier==='projectnews')return t('noProjectNews');if(state.tier==='dormant')return t('noDormant');return t('noFiltered')}
 const nexusRenderTokensBase=renderTokens;
-renderTokens=function(){nexusRenderTokensBase();const list=filteredTokens(),box=$('emptyState');if(!box)return;if(!list.length){box.classList.add('show');box.innerHTML=state.connected?`<div class="empty-radar-mark">◎</div><strong>${esc(nexusEmptyMessage())}</strong><span>${state.intelUpdatedAt?`${state.lang==='ru'?'Последний intelligence refresh':'Last intelligence refresh'}: ${timeAgo(state.intelUpdatedAt)}`:esc(t('noFake'))}</span>`:`<div class="spinner"></div><strong>${esc(t('connecting'))}</strong><span>${esc(t('noFake'))}</span>`}};
+renderTokens=function(){nexusRenderTokensBase();const list=filteredTokens(),box=$('emptyState');if(box&&!list.length){box.classList.add('show');box.innerHTML=state.connected?`<div class="empty-radar-mark">◎</div><strong>${esc(nexusEmptyMessage())}</strong><span>${state.intelUpdatedAt?`${state.lang==='ru'?'Последний intelligence refresh':'Last intelligence refresh'}: ${timeAgo(state.intelUpdatedAt)}`:esc(t('noFake'))}</span>`:`<div class="spinner"></div><strong>${esc(t('connecting'))}</strong><span>${esc(t('noFake'))}</span>`}document.querySelectorAll('#tokenBody tr[data-mint]').forEach(row=>{const tk=(state.data?.tokens||[]).find(x=>x.mint===row.dataset.mint);if(!tk||Number(tk.ageMs||0)<30*24*3600_000)return;const cex=tk.intel?.cex;if(cex?.majorCexSymbolDetected)return;const signal=row.querySelector('td:last-child');if(signal&&!signal.querySelector('.edge-chip.dormant'))signal.insertAdjacentHTML('beforeend',`<div class="edge-chip-row"><span class="edge-chip dormant">DORMANT ${Math.max(30,Math.floor(Number(tk.ageMs||0)/86400000))}D</span></div>`)});};
 
 const nexusEnsureControlsBase=ensureExtraControls;
-ensureExtraControls=function(){nexusEnsureControlsBase();const filters=$('tierFilters');if(filters&&!filters.querySelector('[data-tier="projectnews"]'))filters.insertAdjacentHTML('beforeend',`<button class="filter" data-tier="projectnews">⚡ ${esc(t('projectNews'))}</button>`);if(filters)filters.querySelectorAll('.filter').forEach(btn=>btn.onclick=()=>{filters.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));btn.classList.add('active');state.tier=btn.dataset.tier;renderTokens()})};
+ensureExtraControls=function(){nexusEnsureControlsBase();const filters=$('tierFilters');if(filters&&!filters.querySelector('[data-tier="projectnews"]'))filters.insertAdjacentHTML('beforeend',`<button class="filter" data-tier="projectnews">⚡ ${esc(t('projectNews'))}</button>`);if(filters&&!filters.querySelector('[data-tier="dormant"]'))filters.insertAdjacentHTML('beforeend',`<button class="filter" data-tier="dormant">◌ ${esc(t('dormant'))}</button>`);if(filters)filters.querySelectorAll('.filter').forEach(btn=>btn.onclick=()=>{filters.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));btn.classList.add('active');state.tier=btn.dataset.tier;renderTokens()})};
 const nexusFilteredTokensBase=filteredTokens;
-filteredTokens=function(){let list=nexusFilteredTokensBase();if(state.tier==='projectnews')list=list.filter(x=>x.intel?.cex?.projectClaimDetected);return list};
+filteredTokens=function(){let list=nexusFilteredTokensBase();if(state.tier==='projectnews')list=list.filter(x=>x.intel?.cex?.projectClaimDetected);if(state.tier==='dormant')list=list.filter(x=>Number(x.ageMs||0)>=30*24*3600_000&&!x.intel?.cex?.majorCexSymbolDetected);return list};
 
 const nexusRenderDetailIntelBase=renderDetailIntelV2;
 renderDetailIntelV2=function(root,data){nexusRenderDetailIntelBase(root,data);const signals=data?.cex?.signals||[];root.querySelectorAll('.listing-signal').forEach((el,i)=>{const s=signals[i];if(!s?.projectClaim)return;el.classList.add('project-claim');const head=el.querySelector('div');if(head)head.insertAdjacentHTML('beforeend',`<span class="project-claim-badge">${esc(t('projectClaim'))} · ${esc(t('notCexConfirmed'))}</span>`)});const status=root.querySelector('#alphaCexContent .cex-status');if(status&&data?.cex?.projectClaimDetected)status.insertAdjacentHTML('afterend',`<p class="project-caution">⚡ ${esc(state.lang==='ru'?'Ранний сигнал найден в канале, который сам проект указал как свой. Это важнее слуха, но всё ещё не является подтверждением биржи.':'Early signal found in a channel supplied by the project itself. Stronger than a rumor, but still not exchange confirmation.')}</p>`)};
@@ -80,7 +82,7 @@ renderDetail=function(tk){nexusRenderDetailBase(tk);const mint=tk.mint;fetch(`${
 const nexusAlertTitleBase=alertTitle;
 alertTitle=function(a){if(a?.title==='PROJECT_LISTING_CLAIM')return state.lang==='ru'?'Проект сообщил о будущем листинге':'Project future-listing claim';return nexusAlertTitleBase(a)};
 
-const nexusUxStyle=document.createElement('style');nexusUxStyle.textContent=`.empty-radar-mark{font-size:28px;color:#5de4ff;opacity:.65;margin-bottom:8px}.listing-signal.project-claim{border-color:rgba(255,200,92,.3);background:linear-gradient(135deg,rgba(255,200,92,.07),rgba(190,123,255,.05))}.project-claim-badge{font-size:7px!important;color:#ffd17b!important;border:1px solid rgba(255,200,92,.28);padding:3px 5px;border-radius:999px;white-space:nowrap}.project-caution{font-size:9px;line-height:1.55;color:#b9a579;border-left:2px solid #ffc85c;padding:8px 10px;background:rgba(255,200,92,.035);border-radius:0 7px 7px 0}`;document.head.appendChild(nexusUxStyle);
+const nexusUxStyle=document.createElement('style');nexusUxStyle.textContent=`.empty-radar-mark{font-size:28px;color:#5de4ff;opacity:.65;margin-bottom:8px}.listing-signal.project-claim{border-color:rgba(255,200,92,.3);background:linear-gradient(135deg,rgba(255,200,92,.07),rgba(190,123,255,.05))}.project-claim-badge{font-size:7px!important;color:#ffd17b!important;border:1px solid rgba(255,200,92,.28);padding:3px 5px;border-radius:999px;white-space:nowrap}.project-caution{font-size:9px;line-height:1.55;color:#b9a579;border-left:2px solid #ffc85c;padding:8px 10px;background:rgba(255,200,92,.035);border-radius:0 7px 7px 0}.edge-chip.dormant{color:#9fc8ff;border-color:rgba(120,170,255,.26);background:rgba(120,170,255,.07)}`;document.head.appendChild(nexusUxStyle);
 
 setTimeout(refreshAlphaArchive, 1400);
 setInterval(refreshAlphaArchive, 15000);
