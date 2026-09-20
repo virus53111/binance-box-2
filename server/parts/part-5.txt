@@ -8,6 +8,37 @@ function logRadarHealth(label) {
   }));
 }
 
+pollBinance = async function pollBinanceCurrent() {
+  const started = now();
+  const urls = [
+    'https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&pageNo=1&pageSize=50',
+    'https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&category=48&pageNo=1&pageSize=50',
+    'https://www.binance.com/bapi/apex/v1/public/apex/cms/article/list/query?type=1&pageNo=1&pageSize=50'
+  ];
+  let lastError = '';
+  for (const url of urls) {
+    try {
+      const data = await fetchJson(url, { timeout: 8000, headers: { clienttype: 'web', referer: 'https://www.binance.com/en/support/announcement/list/48' } });
+      const rows = parseBinanceRows(data);
+      if (!rows.length) throw new Error('No announcement rows');
+      const normalized = rows.slice(0, 60).map(x => ({
+        id: str(x?.id || x?.code || x?.articleId),
+        title: str(x?.title),
+        releaseDate: normalizeTs(x?.releaseDate || x?.publishDate || x?.date),
+        code: str(x?.code || x?.id)
+      })).filter(x => x.title);
+      if (!normalized.length) throw new Error('No announcement titles');
+      binanceArticles.splice(0, binanceArticles.length, ...normalized);
+      matchBinanceMentions();
+      touchSource('binance', true, started);
+      return;
+    } catch (error) {
+      lastError = compactError(error);
+    }
+  }
+  touchSource('binance', false, started, lastError);
+};
+
 async function boot() {
   try { await initDb(); } catch (error) { console.error('DB init:', compactError(error)); }
   await Promise.allSettled([pollPump(), pollDexProfiles(), pollBinance()]);
