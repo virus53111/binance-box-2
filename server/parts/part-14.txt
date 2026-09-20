@@ -1,0 +1,60 @@
+// NEXUS ALPHA Vetted DEX universe: old, independently verified, liquid, non-major-CEX Solana assets.
+sourceState.vetted=sourceState.vetted||{label:'Vetted DEX',ok:false,lastOk:0,lastError:'',latency:null};
+const VETTED_MIN_AGE_MS=30*24*3600_000,VETTED_MAX_AGE_MS=365*24*3600_000,VETTED_REFRESH_MS=5*60_000;
+let vettedLastRefresh=0;
+
+function vettedAssessment(token){
+  const blockers=[],warnings=[],reasons=[],ageDays=Math.floor(ageMs(token)/86400000),j=token.jupiter||null,cex=getCexIntel(token),setup=computeSetupIntel(token),dexLiq=marketNum(token.dex?.liquidityUsd),jupLiq=marketNum(j?.liquidity),organic=marketNum(j?.organicScore),audit=j?.audit||{};
+  if(ageMs(token)<VETTED_MIN_AGE_MS)blockers.push('age_under_30d');
+  if(ageMs(token)>VETTED_MAX_AGE_MS)blockers.push('age_over_365d');
+  if(!token.dex?.pairAddress)blockers.push('no_dex_market');
+  if(cex.majorCexSymbolDetected)blockers.push('major_cex_detected');else reasons.push('not_on_major_cex');
+  if(!j)blockers.push('jupiter_pending');
+  else{
+    if(!j.isVerified)blockers.push('not_jupiter_verified');else reasons.push('jupiter_verified');
+    if(j.organicScoreLabel==='low'||organic<50)blockers.push('organic_below_50');else reasons.push('organic_activity_ok');
+    if(jupLiq<50000)blockers.push('jupiter_liquidity_under_50k');else reasons.push('jupiter_liquidity_ok');
+    if(audit.isSus)blockers.push('jupiter_suspicious');
+    if(marketNum(audit.topHoldersPercentage)>=65)blockers.push('holder_concentration_high');
+  }
+  if(dexLiq<25000)blockers.push('dex_liquidity_under_25k');else reasons.push('dex_liquidity_ok');
+  if(['high','critical'].includes(token.riskLevel))blockers.push(`risk_${token.riskLevel}`);
+  if((token.flags||[]).includes('creator_flagged'))blockers.push('creator_flagged');
+  const mintSafe=token.chain?!token.chain.mintAuthority:audit.mintAuthorityDisabled===true;
+  const freezeSafe=token.chain?!token.chain.freezeAuthority:audit.freezeAuthorityDisabled===true;
+  if(!mintSafe)blockers.push('mint_control_not_cleared');else reasons.push('mint_control_safe');
+  if(!freezeSafe)blockers.push('freeze_control_not_cleared');else reasons.push('freeze_control_safe');
+  if(!token.chain&&!j)warnings.push('onchain_pending');
+  if(setup.accumulationPressure>=65)reasons.push('accumulation');
+  if(setup.priceCompression>=65)reasons.push('price_compression');
+  if(cex.projectClaimDetected)reasons.push('project_listing_claim');
+  let score=35;
+  score+=Math.min(20,Math.max(0,(organic-50)*.4));
+  score+=Math.min(15,Math.log10(Math.max(jupLiq,1)/50000)*10+5);
+  score+=Math.min(10,Math.log10(Math.max(dexLiq,1)/25000)*8+3);
+  score+=setup.accumulationPressure*.10+setup.priceCompression*.06;
+  if(cex.projectClaimDetected)score+=12;
+  if(ageDays>=90)score+=4;if(ageDays>=180)score+=3;
+  if(blockers.length)score=Math.min(score,49);
+  score=Math.round(clamp(score,0,100));
+  return{pass:blockers.length===0,score,ageDays,blockers:uniq(blockers),warnings:uniq(warnings),reasons:uniq(reasons),setup,cex,requirements:{minAgeDays:30,maxAgeDays:365,jupiterVerified:true,minOrganicScore:50,minJupiterLiquidityUsd:50000,minDexLiquidityUsd:25000,maxTopHoldersPct:65,noMajorCex:true,mintFreezeCleared:true},method:'Strict research gate for older Solana DEX assets. Passing reduces obvious risk but does not prove an asset is safe or predict appreciation.'};
+}
+
+async function refreshVettedUniverse(){
+  const started=now();try{
+    const base=[...tokens.values()].filter(t=>t.dex?.pairAddress&&ageMs(t)>=VETTED_MIN_AGE_MS&&ageMs(t)<=VETTED_MAX_AGE_MS&&!getCexIntel(t).majorCexSymbolDetected&&marketNum(t.dex?.liquidityUsd)>=15000).sort((a,b)=>(marketNum(b.dex?.volumeH1)-marketNum(a.dex?.volumeH1))||(marketNum(b.dex?.liquidityUsd)-marketNum(a.dex?.liquidityUsd))).slice(0,180);
+    for(const group of chunk(base.map(t=>t.mint),90)){
+      if(!group.length)continue;try{const rows=await fetchJupiterRows(group),byMint=new Map(rows.map(r=>[str(r.id||r.address||r.mint),r]));for(const mint of group){const token=tokens.get(mint),row=byMint.get(mint);if(!token||!row)continue;token.jupiter=normalizeJupiterRow(row);scoreToken(token)}}catch(error){sourceState.vetted.lastError=`Jupiter: ${compactError(error)}`}await sleep(500)
+    }
+    const deep=base.filter(t=>{const j=t.jupiter;return j?.isVerified&&marketNum(j.organicScore)>=50&&marketNum(j.liquidity)>=50000&&!j.audit?.isSus&&marketNum(j.audit?.topHoldersPercentage)<65}).slice(0,18);
+    for(const token of deep){await enrichOnchain(token).catch(()=>{});await sleep(450);await enrichSecurity(token).catch(()=>{});await sleep(550)}
+    vettedLastRefresh=now();touchSource('vetted',true,started);
+  }catch(error){touchSource('vetted',false,started,error)}
+}
+
+function vettedSnapshot(limit=200){
+  const rows=[...tokens.values()].map(token=>({token,assessment:vettedAssessment(token)})).filter(x=>x.assessment.pass).sort((a,b)=>{const ac=a.assessment.cex?.projectClaimDetected?1:0,bc=b.assessment.cex?.projectClaimDetected?1:0;if(ac!==bc)return bc-ac;return b.assessment.score-a.assessment.score||marketNum(b.token.dex?.volumeH1)-marketNum(a.token.dex?.volumeH1)}).slice(0,limit).map(({token,assessment})=>({...publicToken(token),vetted:assessment,intel:{setup:assessment.setup,cex:assessment.cex,buyLinks:buyLinksFor(token)},dormant:token.dormant||null}));
+  return{generatedAt:now(),lastRefresh:vettedLastRefresh,count:rows.length,tokens:rows,sources:sourceState,requirements:{age:'30-365 days',jupiter:'verified + organicScore >= 50',liquidity:'Jupiter >= $50k and DEX >= $25k',cex:'no symbol detected on Binance/OKX/Bybit/Coinbase/Kraken',risk:'no high/critical risk; mint/freeze controls cleared'},methodology:'Vetted DEX is a strict eligibility filter, not a safety guarantee or return forecast.'};
+}
+app.get('/api/vetted',(req,res)=>res.json(vettedSnapshot(clamp(num(req.query.limit)||200,10,300))));
+setTimeout(()=>refreshVettedUniverse().catch(()=>{}),40_000);setInterval(()=>refreshVettedUniverse().catch(()=>{}),VETTED_REFRESH_MS);
