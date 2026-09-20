@@ -2,7 +2,8 @@
 var shortAddr = typeof short === 'function' ? short : (value => value ? `${String(value).slice(0,5)}…${String(value).slice(-4)}` : '—');
 (function loadNexusLayers(){
   if(window.__nexusFocusedLayersLoading)return;window.__nexusFocusedLayersLoading=true;
-  const loadClarity=()=>{if(window.__nexusRaveClarityLoaded)return;window.__nexusRaveClarityLoaded=true;const q=document.createElement('script');q.src='./app-11.js?v=20260920-rave-type';q.defer=true;document.body.appendChild(q)};
+  const loadMap=()=>{if(window.__nexusMarketMapLoaded)return;const m=document.createElement('script');m.src='./app-12.js?v=20260920-market-map';m.defer=true;document.body.appendChild(m)};
+  const loadClarity=()=>{if(window.__nexusRaveClarityLoaded){setTimeout(loadMap,120);return}window.__nexusRaveClarityLoaded=true;const q=document.createElement('script');q.src='./app-11.js?v=20260920-rave-type';q.defer=true;q.onload=loadMap;q.onerror=loadMap;document.body.appendChild(q)};
   const loadStability=()=>{if(window.__nexusStabilityLoaded){setTimeout(loadClarity,120);return}window.__nexusStabilityLoaded=true;const p=document.createElement('script');p.src='./app-10.js?v=20260920-vetted-stable';p.defer=true;p.onload=loadClarity;p.onerror=loadClarity;document.body.appendChild(p)};
   const loadFocused=()=>{if(window.__nexusFocusedLoaded){setTimeout(loadStability,120);return}window.__nexusFocusedLoaded=true;const n=document.createElement('script');n.src='./app-9.js?v=20260920-vetted-mexc';n.defer=true;n.onload=loadStability;n.onerror=loadStability;document.body.appendChild(n)};
   if(window.__nexusJupiterUILoading){setTimeout(loadFocused,450);return}
