@@ -8,6 +8,33 @@ function logRadarHealth(label) {
   }));
 }
 
+rpc = async function rpcWithFallback(method, params) {
+  const started = now();
+  const urls = uniq([
+    'https://solana-rpc.publicnode.com',
+    SOLANA_RPC_URL,
+    'https://api.mainnet.solana.com'
+  ]);
+  let lastError = '';
+  for (const url of urls) {
+    try {
+      const data = await fetchJson(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+        timeout: 9000
+      });
+      if (data?.error) throw new Error(data.error.message || 'RPC error');
+      touchSource('solana', true, started);
+      return data?.result;
+    } catch (error) {
+      lastError = compactError(error);
+    }
+  }
+  touchSource('solana', false, started, lastError);
+  throw new Error(lastError || 'All Solana RPC endpoints failed');
+};
+
 pollBinance = async function pollBinanceCurrent() {
   const started = now();
   const urls = [
