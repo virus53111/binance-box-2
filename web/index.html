@@ -8,8 +8,8 @@
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <meta name="description" content="NEXUS ALPHA — live animated crypto market map with market-cap rankings, Pump.fun, vetted DEX and pre-CEX views." />
   <link rel="canonical" href="https://murdilimax.com/" />
-  <link rel="manifest" href="./manifest.webmanifest?v=clean3" />
-  <link rel="icon" href="./icon.svg?v=clean3" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest?v=clean4" />
+  <link rel="icon" href="./icon.svg?v=clean4" type="image/svg+xml" />
   <title>NEXUS ALPHA — Live Crypto Market Map</title>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#020304;color:#f7f9fb;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{overflow-x:hidden}.top{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.075);background:rgba(2,4,6,.96);position:sticky;top:0;z-index:30}.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:.09em}.mark{width:38px;height:38px;border:1px solid rgba(67,221,255,.35);border-radius:50%;position:relative;box-shadow:inset 0 0 18px rgba(67,221,255,.05)}.mark:before,.mark:after{content:"";position:absolute;border:1px solid rgba(67,221,255,.28);border-radius:50%;inset:6px}.mark:after{inset:13px;background:#55e9b1;box-shadow:0 0 15px rgba(85,233,177,.65);border:0}.live{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(85,233,177,.22);border-radius:999px;color:#67efb7;font-size:10px;font-weight:900;letter-spacing:.12em}.live i{width:6px;height:6px;border-radius:50%;background:#67efb7;box-shadow:0 0 10px #67efb7}.actions{display:flex;align-items:center;gap:7px}.top button{border:1px solid rgba(255,255,255,.09);background:#080b0f;color:#b7c1cc;border-radius:12px;padding:10px 12px;font-weight:800}.top button.primary{border-color:rgba(82,225,255,.24);color:#85eaff}.shell{width:100%;min-height:calc(100dvh - 70px)}#app{min-height:calc(100dvh - 70px)}.boot{height:calc(100dvh - 70px);display:grid;place-items:center;color:#64717d;font-size:12px;letter-spacing:.08em}.spin{width:22px;height:22px;border:2px solid #15222b;border-top-color:#62e6ff;border-radius:50%;animation:s .7s linear infinite;margin:0 auto 10px}@keyframes s{to{transform:rotate(360deg)}}
@@ -27,11 +27,11 @@
     window.NEXUS_LANG=localStorage.getItem('nexus-lang')||'ru';
     document.getElementById('langBtn').textContent=window.NEXUS_LANG.toUpperCase();
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(async regs=>{for(const r of regs)await r.unregister();for(const k of await caches.keys())await caches.delete(k);navigator.serviceWorker.register('./sw.js?v=clean3').catch(()=>{})}).catch(()=>{});
+      navigator.serviceWorker.getRegistrations().then(async regs=>{for(const r of regs)await r.unregister();for(const k of await caches.keys())await caches.delete(k);navigator.serviceWorker.register('./sw.js?v=clean4').catch(()=>{})}).catch(()=>{});
     }
     let deferredInstall=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.getElementById('installBtn').hidden=false});
     document.getElementById('installBtn').onclick=async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null}};
   </script>
-  <script src="./app-14.js?v=clean-map-3" defer></script>
+  <script src="./app-15.js?v=calm-zoom-time-v1" defer></script>
 </body>
 </html>
