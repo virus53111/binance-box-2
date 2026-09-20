@@ -9,7 +9,7 @@ Real-time early-token intelligence dashboard for Solana/Pump.fun.
 - Checks Solana mint/freeze controls and top-holder concentration.
 - Uses GoPlus security data when available.
 - Inspects recent creator history from Pump.fun public frontend data.
-- Watches public Binance listing announcements for exact public mentions.
+- Watches public Binance announcements for conservative name/ticker matches; these matches are informational only, are not contract verification, and do not increase Radar Score.
 - Produces explainable Radar Score / risk flags and server-sent event alerts.
 - RU/EN interface, local watchlist, browser sound alerts.
 
