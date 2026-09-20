@@ -1,4 +1,4 @@
-app.get('/', (_req, res) => res.json({ name: 'Murdili Radar API', ok: true, docs: '/api/health' }));
+app.get('/', (_req, res) => res.json({ name: 'NEXUS ALPHA API', ok: true, docs: '/api/health' }));
 
 function logRadarHealth(label) {
   console.log(label, JSON.stringify({
@@ -124,12 +124,14 @@ pollBinance = async function pollBinanceCurrent() {
   touchSource('binance', false, started, lastError);
 };
 
+// The full market-regime endpoint is registered in part-6. Keep the old simple
+// ticker helper available for diagnostics, but do not shadow /api/market-regime.
 async function fetchMarketTicker(symbol) {
   const data = await fetchJson(`https://api.binance.com/api/v3/ticker/24hr?symbol=${encodeURIComponent(symbol)}`, { timeout: 7000 });
   return { symbol, price: num(data?.lastPrice), change24h: num(data?.priceChangePercent), quoteVolume: num(data?.quoteVolume) };
 }
 
-app.get('/api/market-regime', async (_req, res) => {
+app.get('/api/market-regime-basic', async (_req, res) => {
   try {
     const [btc, eth, sol] = await Promise.all(['BTCUSDT','ETHUSDT','SOLUSDT'].map(fetchMarketTicker));
     const changes = [btc.change24h, eth.change24h, sol.change24h];
@@ -153,7 +155,7 @@ async function boot() {
     checkGoPlusHealth()
   ]);
   await pollDexPairs().catch(() => {});
-  logRadarHealth('Murdili Radar startup snapshot');
+  logRadarHealth('NEXUS ALPHA startup snapshot');
 
   setInterval(() => pollPump().catch(() => {}), 7000);
   setInterval(() => pollDexProfiles().catch(() => {}), 60_000);
@@ -161,9 +163,9 @@ async function boot() {
   setInterval(() => pollBinance().catch(() => {}), 20_000);
   enrichmentLoop().catch(() => {});
   persistenceLoop().catch(() => {});
-  setTimeout(() => logRadarHealth('Murdili Radar health snapshot'), 60_000);
+  setTimeout(() => logRadarHealth('NEXUS ALPHA health snapshot'), 60_000);
 
-  app.listen(PORT, '0.0.0.0', () => console.log(`Murdili Radar API listening on ${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => console.log(`NEXUS ALPHA API listening on ${PORT}`));
 }
 
 boot().catch(error => {
