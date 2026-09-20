@@ -4,11 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#070b12" />
-  <meta name="description" content="Murdili Radar — real-time early token intelligence for Solana and Pump.fun. Liquidity, momentum, holders, security, creator history and public exchange mentions." />
-  <meta property="og:title" content="Murdili Radar" />
+  <meta name="description" content="NEXUS ALPHA — live Solana token intelligence: charts, DEX buy routes, CEX listing watch, accumulation and potential-pump signals, market regime and on-chain risk." />
+  <meta property="og:title" content="NEXUS ALPHA" />
   <meta property="og:description" content="Real-time early token intelligence. Facts, risk flags and alerts — no fake signals." />
   <meta property="og:type" content="website" />
-  <title>Murdili Radar — Early Token Intelligence</title>
+  <title>NEXUS ALPHA — Solana Token Intelligence & CEX Listing Radar</title>
+  <link rel="canonical" href="https://murdilimax.com/" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta property="og:url" content="https://murdilimax.com/" />
+  <meta property="og:site_name" content="NEXUS ALPHA" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="stylesheet" href="./styles-1.css" />
   <link rel="stylesheet" href="./styles-2.css" />
 </head>
@@ -18,9 +26,9 @@
   <div class="aurora aurora-b"></div>
 
   <header class="topbar">
-    <a class="brand" href="#" aria-label="Murdili Radar home">
+    <a class="brand" href="#" aria-label="NEXUS ALPHA home">
       <span class="brand-mark"><i></i><b></b><em></em></span>
-      <span class="brand-copy"><strong>MURDILI</strong><small>RADAR</small></span>
+      <span class="brand-copy"><strong>NEXUS</strong><small>ALPHA</small></span>
       <span class="live-dot"><i></i><span data-i18n="live">LIVE</span></span>
     </a>
 
@@ -28,6 +36,7 @@
       <div class="latency-chip" id="latencyChip"><span class="status-dot"></span><span id="latencyText">Connecting…</span></div>
       <button class="ghost-btn compact" id="soundBtn" type="button" aria-label="Sound alerts"><span id="soundIcon">◼</span><span id="soundLabel">Sound</span></button>
       <button class="ghost-btn compact" id="langBtn" type="button"><span id="langLabel">RU</span></button>
+      <button class="ghost-btn compact" id="installBtn" type="button"><span>⇩</span><span>App</span></button>
       <button class="ghost-btn compact" id="methodBtn" type="button"><span>◎</span><span data-i18n="method">Method</span></button>
     </nav>
   </header>
@@ -36,8 +45,8 @@
     <section class="hero-strip">
       <div class="hero-copy">
         <div class="eyebrow"><span class="scan-pulse"></span><span data-i18n="eyebrow">EARLY TOKEN INTELLIGENCE</span></div>
-        <h1 data-i18n="headline">Радар, который отбрасывает шум.</h1>
-        <p data-i18n="subhead">Новые Solana/Pump.fun токены → рынок → on-chain → security → creator history → публичные CEX-упоминания.</p>
+        <h1 data-i18n="headline">NEXUS ALPHA — сигналы до того, как их увидит толпа.</h1>
+        <p data-i18n="subhead">Новые и недооценённые Solana-токены → график → где купить → накопление → потенциальный импульс → CEX listing watch → режим рынка.</p>
       </div>
       <div class="radar-visual" aria-hidden="true">
         <div class="radar-grid"><span class="sweep"></span><i class="blip b1"></i><i class="blip b2"></i><i class="blip b3"></i></div>
@@ -50,6 +59,7 @@
       <article class="stat-card accent"><span data-i18n="candidates">Кандидаты</span><strong id="statCandidates">—</strong><small><b id="statPrime">—</b> <span data-i18n="primeNow">prime сейчас</span></small></article>
       <article class="stat-card danger"><span data-i18n="riskFlags">Critical risk</span><strong id="statRisk">—</strong><small data-i18n="autoFiltered">авто-фильтруются</small></article>
       <article class="stat-card"><span data-i18n="alerts24">Алертов / 24ч</span><strong id="statAlerts">—</strong><small data-i18n="soundReady">звук для важных</small></article>
+      <article class="stat-card regime-card"><span>MARKET REGIME</span><strong id="statRegime">—</strong><small id="statRegimeNote">BTC / ETH / SOL</small></article>
     </section>
 
     <section class="control-deck">
@@ -130,5 +140,6 @@
   <script src="./app-1.js" defer></script>
   <script src="./app-2.js" defer></script>
   <script src="./app-3.js" defer></script>
+  <script src="./app-4.js" defer></script>
 </body>
 </html>
