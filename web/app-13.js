@@ -1,2 +1,0 @@
-// MARKET MAP final startup/layout guard.
-(function(){if(window.__nexusMapGuard)return;window.__nexusMapGuard=true;const s=document.createElement('style');s.textContent='.radar-mode-switch{grid-template-columns:repeat(3,minmax(0,1fr))!important}@media(max-width:760px){.radar-mode-switch{grid-template-columns:1fr!important}}';document.head.appendChild(s);setTimeout(()=>{if(typeof ensureMarketMode==='function')ensureMarketMode();if(typeof switchRadarMode==='function')switchRadarMode('map')},2600)})();
