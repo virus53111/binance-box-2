@@ -2,23 +2,61 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#070b12" />
-  <meta name="description" content="NEXUS ALPHA — live Solana token intelligence: charts, DEX buy routes, CEX listing watch, accumulation and potential-pump signals, market regime and on-chain risk." />
-  <meta property="og:title" content="NEXUS ALPHA" />
-  <meta property="og:description" content="Real-time early token intelligence. Facts, risk flags and alerts — no fake signals." />
-  <meta property="og:type" content="website" />
-  <title>NEXUS ALPHA — Solana Token Intelligence & CEX Listing Radar</title>
+  <meta name="color-scheme" content="dark" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="description" content="NEXUS ALPHA — live Solana token scanner, Pump.fun early-token intelligence, CEX listing watch, market regime, liquidity, holders, security, accumulation and breakout setups." />
+  <meta name="keywords" content="Solana token scanner, Pump.fun scanner, crypto radar, new token scanner, CEX listing tracker, Solana alpha, token security, market regime, crypto accumulation, memecoin scanner" />
+  <meta name="application-name" content="NEXUS ALPHA" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEXUS ALPHA" />
   <link rel="canonical" href="https://murdilimax.com/" />
-  <meta name="robots" content="index,follow,max-image-preview:large" />
-  <meta property="og:url" content="https://murdilimax.com/" />
-  <meta property="og:site_name" content="NEXUS ALPHA" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <meta property="og:site_name" content="NEXUS ALPHA" />
+  <meta property="og:title" content="NEXUS ALPHA — Solana Alpha & CEX Listing Intelligence" />
+  <meta property="og:description" content="Real-time Solana/Pump.fun token intelligence: price charts, liquidity, holders, security, accumulation pressure, market regime and official CEX listing signals." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://murdilimax.com/" />
+  <meta property="og:image" content="https://murdilimax.com/icon-192.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NEXUS ALPHA" />
+  <meta name="twitter:description" content="Solana early-token scanner + CEX listing intelligence + market regime." />
+  <meta name="twitter:image" content="https://murdilimax.com/icon-192.png" />
+  <title>NEXUS ALPHA — Solana Token Scanner & CEX Listing Intelligence</title>
   <link rel="stylesheet" href="./styles-1.css" />
   <link rel="stylesheet" href="./styles-2.css" />
+  <link rel="stylesheet" href="./styles-3.css" />
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@graph":[
+      {
+        "@type":"WebSite",
+        "@id":"https://murdilimax.com/#website",
+        "url":"https://murdilimax.com/",
+        "name":"NEXUS ALPHA",
+        "alternateName":["NEXUS ALPHA","NEXUS Radar"],
+        "description":"Real-time Solana token scanner and CEX listing intelligence platform."
+      },
+      {
+        "@type":"SoftwareApplication",
+        "@id":"https://murdilimax.com/#app",
+        "name":"NEXUS ALPHA",
+        "url":"https://murdilimax.com/",
+        "applicationCategory":"FinanceApplication",
+        "operatingSystem":"Web, Android, iOS, Windows, macOS",
+        "isAccessibleForFree":true,
+        "description":"Live Solana and Pump.fun token intelligence with market data, holder analysis, security checks, accumulation and breakout heuristics, market regime and official exchange listing signals.",
+        "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="noise"></div>
@@ -26,7 +64,7 @@
   <div class="aurora aurora-b"></div>
 
   <header class="topbar">
-    <a class="brand" href="#" aria-label="NEXUS ALPHA home">
+    <a class="brand" href="/" aria-label="NEXUS ALPHA home">
       <span class="brand-mark"><i></i><b></b><em></em></span>
       <span class="brand-copy"><strong>NEXUS</strong><small>ALPHA</small></span>
       <span class="live-dot"><i></i><span data-i18n="live">LIVE</span></span>
@@ -34,9 +72,9 @@
 
     <nav class="top-actions">
       <div class="latency-chip" id="latencyChip"><span class="status-dot"></span><span id="latencyText">Connecting…</span></div>
+      <button class="ghost-btn compact install-btn" id="installBtn" type="button" hidden>↓ Install</button>
       <button class="ghost-btn compact" id="soundBtn" type="button" aria-label="Sound alerts"><span id="soundIcon">◼</span><span id="soundLabel">Sound</span></button>
       <button class="ghost-btn compact" id="langBtn" type="button"><span id="langLabel">RU</span></button>
-      <button class="ghost-btn compact" id="installBtn" type="button"><span>⇩</span><span>App</span></button>
       <button class="ghost-btn compact" id="methodBtn" type="button"><span>◎</span><span data-i18n="method">Method</span></button>
     </nav>
   </header>
@@ -44,13 +82,17 @@
   <main class="shell">
     <section class="hero-strip">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="scan-pulse"></span><span data-i18n="eyebrow">EARLY TOKEN INTELLIGENCE</span></div>
-        <h1 data-i18n="headline">NEXUS ALPHA — сигналы до того, как их увидит толпа.</h1>
-        <p data-i18n="subhead">Новые и недооценённые Solana-токены → график → где купить → накопление → потенциальный импульс → CEX listing watch → режим рынка.</p>
+        <div class="eyebrow"><span class="scan-pulse"></span><span>ALPHA ENGINE · EARLY TOKEN INTELLIGENCE</span></div>
+        <h1>NEXUS ALPHA</h1>
+        <p data-i18n="subhead">Новые Solana/Pump.fun токены → рынок → on-chain → security → creator history → публичные CEX-упоминания.</p>
       </div>
       <div class="radar-visual" aria-hidden="true">
         <div class="radar-grid"><span class="sweep"></span><i class="blip b1"></i><i class="blip b2"></i><i class="blip b3"></i></div>
       </div>
+    </section>
+
+    <section id="marketRegimeBar" class="market-regime-bar">
+      <div class="regime-loading"><span class="scan-pulse"></span>Market regime: …</div>
     </section>
 
     <section class="stat-grid" id="statGrid">
@@ -59,7 +101,6 @@
       <article class="stat-card accent"><span data-i18n="candidates">Кандидаты</span><strong id="statCandidates">—</strong><small><b id="statPrime">—</b> <span data-i18n="primeNow">prime сейчас</span></small></article>
       <article class="stat-card danger"><span data-i18n="riskFlags">Critical risk</span><strong id="statRisk">—</strong><small data-i18n="autoFiltered">авто-фильтруются</small></article>
       <article class="stat-card"><span data-i18n="alerts24">Алертов / 24ч</span><strong id="statAlerts">—</strong><small data-i18n="soundReady">звук для важных</small></article>
-      <article class="stat-card regime-card"><span>MARKET REGIME</span><strong id="statRegime">—</strong><small id="statRegimeNote">BTC / ETH / SOL</small></article>
     </section>
 
     <section class="control-deck">
@@ -106,6 +147,19 @@
       </aside>
     </section>
 
+    <section class="seo-about" aria-labelledby="about-alpha-radar">
+      <div>
+        <span class="panel-kicker">NEXUS ALPHA ENGINE</span>
+        <h2 id="about-alpha-radar">Solana token scanner, CEX listing watch and market regime in one live radar</h2>
+      </div>
+      <div class="seo-grid">
+        <p><strong>Early token intelligence.</strong> NEXUS ALPHA monitors new Solana and Pump.fun tokens, DEX liquidity, market cap, volume, buy/sell flow, holder concentration, mint/freeze authority, creator history and security flags.</p>
+        <p><strong>Listing intelligence.</strong> The radar checks major exchange symbol universes and official listing/roadmap sources to surface PRE-CEX evidence while clearly separating ticker matches from contract verification.</p>
+        <p><strong>Accumulation & breakout setups.</strong> Flow heuristics combine turnover versus liquidity, price compression, buy pressure and liquidity changes. They are research signals, not guaranteed forecasts.</p>
+        <p><strong>Market context.</strong> BTC trend, SOL relative strength and volatility are combined into a live bull, bear or flat market regime with risk-on/risk-off context.</p>
+      </div>
+    </section>
+
     <section class="truth-bar">
       <span>⚠</span>
       <p data-i18n="disclaimer">Radar Score — приоритизация для исследования, а не прогноз доходности и не рекомендация купить. Микрокап-токены могут потерять всю стоимость. Проверяйте контракт и источники самостоятельно.</p>
@@ -141,5 +195,6 @@
   <script src="./app-2.js" defer></script>
   <script src="./app-3.js" defer></script>
   <script src="./app-4.js" defer></script>
+  <script src="./app-5.js" defer></script>
 </body>
 </html>
