@@ -1,0 +1,2 @@
+// Warm the first market-map page after startup so the default visual opens fast and source health is observable.
+setTimeout(()=>getMarketMapPage(0,100).catch(()=>{}),12_000);
