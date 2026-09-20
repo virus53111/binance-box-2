@@ -1,7 +1,7 @@
 {
-  "name": "Murdili Alpha Radar",
-  "short_name": "Murdili Alpha",
-  "description": "Live Solana token scanner, CEX listing intelligence and market regime.",
+  "name": "NEXUS ALPHA",
+  "short_name": "NEXUS",
+  "description": "Live Solana intelligence: CEX listing watch, accumulation, potential impulse, market regime and on-chain risk.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -9,10 +9,28 @@
   "background_color": "#070b12",
   "theme_color": "#070b12",
   "orientation": "any",
-  "categories": ["finance", "utilities"],
+  "categories": [
+    "finance",
+    "utilities"
+  ],
   "icons": [
-    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
-    {"src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }
