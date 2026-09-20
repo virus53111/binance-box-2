@@ -1,0 +1,13 @@
+// Safety hardening: public CEX title matches are informational only.
+// They must never increase Radar Score because a ticker/name match does not verify a contract or future listing.
+const scoreTokenWithoutCexTitleBoost = scoreToken;
+scoreToken = function scoreTokenSafe(token) {
+  const originalCex = token?.cex;
+  const hadUnverifiedMention = Boolean(originalCex?.binanceMention);
+  if (hadUnverifiedMention) token.cex = { ...originalCex, binanceMention: false };
+  try {
+    return scoreTokenWithoutCexTitleBoost(token);
+  } finally {
+    if (hadUnverifiedMention) token.cex = originalCex;
+  }
+};

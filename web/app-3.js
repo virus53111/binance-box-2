@@ -1,3 +1,7 @@
+// CEX announcement title matches are informational only and do not contribute to Radar Score.
+I18N.ru.mAttentionText='DEX boosts и Pump.fun graduation. CEX-совпадения показываются отдельно и не влияют на Score.';
+I18N.en.mAttentionText='DEX boosts and Pump.fun graduation. CEX title matches are shown separately and do not affect the score.';
+
 function sparkline(points,key='mc'){
   const vals=(points||[]).map(p=>Number(p[key])||0).filter(v=>v>=0);if(vals.length<2)return `<div class="no-events">${esc(t('noTimeline'))}</div>`;
   const min=Math.min(...vals),max=Math.max(...vals),range=Math.max(max-min,1);const w=520,h=72;
