@@ -1,0 +1,9 @@
+// NEXUS ALPHA rich market-regime endpoint.
+// Kept separate from the legacy compatibility endpoint in part-5.
+app.get('/api/market-regime-v2', (_req, res) => {
+  res.json({
+    generatedAt: now(),
+    regime: marketRegimeState,
+    source: sourceState.market
+  });
+});
