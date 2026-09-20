@@ -1,4 +1,4 @@
-// Preserve the 7-day Alpha Radar universe across the legacy fast live refresh.
+// Preserve the extended Alpha Radar universe across the legacy fast live refresh.
 state.alphaExtendedTokens = state.alphaExtendedTokens || [];
 const alphaArchiveRenderAllBase = renderAll;
 renderAll = function renderAllWithAlphaArchive() {
@@ -18,11 +18,11 @@ renderAll = function renderAllWithAlphaArchive() {
 
 async function refreshAlphaArchive() {
   try {
-    const response = await fetch(`${API_BASE}/api/radar?limit=300&maxAgeHours=168`, { cache:'no-store' });
+    const response = await fetch(`${API_BASE}/api/radar-v2?limit=400&maxAgeHours=720`, { cache:'no-store' });
     if (!response.ok) return;
     const payload = await response.json();
     const existingIntel = new Map((state.data?.tokens || []).filter(token => token.intel).map(token => [token.mint, token.intel]));
-    state.alphaExtendedTokens = (payload.tokens || []).map(token => ({ ...token, intel: existingIntel.get(token.mint) || token.intel || null }));
+    state.alphaExtendedTokens = (payload.tokens || []).map(token => ({ ...token, intel: token.intel || existingIntel.get(token.mint) || null }));
     if (!state.data) state.data = payload;
     else {
       state.data.stats = payload.stats || state.data.stats;
@@ -59,7 +59,6 @@ async function refreshNexusRichRegime() {
   } catch {}
 }
 
-// Reliability + project-channel signal UX.
 Object.assign(I18N.ru,{projectNews:'PROJECT NEWS',noFiltered:'Сейчас подходящих токенов нет.',noPrime:'Сейчас нет токенов, прошедших строгий PRIME-порог. Радар продолжает наблюдение.',noPreCex:'Сейчас нет PRE-CEX сигналов. Мониторинг официальных каналов проектов и CEX продолжается.',noProjectNews:'Новых заявлений о листинге в каналах проектов пока нет.',projectClaim:'ЗАЯВЛЕНИЕ ПРОЕКТА',notCexConfirmed:'НЕ ПОДТВЕРЖДЕНО CEX',intelUnavailable:'Источник временно недоступен — это не считается отсутствием сигнала.'});
 Object.assign(I18N.en,{projectNews:'PROJECT NEWS',noFiltered:'No matching tokens right now.',noPrime:'No token currently passes the strict PRIME threshold. Monitoring continues.',noPreCex:'No PRE-CEX signal right now. Project-channel and CEX monitoring continues.',noProjectNews:'No new listing claims detected in project channels yet.',projectClaim:'PROJECT CLAIM',notCexConfirmed:'NOT CEX CONFIRMED',intelUnavailable:'Source temporarily unavailable — this is not treated as absence of a signal.'});
 
@@ -76,10 +75,12 @@ const nexusRenderDetailIntelBase=renderDetailIntelV2;
 renderDetailIntelV2=function(root,data){nexusRenderDetailIntelBase(root,data);const signals=data?.cex?.signals||[];root.querySelectorAll('.listing-signal').forEach((el,i)=>{const s=signals[i];if(!s?.projectClaim)return;el.classList.add('project-claim');const head=el.querySelector('div');if(head)head.insertAdjacentHTML('beforeend',`<span class="project-claim-badge">${esc(t('projectClaim'))} · ${esc(t('notCexConfirmed'))}</span>`)});const status=root.querySelector('#alphaCexContent .cex-status');if(status&&data?.cex?.projectClaimDetected)status.insertAdjacentHTML('afterend',`<p class="project-caution">⚡ ${esc(state.lang==='ru'?'Ранний сигнал найден в канале, который сам проект указал как свой. Это важнее слуха, но всё ещё не является подтверждением биржи.':'Early signal found in a channel supplied by the project itself. Stronger than a rumor, but still not exchange confirmation.')}</p>`)};
 
 const nexusRenderDetailBase=renderDetail;
-renderDetail=function(tk){nexusRenderDetailBase(tk);const mint=tk.mint;setTimeout(()=>{if(state.selectedMint!==mint)return;const root=$('drawerContent');root?.querySelectorAll('#alphaSetupContent .chart-loading,#alphaFlowContent .chart-loading,#alphaCexContent .chart-loading').forEach(el=>{el.outerHTML=`<p class="drawer-note">${esc(t('intelUnavailable'))}</p>`})},12000)};
+renderDetail=function(tk){nexusRenderDetailBase(tk);const mint=tk.mint;fetch(`${API_BASE}/api/project-scan/${encodeURIComponent(mint)}`,{method:'POST'}).catch(()=>{});setTimeout(()=>{if(state.selectedMint===mint&&typeof loadDetailIntelV2==='function')loadDetailIntelV2(mint)},25000);setTimeout(()=>{if(state.selectedMint!==mint)return;const root=$('drawerContent');root?.querySelectorAll('#alphaSetupContent .chart-loading,#alphaFlowContent .chart-loading,#alphaCexContent .chart-loading').forEach(el=>{el.outerHTML=`<p class="drawer-note">${esc(t('intelUnavailable'))}</p>`})},12000)};
 
 const nexusAlertTitleBase=alertTitle;
 alertTitle=function(a){if(a?.title==='PROJECT_LISTING_CLAIM')return state.lang==='ru'?'Проект сообщил о будущем листинге':'Project future-listing claim';return nexusAlertTitleBase(a)};
+
+const nexusUxStyle=document.createElement('style');nexusUxStyle.textContent=`.empty-radar-mark{font-size:28px;color:#5de4ff;opacity:.65;margin-bottom:8px}.listing-signal.project-claim{border-color:rgba(255,200,92,.3);background:linear-gradient(135deg,rgba(255,200,92,.07),rgba(190,123,255,.05))}.project-claim-badge{font-size:7px!important;color:#ffd17b!important;border:1px solid rgba(255,200,92,.28);padding:3px 5px;border-radius:999px;white-space:nowrap}.project-caution{font-size:9px;line-height:1.55;color:#b9a579;border-left:2px solid #ffc85c;padding:8px 10px;background:rgba(255,200,92,.035);border-radius:0 7px 7px 0}`;document.head.appendChild(nexusUxStyle);
 
 setTimeout(refreshAlphaArchive, 1400);
 setInterval(refreshAlphaArchive, 15000);
