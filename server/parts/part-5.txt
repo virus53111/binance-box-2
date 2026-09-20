@@ -1,9 +1,18 @@
 app.get('/', (_req, res) => res.json({ name: 'Murdili Radar API', ok: true, docs: '/api/health' }));
 
+function logRadarHealth(label) {
+  console.log(label, JSON.stringify({
+    storage: pool ? 'postgres' : 'memory',
+    stats: statsSnapshot(),
+    sources: Object.fromEntries(Object.entries(sourceState).map(([key, value]) => [key, { ok: value.ok, lastOk: value.lastOk, lastError: value.lastError, latency: value.latency }]))
+  }));
+}
+
 async function boot() {
   try { await initDb(); } catch (error) { console.error('DB init:', compactError(error)); }
   await Promise.allSettled([pollPump(), pollDexProfiles(), pollBinance()]);
   await pollDexPairs().catch(() => {});
+  logRadarHealth('Murdili Radar startup snapshot');
 
   setInterval(() => pollPump().catch(() => {}), 7000);
   setInterval(() => pollDexProfiles().catch(() => {}), 30000);
@@ -11,6 +20,7 @@ async function boot() {
   setInterval(() => pollBinance().catch(() => {}), 20000);
   enrichmentLoop().catch(() => {});
   persistenceLoop().catch(() => {});
+  setTimeout(() => logRadarHealth('Murdili Radar health snapshot'), 45000);
 
   app.listen(PORT, '0.0.0.0', () => console.log(`Murdili Radar API listening on ${PORT}`));
 }
