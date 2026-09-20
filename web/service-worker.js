@@ -1,4 +1,4 @@
-const CACHE='nexus-alpha-v5';
+const CACHE='nexus-alpha-v6';
 const STATIC=['./','./index.html','./styles-1.css','./styles-2.css','./styles-3.css','./app-1.js','./app-2.js','./app-3.js','./app-4.js','./app-5.js','./manifest.webmanifest','./icon.svg','./icon-192.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
