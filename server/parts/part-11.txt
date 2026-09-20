@@ -1,0 +1,99 @@
+// NEXUS ALPHA Extreme Asymmetry + MEXC market-structure radar.
+// This layer ranks unusual setups; it never claims a future return or guarantees that an asset is not a scam.
+sourceState.mexc=sourceState.mexc||{label:'MEXC Spot',ok:false,lastOk:0,lastError:'',latency:null};
+const mexcMarkets=new Map();
+let mexcUniverseUpdatedAt=0,mexcDeepUpdatedAt=0;
+const MEXC_POLL_MS=60_000,MEXC_DEEP_MS=3*60_000;
+const mexcStableQuotes=new Set(['USDT','USDC','USD1','USDE','FDUSD']);
+const leveragedSuffixRe=/(?:3L|3S|5L|5S|2L|2S)$/i;
+
+function marketNum(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function orderUsd(rows,mid,pct,side){let usd=0;for(const row of rows||[]){const p=marketNum(row?.[0]),q=marketNum(row?.[1]);if(!p||!q)continue;const within=side==='bid'?p>=mid*(1-pct):p<=mid*(1+pct);if(within)usd+=p*q}return usd}
+function mexcKlineStats(rows){
+  const k=(Array.isArray(rows)?rows:[]).map(x=>({at:marketNum(x?.[0]),o:marketNum(x?.[1]),h:marketNum(x?.[2]),l:marketNum(x?.[3]),c:marketNum(x?.[4]),v:marketNum(x?.[7])||marketNum(x?.[5])*marketNum(x?.[4])})).filter(x=>x.c>0);
+  if(k.length<12)return null;const last=k.at(-1),recent=k.slice(-3),prior=k.slice(-15,-3),all=k.slice(-48);
+  const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+  const recentVol=avg(recent.map(x=>x.v)),priorVol=avg(prior.map(x=>x.v)),volAccel=priorVol>0?recentVol/priorVol:0;
+  const tr=all.map(x=>(x.h-x.l)/Math.max(x.c,1e-18)*100),atrPct=avg(tr.slice(-12));
+  const hi=Math.max(...all.map(x=>x.h)),lo=Math.min(...all.map(x=>x.l)),rangePos=hi>lo?(last.c-lo)/(hi-lo):.5;
+  const p3=recent[0]?.o||last.c,price3h=p3>0?(last.c/p3-1)*100:0;
+  const prev24=k.at(-25)?.c||k[0]?.c||last.c,price24h=prev24>0?(last.c/prev24h-1)*100:0;
+  let wickRisk=0;for(const x of all.slice(-12)){const body=Math.abs(x.c-x.o),range=x.h-x.l;if(range>0&&body/range<.08&&range/Math.max(x.c,1e-18)>.25)wickRisk++}
+  return{last:last.c,recentVol,priorVol,volAccel:Math.round(volAccel*100)/100,atrPct:Math.round(atrPct*100)/100,rangePos:Math.round(rangePos*1000)/1000,price3h:Math.round(price3h*100)/100,price24h:Math.round(price24h*100)/100,wickRisk,bars:k.length};
+}
+function computeMexcExtreme(m){
+  const d=m.deep||{},qv=marketNum(m.quoteVolume24h),spread=marketNum(d.spreadPct),depth2=marketNum(d.depth2Usd),depth5=marketNum(d.depth5Usd),imb=marketNum(d.bidAskImbalance2),k=d.kline||{};
+  let auth=0,reasons=[],flags=[];
+  if(qv>=100000)auth+=20;else flags.push('low_24h_volume');if(qv>=500000)auth+=10;
+  if(spread>0&&spread<=.8)auth+=20;else if(spread<=2)auth+=10;else flags.push('wide_spread');
+  if(depth2>=15000)auth+=20;else if(depth2>=5000)auth+=10;else flags.push('thin_2pct_book');
+  if(k.bars>=24)auth+=15;if((k.wickRisk||0)<=1)auth+=15;else flags.push('wick_anomaly');
+  auth=Math.round(clamp(auth,0,100));
+  let score=0;
+  if(k.volAccel>=1.5){score+=18;reasons.push('volume_acceleration')}if(k.volAccel>=2.5)score+=10;
+  if(k.atrPct>0&&k.atrPct<=5){score+=18;reasons.push('price_compression')}else if(k.atrPct<=9)score+=9;
+  if(Math.abs(k.price3h||0)<=6&&k.volAccel>=1.4){score+=14;reasons.push('flow_without_price_expansion')}
+  if(imb>=1.15&&imb<=4){score+=14;reasons.push('bid_depth_advantage')}else if(imb>4){score+=5;flags.push('extreme_book_imbalance')}
+  if(k.rangePos>=.2&&k.rangePos<=.72)score+=10;
+  if(depth5>=25000)score+=8;
+  if(auth>=70)score+=10;
+  const alreadyMoved=Math.abs(k.price3h||0)>35||Math.abs(k.price24h||0)>120||Math.abs(m.change24h||0)>150;
+  if(alreadyMoved){score-=28;flags.push('already_expanded')}
+  if(auth<50)score-=25;
+  score=Math.round(clamp(score,0,100));
+  const riskGate=auth>=70&&!flags.includes('wide_spread')&&!flags.includes('thin_2pct_book')&&!flags.includes('wick_anomaly')?'pass':auth>=50?'caution':'fail';
+  return{score,authenticity:auth,riskGate,reasons:uniq(reasons),flags:uniq(flags),alreadyMoved,method:'Market-structure heuristic from volume acceleration, price compression, order-book depth/imbalance and anomaly checks. It is not a return prediction.'};
+}
+function computeDexExtreme(token){
+  const setup=computeSetupIntel(token),cex=getCexIntel(token),liq=marketNum(token.dex?.liquidityUsd),vol=marketNum(token.dex?.volumeH1),ageDays=ageMs(token)/86400000;
+  const severe=(token.flags||[]).some(x=>['creator_flagged','mint_authority_active','freeze_authority_active','top10_extreme'].includes(x));
+  let gate='pass';if(token.riskLevel==='critical'||severe||liq<5000)gate='fail';else if(token.riskLevel==='high'||!token.chain||liq<12000)gate='caution';
+  let score=0,reasons=[];
+  score+=setup.accumulationPressure*.28;score+=setup.breakoutReadiness*.24;
+  if(liq>=15000){score+=8;reasons.push('usable_liquidity')}if(liq>=50000)score+=5;
+  if(vol>=liq*.6&&vol>=10000){score+=8;reasons.push('high_turnover')}
+  if(setup.priceCompression>=65){score+=9;reasons.push('compression')}
+  if(setup.buySharePct>=54&&setup.buySharePct<=78){score+=7;reasons.push('balanced_buy_pressure')}
+  if(!cex.majorCexSymbolDetected){score+=6;reasons.push('not_on_major_cex')}
+  if(cex.projectClaimDetected){score+=12;reasons.push('project_listing_claim')}
+  if(ageDays>=30&&token.dormant){score+=5;reasons.push('dormant_reactivation_watch')}
+  if(gate==='fail')score-=40;else if(gate==='caution')score-=12;
+  if(Math.abs(marketNum(token.dex?.changeM5))>45)score-=20;
+  score=Math.round(clamp(score,0,100));
+  return{score,riskGate:gate,reasons:uniq(reasons),setup,cex,method:'Asymmetry ranking from accumulation, compression, turnover, liquidity, CEX status and on-chain risk. No future multiple is implied.'};
+}
+
+async function pollMexcUniverse(){
+  const started=now();try{
+    const [info,tickers]=await Promise.all([fetchJson('https://api.mexc.com/api/v3/exchangeInfo',{timeout:12000}),fetchJson('https://api.mexc.com/api/v3/ticker/24hr',{timeout:12000})]);
+    const symbols=new Map((info?.symbols||[]).map(x=>[str(x.symbol),x])),rows=Array.isArray(tickers)?tickers:[];
+    for(const row of rows){const symbol=str(row.symbol),meta=symbols.get(symbol);if(!meta)continue;const quote=str(meta.quoteAsset).toUpperCase(),base=str(meta.baseAsset).toUpperCase();if(!mexcStableQuotes.has(quote)||leveragedSuffixRe.test(base))continue;const status=str(meta.status).toUpperCase();if(status&& !['ENABLED','1','TRADING'].includes(status))continue;const price=marketNum(row.lastPrice),qv=marketNum(row.quoteVolume)||marketNum(row.volume)*price;if(!price||qv<20000)continue;
+      const prev=mexcMarkets.get(symbol)||{symbol,history:[],deep:null,alertedExtreme:false};const sample={at:now(),price,quoteVolume:qv};prev.history=[...(prev.history||[]),sample].filter(x=>now()-x.at<6*3600_000).slice(-360);Object.assign(prev,{symbol,base,quote,price,change24h:marketNum(row.priceChangePercent),high24h:marketNum(row.highPrice),low24h:marketNum(row.lowPrice),quoteVolume24h:qv,bid:marketNum(row.bidPrice),ask:marketNum(row.askPrice),isSpotTradingAllowed:Boolean(meta.isSpotTradingAllowed),updatedAt:now()});mexcMarkets.set(symbol,prev)
+    }
+    mexcUniverseUpdatedAt=now();touchSource('mexc',true,started);
+  }catch(error){touchSource('mexc',false,started,error)}
+}
+async function enrichMexcCandidate(m){
+  try{
+    const [kl,book]=await Promise.all([fetchJson(`https://api.mexc.com/api/v3/klines?symbol=${encodeURIComponent(m.symbol)}&interval=60m&limit=72`,{timeout:9000}),fetchJson(`https://api.mexc.com/api/v3/depth?symbol=${encodeURIComponent(m.symbol)}&limit=100`,{timeout:9000})]);
+    const bid=marketNum(book?.bids?.[0]?.[0]),ask=marketNum(book?.asks?.[0]?.[0]),mid=bid&&ask?(bid+ask)/2:m.price,spread=mid>0&&ask>bid?(ask-bid)/mid*100:999;
+    const bid2=orderUsd(book?.bids,mid,.02,'bid'),ask2=orderUsd(book?.asks,mid,.02,'ask'),bid5=orderUsd(book?.bids,mid,.05,'bid'),ask5=orderUsd(book?.asks,mid,.05,'ask');
+    m.deep={checkedAt:now(),spreadPct:Math.round(spread*1000)/1000,bid2Usd:Math.round(bid2),ask2Usd:Math.round(ask2),depth2Usd:Math.round(bid2+ask2),bid5Usd:Math.round(bid5),ask5Usd:Math.round(ask5),depth5Usd:Math.round(bid5+ask5),bidAskImbalance2:ask2>0?Math.round(bid2/ask2*100)/100:0,kline:mexcKlineStats(kl)};m.extreme=computeMexcExtreme(m);
+    if(m.extreme.score>=82&&m.extreme.riskGate==='pass'&&!m.alertedExtreme){m.alertedExtreme=true;addAlert({severity:'important',type:'mexc-extreme',symbol:m.base,title:'MEXC_EXTREME_SETUP',message:`${m.symbol} structure score ${m.extreme.score}; authenticity ${m.extreme.authenticity}`,score:m.extreme.score})}
+  }catch(error){m.deepError=compactError(error)}
+}
+async function pollMexcDeep(){
+  const list=[...mexcMarkets.values()].filter(m=>m.quoteVolume24h>=75000&&m.quoteVolume24h<=100000000&&Math.abs(m.change24h)<=140).sort((a,b)=>{const av=(a.quoteVolume24h>0?Math.log10(a.quoteVolume24h):0)-Math.abs(a.change24h)/30,bv=(b.quoteVolume24h>0?Math.log10(b.quoteVolume24h):0)-Math.abs(b.change24h)/30;return bv-av}).slice(0,18);
+  for(const m of list){await enrichMexcCandidate(m);await sleep(500)}mexcDeepUpdatedAt=now();
+}
+function extremeSnapshot(){
+  const dex=[...tokens.values()].map(token=>({token,intel:computeDexExtreme(token)})).filter(x=>x.intel.score>=45&&x.token.dex?.pairAddress).sort((a,b)=>b.intel.score-a.intel.score).slice(0,60).map(x=>({token:publicToken(x.token),extreme:x.intel}));
+  const mexc=[...mexcMarkets.values()].filter(x=>x.extreme).sort((a,b)=>b.extreme.score-a.extreme.score).slice(0,60).map(m=>({symbol:m.symbol,base:m.base,quote:m.quote,price:m.price,change24h:m.change24h,quoteVolume24h:m.quoteVolume24h,deep:m.deep,extreme:m.extreme,url:`https://www.mexc.com/exchange/${encodeURIComponent(m.base)}_${encodeURIComponent(m.quote)}`}));
+  return{generatedAt:now(),dex,mexc,source:sourceState.mexc,mexcUniverseUpdatedAt,mexcDeepUpdatedAt,methodology:{extreme:'Ranks asymmetric market structures; it is not a probability of 100x/1000x.',risk:'PASS means no critical flags detected by the available checks, not proof that an asset is safe or non-scam.',mexc:'MEXC market-structure checks validate volume, spread, depth and candles to reject thin-book/wick anomalies.'}};
+}
+app.get('/api/extreme',(_req,res)=>res.json(extremeSnapshot()));
+
+setTimeout(()=>pollMexcUniverse().catch(()=>{}),20_000);
+setTimeout(()=>pollMexcDeep().catch(()=>{}),35_000);
+setInterval(()=>pollMexcUniverse().catch(()=>{}),MEXC_POLL_MS);
+setInterval(()=>pollMexcDeep().catch(()=>{}),MEXC_DEEP_MS);
