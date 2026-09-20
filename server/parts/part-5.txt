@@ -40,6 +40,59 @@ rpc = async function rpcWithFallback(method, params) {
   throw new Error(lastError || 'All Solana RPC endpoints failed');
 };
 
+let dexBackoffUntil = 0;
+pollDexPairs = async function pollDexPairsThrottled() {
+  const started = now();
+  if (now() < dexBackoffUntil) return;
+  try {
+    const candidates = [...tokens.values()]
+      .filter(t => ageMs(t) < 24 * 3600_000)
+      .sort((a, b) => (b.score - a.score) || (b.discoveredAt - a.discoveredAt))
+      .slice(0, 90);
+    const groups = chunk(candidates.map(t => t.mint), 30).slice(0, 3);
+    for (const group of groups) {
+      if (!group.length) continue;
+      let data;
+      try {
+        data = await fetchJson(`https://api.dexscreener.com/tokens/v1/solana/${group.join(',')}`, { timeout: 9000 });
+      } catch (error) {
+        const message = compactError(error);
+        if (message.includes('429')) {
+          dexBackoffUntil = now() + 60_000;
+          touchSource('dex', false, started, message);
+          return;
+        }
+        throw error;
+      }
+      const pairs = Array.isArray(data) ? data : [];
+      const best = new Map();
+      for (const pair of pairs) {
+        const mint = str(pair?.baseToken?.address);
+        if (!mint || !tokens.has(mint)) continue;
+        const liq = num(pair?.liquidity?.usd);
+        if (!best.has(mint) || liq > num(best.get(mint)?.liquidity?.usd)) best.set(mint, pair);
+      }
+      for (const [mint, pair] of best) applyDexPair(tokens.get(mint), pair);
+      await sleep(850);
+    }
+    touchSource('dex', true, started);
+  } catch (error) {
+    touchSource('dex', false, started, error);
+  }
+};
+
+async function checkGoPlusHealth() {
+  const started = now();
+  try {
+    const headers = GOPLUS_TOKEN ? { authorization: `Bearer ${GOPLUS_TOKEN}` } : {};
+    const data = await fetchJson('https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=So11111111111111111111111111111111111111112', { headers, timeout: 8000 });
+    if (!data || typeof data !== 'object') throw new Error('Invalid GoPlus response');
+    touchSource('goplus', true, started);
+  } catch (error) {
+    touchSource('goplus', false, started, error);
+  }
+}
+
 pollBinance = async function pollBinanceCurrent() {
   const started = now();
   const urls = [
@@ -77,18 +130,19 @@ async function boot() {
     pollPump(),
     pollDexProfiles(),
     pollBinance(),
-    rpc('getSlot', [{ commitment: 'confirmed' }])
+    rpc('getSlot', [{ commitment: 'confirmed' }]),
+    checkGoPlusHealth()
   ]);
   await pollDexPairs().catch(() => {});
   logRadarHealth('Murdili Radar startup snapshot');
 
   setInterval(() => pollPump().catch(() => {}), 7000);
-  setInterval(() => pollDexProfiles().catch(() => {}), 30000);
-  setInterval(() => pollDexPairs().catch(() => {}), 15000);
-  setInterval(() => pollBinance().catch(() => {}), 20000);
+  setInterval(() => pollDexProfiles().catch(() => {}), 60_000);
+  setInterval(() => pollDexPairs().catch(() => {}), 30_000);
+  setInterval(() => pollBinance().catch(() => {}), 20_000);
   enrichmentLoop().catch(() => {});
   persistenceLoop().catch(() => {});
-  setTimeout(() => logRadarHealth('Murdili Radar health snapshot'), 45000);
+  setTimeout(() => logRadarHealth('Murdili Radar health snapshot'), 60_000);
 
   app.listen(PORT, '0.0.0.0', () => console.log(`Murdili Radar API listening on ${PORT}`));
 }
