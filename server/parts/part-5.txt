@@ -8,6 +8,7 @@ function logRadarHealth(label) {
   }));
 }
 
+let lastRpcRequestAt = 0;
 rpc = async function rpcWithFallback(method, params) {
   const started = now();
   const urls = uniq([
@@ -18,6 +19,9 @@ rpc = async function rpcWithFallback(method, params) {
   let lastError = '';
   for (const url of urls) {
     try {
+      const gap = 300 - (now() - lastRpcRequestAt);
+      if (gap > 0) await sleep(gap);
+      lastRpcRequestAt = now();
       const data = await fetchJson(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -29,6 +33,7 @@ rpc = async function rpcWithFallback(method, params) {
       return data?.result;
     } catch (error) {
       lastError = compactError(error);
+      if (lastError.includes('429')) await sleep(700);
     }
   }
   touchSource('solana', false, started, lastError);
