@@ -1,0 +1,22 @@
+// NEXUS ALPHA durability, on-demand project scans and 30-day intelligence universe.
+const projectScanPersistBase=scanProjectToken;
+scanProjectToken=async function scanAndPersistProjectToken(token){
+  if(!projectSignalState.has(token.mint)&&Array.isArray(token.projectSignals)&&token.projectSignals.length){
+    projectSignalState.set(token.mint,{fingerprints:new Set(token.projectSignals.map(projectFingerprint)),signals:token.projectSignals,initialized:true,lastScan:num(token.projectChannels?.lastScan),errors:token.projectChannels?.errors||[],okSources:num(token.projectChannels?.okSources),totalSources:num(token.projectChannels?.totalSources)});
+  }
+  await projectScanPersistBase(token);
+  const st=projectSignalState.get(token.mint);
+  if(st){token.projectSignals=st.signals;token.projectChannels={lastScan:st.lastScan,errors:st.errors,okSources:st.okSources,totalSources:st.totalSources};token.lastUpdatedAt=now()}
+};
+const projectIntelPersistBase=getCexIntel;
+getCexIntel=function getCexIntelWithStoredProjectClaims(token){
+  const current=projectIntelPersistBase(token);if(current.projectSignals?.length||!token.projectSignals?.length)return current;
+  const claims=token.projectSignals,combined=[...claims,...(current.signals||[])].sort((a,b)=>(b.evidenceScore||0)-(a.evidenceScore||0)).slice(0,12),bestProject=claims[0]||null;
+  return {...current,signals:combined,projectSignals:claims,projectChannels:token.projectChannels||current.projectChannels,projectClaimDetected:true,preCexCandidate:current.preCexCandidate||Boolean(!current.majorCexSymbolDetected&&bestProject?.evidenceScore>=74),evidenceScore:Math.max(current.evidenceScore||0,bestProject?.evidenceScore||0)};
+};
+
+app.post('/api/project-scan/:mint',(req,res)=>{const mint=str(req.params.mint),token=tokens.get(mint);if(!token)return res.status(404).json({error:'Token not found yet'});const st=projectSignalState.get(mint);if(!st||now()-st.lastScan>4*60_000)scanProjectToken(token).catch(()=>{});res.status(202).json({ok:true,mint,status:st?'refreshing':'queued',lastScan:st?.lastScan||0})});
+
+app.get('/api/radar-v2',(req,res)=>{const limit=clamp(num(req.query.limit)||300,20,500),minScore=clamp(num(req.query.minScore)||0,0,100),maxAgeHours=clamp(num(req.query.maxAgeHours)||720,1,720);const list=[...tokens.values()].filter(t=>t.score>=minScore&&ageMs(t)<=maxAgeHours*3600_000).sort((a,b)=>(b.score-a.score)||((b.dex?.liquidityUsd||0)-(a.dex?.liquidityUsd||0))||(b.discoveredAt-a.discoveredAt)).slice(0,limit).map(t=>({...publicToken(t),intel:{setup:computeSetupIntel(t),cex:getCexIntel(t),buyLinks:buyLinksFor(t)}}));res.json({generatedAt:now(),stats:statsSnapshot(),sources:sourceState,tokens:list,alerts:alerts.slice(0,60),marketRegime:marketRegimeState,universeHours:maxAgeHours})});
+
+persistenceLoop=async function persistenceLoop30d(){while(true){if(pool){const keep=[...tokens.values()].sort((a,b)=>b.score-a.score).slice(0,320);for(const token of keep){try{await persistToken(token)}catch{}}try{await pool.query('DELETE FROM radar_tokens WHERE updated_at < $1 AND score < 55',[now()-30*24*3600_000]);await pool.query('DELETE FROM radar_alerts WHERE created_at < $1',[now()-30*24*3600_000])}catch{}}await sleep(120_000)}};
