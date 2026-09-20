@@ -73,7 +73,12 @@ pollBinance = async function pollBinanceCurrent() {
 
 async function boot() {
   try { await initDb(); } catch (error) { console.error('DB init:', compactError(error)); }
-  await Promise.allSettled([pollPump(), pollDexProfiles(), pollBinance()]);
+  await Promise.allSettled([
+    pollPump(),
+    pollDexProfiles(),
+    pollBinance(),
+    rpc('getSlot', [{ commitment: 'confirmed' }])
+  ]);
   await pollDexPairs().catch(() => {});
   logRadarHealth('Murdili Radar startup snapshot');
 
