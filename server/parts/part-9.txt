@@ -1,0 +1,28 @@
+// NEXUS ALPHA fast project-news scheduler.
+// Prioritize the channels where projects usually publish exchange news first.
+projectSourceList=function projectSourcesPriority(token){
+  const out=[];
+  const add=(type,url)=>{url=safeUrl(url);if(!url||!/^https:\/\//i.test(url))return;out.push({type,url})};
+  add('x',token.links?.twitter);
+  add('telegram',token.links?.telegram);
+  add('website',token.links?.website);
+  return out.slice(0,3);
+};
+projectChannelLoop=async function fastProjectChannelLoop(){
+  const interval=4*60_000,maxPerPass=12;
+  while(true){
+    const started=now();
+    try{
+      const queue=[...tokens.values()]
+        .filter(t=>projectSourceList(t).length&&ageMs(t)<30*24*3600_000&&(t.score>=52||t.dex?.liquidityUsd>=10000))
+        .sort((a,b)=>((b.score||0)-(a.score||0))||((b.dex?.liquidityUsd||0)-(a.dex?.liquidityUsd||0)));
+      for(const token of queue.slice(0,maxPerPass)){
+        const st=projectSignalState.get(token.mint);
+        if(st&&now()-st.lastScan<interval)continue;
+        await scanProjectToken(token);
+      }
+      if(queue.length===0)sourceState.project.lastError='Waiting for eligible tokens with public project channels';
+    }catch(error){touchSource('project',false,started,error)}
+    await sleep(interval);
+  }
+};
