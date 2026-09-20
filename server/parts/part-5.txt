@@ -124,6 +124,25 @@ pollBinance = async function pollBinanceCurrent() {
   touchSource('binance', false, started, lastError);
 };
 
+async function fetchMarketTicker(symbol) {
+  const data = await fetchJson(`https://api.binance.com/api/v3/ticker/24hr?symbol=${encodeURIComponent(symbol)}`, { timeout: 7000 });
+  return { symbol, price: num(data?.lastPrice), change24h: num(data?.priceChangePercent), quoteVolume: num(data?.quoteVolume) };
+}
+
+app.get('/api/market-regime', async (_req, res) => {
+  try {
+    const [btc, eth, sol] = await Promise.all(['BTCUSDT','ETHUSDT','SOLUSDT'].map(fetchMarketTicker));
+    const changes = [btc.change24h, eth.change24h, sol.change24h];
+    const avg = changes.reduce((a,b)=>a+b,0) / changes.length;
+    const breadth = changes.filter(x=>x>0).length;
+    let regime = 'RANGE';
+    if (avg >= 2 && breadth >= 2) regime = 'BULLISH';
+    else if (avg <= -2 && breadth <= 1) regime = 'BEARISH';
+    else if (Math.max(...changes)-Math.min(...changes) > 6) regime = 'MIXED';
+    res.json({ regime, score: Math.round(avg*10)/10, note: `BTC ${btc.change24h>=0?'+':''}${btc.change24h.toFixed(1)}% · ETH ${eth.change24h>=0?'+':''}${eth.change24h.toFixed(1)}% · SOL ${sol.change24h>=0?'+':''}${sol.change24h.toFixed(1)}%`, assets:{btc,eth,sol}, methodology:'24h directional regime from BTC, ETH and SOL. Descriptive, not predictive.' });
+  } catch (error) { res.status(503).json({ regime:'UNKNOWN', error: compactError(error) }); }
+});
+
 async function boot() {
   try { await initDb(); } catch (error) { console.error('DB init:', compactError(error)); }
   await Promise.allSettled([
