@@ -34,5 +34,35 @@ async function refreshAlphaArchive() {
   } catch {}
 }
 
+// The backend keeps a simple legacy /api/market-regime route for compatibility.
+// NEXUS ALPHA uses the richer v2 route (EMA trend, BTC/SOL relative strength,
+// volatility and risk-on/risk-off context) and protects it from legacy refreshes.
+state.marketRegimeRich = state.marketRegimeRich || null;
+const alphaRichRegimeRenderer = renderMarketRegimeV2;
+renderMarketRegimeV2 = function renderNexusRichRegime() {
+  const current = state.marketRegime;
+  if (current && typeof current === 'object' && current.updatedAt) state.marketRegimeRich = current;
+  if ((!current || typeof current !== 'object' || !current.updatedAt) && state.marketRegimeRich) {
+    state.marketRegime = state.marketRegimeRich;
+    try { return alphaRichRegimeRenderer(); }
+    finally { state.marketRegime = current; }
+  }
+  return alphaRichRegimeRenderer();
+};
+
+async function refreshNexusRichRegime() {
+  try {
+    const response = await fetch(`${API_BASE}/api/market-regime-v2`, { cache:'no-store' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (!payload?.regime || typeof payload.regime !== 'object') return;
+    state.marketRegimeRich = payload.regime;
+    state.marketRegime = payload.regime;
+    renderMarketRegimeV2();
+  } catch {}
+}
+
 setTimeout(refreshAlphaArchive, 1400);
 setInterval(refreshAlphaArchive, 15000);
+setTimeout(refreshNexusRichRegime, 1800);
+setInterval(refreshNexusRichRegime, 60000);
