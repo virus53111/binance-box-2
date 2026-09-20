@@ -1,0 +1,236 @@
+async function enrichCreator(token) {
+  if (!token?.creator || now() - token.lastCreatorAt < 30 * 60_000) return;
+  token.lastCreatorAt = now();
+  try {
+    const url = `https://frontend-api-v3.pump.fun/coins?offset=0&limit=50&sort=created_timestamp&order=DESC&includeNsfw=true&creator=${encodeURIComponent(token.creator)}`;
+    const data = await fetchJson(url, { timeout: 7000 });
+    const rows = extractPumpArray(data).filter(x => str(x?.creator) === token.creator).slice(0, 50);
+    if (!rows.length) return;
+    const completed = rows.filter(x => Boolean(x?.complete)).length;
+    const created24h = rows.filter(x => now() - normalizeTs(x?.created_timestamp) < 24 * 3600_000).length;
+    const mcs = rows.map(x => num(x?.usd_market_cap || x?.market_cap_usd)).filter(x => x > 0);
+    token.creatorStats = {
+      projectCount: rows.length,
+      completed,
+      created24h,
+      maxObservedMarketCap: mcs.length ? Math.max(...mcs) : 0,
+      serialDeployer: created24h >= 8,
+      checkedAt: now()
+    };
+    scoreToken(token);
+  } catch {
+    token.lastCreatorAt = now() - 25 * 60_000;
+  }
+}
+
+async function enrichmentLoop() {
+  while (true) {
+    try {
+      const queue = [...tokens.values()]
+        .filter(t => t.dex?.pairAddress && ageMs(t) < 12 * 3600_000)
+        .sort((a, b) => (b.score - a.score) || (b.dex?.liquidityUsd || 0) - (a.dex?.liquidityUsd || 0));
+      for (const token of queue.slice(0, 24)) {
+        if (token.score >= 45 || token.dex?.liquidityUsd >= 5000) {
+          await enrichOnchain(token);
+          await sleep(700);
+        }
+        if (token.score >= 58) {
+          await enrichSecurity(token);
+          await sleep(900);
+        }
+        if (token.score >= 65 && token.creator) {
+          await enrichCreator(token);
+          await sleep(500);
+        }
+      }
+    } catch {}
+    await sleep(60_000);
+  }
+}
+
+function parseBinanceRows(payload) {
+  const data = payload?.data || payload;
+  const candidates = [
+    data?.catalogs?.[0]?.articles,
+    data?.articles,
+    data?.catalogs,
+    data?.data
+  ];
+  for (const c of candidates) if (Array.isArray(c)) return c.flatMap(x => Array.isArray(x?.articles) ? x.articles : [x]);
+  return [];
+}
+
+async function pollBinance() {
+  const started = now();
+  const urls = [
+    'https://www.binance.com/bapi/apex/v1/public/apex/cms/article/list/query?type=1&catalogId=48&pageNo=1&pageSize=30',
+    'https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=48&pageNo=1&pageSize=30'
+  ];
+  let lastError = '';
+  for (const url of urls) {
+    try {
+      const data = await fetchJson(url, { timeout: 8000, headers: { clienttype: 'web', referer: 'https://www.binance.com/en/support/announcement/' } });
+      const rows = parseBinanceRows(data);
+      if (!rows.length) throw new Error('No announcement rows');
+      const normalized = rows.slice(0, 40).map(x => ({
+        id: str(x?.id || x?.code || x?.articleId),
+        title: str(x?.title),
+        releaseDate: normalizeTs(x?.releaseDate || x?.publishDate || x?.date),
+        code: str(x?.code || x?.id)
+      })).filter(x => x.title);
+      binanceArticles.splice(0, binanceArticles.length, ...normalized);
+      matchBinanceMentions();
+      touchSource('binance', true, started);
+      return;
+    } catch (error) {
+      lastError = compactError(error);
+    }
+  }
+  touchSource('binance', false, started, lastError);
+}
+
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function matchBinanceMentions() {
+  for (const token of tokens.values()) {
+    if (!token.symbol || token.symbol.length < 2) continue;
+    const symbol = token.symbol.trim();
+    const escapedSymbol = escapeRegExp(symbol);
+    // Short tickers are extremely collision-prone. Require Binance-style parenthesized notation
+    // such as "Project Name (ABC)" instead of matching any occurrence of ABC.
+    const symbolPattern = symbol.length <= 3
+      ? new RegExp(`\\(${escapedSymbol}\\)`, 'i')
+      : new RegExp(`(?:\\(|\\b)${escapedSymbol}(?:\\)|\\b)`, 'i');
+    const name = token.name?.trim().toLowerCase();
+    const earliestRelevant = Number(token.createdAt || 0) - 2 * 60 * 60 * 1000;
+    const matches = binanceArticles.filter(article => {
+      if (article.releaseDate && earliestRelevant && article.releaseDate < earliestRelevant) return false;
+      const title = article.title.toLowerCase();
+      const tickerMatch = symbolPattern.test(article.title);
+      const nameMatch = Boolean(name && name.length >= 6 && title.includes(name));
+      return tickerMatch || nameMatch;
+    }).slice(0, 3);
+    const had = token.cex?.binanceMention;
+    token.cex = {
+      binanceMention: matches.length > 0,
+      mentionType: matches.length ? 'title_match_unverified' : '',
+      mentions: matches
+    };
+    if (!had && matches.length) {
+      addAlert({ severity: 'important', type: 'cex', mint: token.mint, symbol: token.symbol, title: 'BINANCE_PUBLIC_MENTION', message: matches[0].title, score: token.score });
+      scoreToken(token);
+    }
+  }
+}
+
+function pruneTokens() {
+  if (tokens.size <= MAX_TOKENS) return;
+  const ordered = [...tokens.values()].sort((a, b) => {
+    const aKeep = a.score >= 70 ? 1 : 0;
+    const bKeep = b.score >= 70 ? 1 : 0;
+    if (aKeep !== bKeep) return aKeep - bKeep;
+    return a.lastUpdatedAt - b.lastUpdatedAt;
+  });
+  for (const token of ordered.slice(0, tokens.size - MAX_TOKENS)) tokens.delete(token.mint);
+}
+
+async function persistenceLoop() {
+  while (true) {
+    if (pool) {
+      const keep = [...tokens.values()].sort((a, b) => b.score - a.score).slice(0, 160);
+      for (const token of keep) {
+        try { await persistToken(token); } catch {}
+      }
+      try {
+        await pool.query('DELETE FROM radar_tokens WHERE updated_at < $1 AND score < 70', [now() - 7 * 24 * 3600_000]);
+        await pool.query('DELETE FROM radar_alerts WHERE created_at < $1', [now() - 14 * 24 * 3600_000]);
+      } catch {}
+    }
+    await sleep(120_000);
+  }
+}
+
+function statsSnapshot() {
+  const list = [...tokens.values()];
+  const fresh5m = list.filter(t => ageMs(t) < 5 * 60_000).length;
+  const candidates = list.filter(t => t.score >= 70 && t.dex?.liquidityUsd >= 7500).length;
+  const prime = list.filter(t => t.score >= 85 && t.dex?.liquidityUsd >= 7500).length;
+  const criticalRisk = list.filter(t => t.riskLevel === 'critical').length;
+  return {
+    tracked: list.length,
+    new5m: fresh5m,
+    perMinute: Math.round((fresh5m / 5) * 10) / 10,
+    candidates,
+    prime,
+    criticalRisk,
+    alerts24h: alerts.filter(a => now() - a.at < 24 * 3600_000).length
+  };
+}
+
+app.get('/api/health', async (_req, res) => {
+  let storage = 'memory';
+  if (pool) {
+    try { await pool.query('SELECT 1'); storage = 'postgres'; } catch { storage = 'postgres-error'; }
+  }
+  res.json({ ok: true, name: 'Murdili Radar API', uptime: Math.floor((now() - startedAt) / 1000), storage, sources: sourceState, stats: statsSnapshot() });
+});
+
+app.get('/api/radar', (req, res) => {
+  const limit = clamp(num(req.query.limit) || 120, 10, 300);
+  const minScore = clamp(num(req.query.minScore) || 0, 0, 100);
+  const maxAgeHours = clamp(num(req.query.maxAgeHours) || 24, 1, 168);
+  const list = [...tokens.values()]
+    .filter(t => t.score >= minScore && ageMs(t) <= maxAgeHours * 3600_000)
+    .sort((a, b) => (b.score - a.score) || ((b.dex?.liquidityUsd || 0) - (a.dex?.liquidityUsd || 0)) || (b.discoveredAt - a.discoveredAt))
+    .slice(0, limit)
+    .map(t => publicToken(t));
+  res.json({
+    generatedAt: now(),
+    stats: statsSnapshot(),
+    sources: sourceState,
+    tokens: list,
+    alerts: alerts.slice(0, 40),
+    binance: binanceArticles.slice(0, 10),
+    methodology: {
+      score: 'Triage score from market quality, momentum, on-chain controls, holder concentration, transparency and public attention. It is not a return forecast.',
+      cex: 'CEX watch detects public announcements and readiness proxies. It does not predict listings.'
+    }
+  });
+});
+
+app.get('/api/token/:mint', async (req, res) => {
+  const mint = str(req.params.mint);
+  let token = tokens.get(mint);
+  if (!token) {
+    try {
+      const pairData = await fetchJson(`https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(mint)}`);
+      const pairs = Array.isArray(pairData) ? pairData : [];
+      if (pairs.length) {
+        token = createToken(mint);
+        tokens.set(mint, token);
+        const best = pairs.sort((a, b) => num(b?.liquidity?.usd) - num(a?.liquidity?.usd))[0];
+        applyDexPair(token, best);
+      }
+    } catch {}
+  }
+  if (!token) return res.status(404).json({ error: 'Token not found yet' });
+  await Promise.allSettled([enrichOnchain(token), enrichSecurity(token), enrichCreator(token)]);
+  res.json({ token: publicToken(token, true), sources: sourceState });
+});
+
+app.get('/api/announcements/binance', (_req, res) => res.json({ articles: binanceArticles, source: sourceState.binance }));
+
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders?.();
+  res.write(`event: hello\ndata: ${JSON.stringify({ at: now(), stats: statsSnapshot() })}\n\n`);
+  clients.add(res);
+  const keepAlive = setInterval(() => res.write(`: ping ${now()}\n\n`), 20000);
+  req.on('close', () => { clearInterval(keepAlive); clients.delete(res); });
+});
+

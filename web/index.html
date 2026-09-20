@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070b12" />
+  <meta name="description" content="Murdili Radar — real-time early token intelligence for Solana and Pump.fun. Liquidity, momentum, holders, security, creator history and public exchange mentions." />
+  <meta property="og:title" content="Murdili Radar" />
+  <meta property="og:description" content="Real-time early token intelligence. Facts, risk flags and alerts — no fake signals." />
+  <meta property="og:type" content="website" />
+  <title>Murdili Radar — Early Token Intelligence</title>
+  <link rel="stylesheet" href="./styles-1.css" />
+  <link rel="stylesheet" href="./styles-2.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="aurora aurora-a"></div>
+  <div class="aurora aurora-b"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Murdili Radar home">
+      <span class="brand-mark"><i></i><b></b><em></em></span>
+      <span class="brand-copy"><strong>MURDILI</strong><small>RADAR</small></span>
+      <span class="live-dot"><i></i><span data-i18n="live">LIVE</span></span>
+    </a>
+
+    <nav class="top-actions">
+      <div class="latency-chip" id="latencyChip"><span class="status-dot"></span><span id="latencyText">Connecting…</span></div>
+      <button class="ghost-btn compact" id="soundBtn" type="button" aria-label="Sound alerts"><span id="soundIcon">◼</span><span id="soundLabel">Sound</span></button>
+      <button class="ghost-btn compact" id="langBtn" type="button"><span id="langLabel">RU</span></button>
+      <button class="ghost-btn compact" id="methodBtn" type="button"><span>◎</span><span data-i18n="method">Method</span></button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="hero-strip">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="scan-pulse"></span><span data-i18n="eyebrow">EARLY TOKEN INTELLIGENCE</span></div>
+        <h1 data-i18n="headline">Радар, который отбрасывает шум.</h1>
+        <p data-i18n="subhead">Новые Solana/Pump.fun токены → рынок → on-chain → security → creator history → публичные CEX-упоминания.</p>
+      </div>
+      <div class="radar-visual" aria-hidden="true">
+        <div class="radar-grid"><span class="sweep"></span><i class="blip b1"></i><i class="blip b2"></i><i class="blip b3"></i></div>
+      </div>
+    </section>
+
+    <section class="stat-grid" id="statGrid">
+      <article class="stat-card"><span data-i18n="newRate">Новых / мин</span><strong id="statRate">—</strong><small id="statNew5">—</small></article>
+      <article class="stat-card"><span data-i18n="tracked">Под наблюдением</span><strong id="statTracked">—</strong><small data-i18n="liveUniverse">живой поток</small></article>
+      <article class="stat-card accent"><span data-i18n="candidates">Кандидаты</span><strong id="statCandidates">—</strong><small><b id="statPrime">—</b> <span data-i18n="primeNow">prime сейчас</span></small></article>
+      <article class="stat-card danger"><span data-i18n="riskFlags">Critical risk</span><strong id="statRisk">—</strong><small data-i18n="autoFiltered">авто-фильтруются</small></article>
+      <article class="stat-card"><span data-i18n="alerts24">Алертов / 24ч</span><strong id="statAlerts">—</strong><small data-i18n="soundReady">звук для важных</small></article>
+    </section>
+
+    <section class="control-deck">
+      <div class="searchbox"><span>⌕</span><input id="searchInput" autocomplete="off" data-i18n-placeholder="search" placeholder="Название, тикер или контракт…" /></div>
+      <div class="filter-row" id="tierFilters">
+        <button class="filter active" data-tier="all" data-i18n="all">Все</button>
+        <button class="filter" data-tier="prime">PRIME</button>
+        <button class="filter" data-tier="candidate" data-i18n="candidate">Кандидаты</button>
+        <button class="filter" data-tier="new" data-i18n="fresh">Свежие &lt;15м</button>
+        <button class="filter" data-tier="watchlist">★ <span data-i18n="watchlist">Watchlist</span></button>
+      </div>
+      <div class="select-wrap"><select id="riskSelect"><option value="all" data-i18n="riskAny">Любой риск</option><option value="low" data-i18n="riskLow">Low</option><option value="medium" data-i18n="riskMedium">Medium</option><option value="high" data-i18n="riskHigh">High</option></select></div>
+      <div class="select-wrap"><select id="sortSelect"><option value="score" data-i18n="sortScore">Score ↓</option><option value="new" data-i18n="sortNew">Самые новые</option><option value="liq" data-i18n="sortLiq">Ликвидность ↓</option><option value="vol" data-i18n="sortVol">Объём ↓</option></select></div>
+    </section>
+
+    <section class="workspace">
+      <div class="radar-panel panel">
+        <div class="panel-head">
+          <div><span class="panel-kicker" data-i18n="liveScanner">LIVE SCANNER</span><h2 data-i18n="rankedCandidates">Ранжированные токены</h2></div>
+          <div class="result-count"><span id="visibleCount">0</span> <span data-i18n="shown">показано</span></div>
+        </div>
+        <div class="table-wrap">
+          <table class="token-table">
+            <thead><tr>
+              <th></th><th data-i18n="token">TOKEN</th><th>SCORE</th><th data-i18n="age">AGE</th><th>MC</th><th>LIQ</th><th>VOL 1H</th><th>5M FLOW</th><th data-i18n="holders">HOLDERS</th><th data-i18n="risk">RISK</th><th data-i18n="signal">SIGNAL</th>
+            </tr></thead>
+            <tbody id="tokenBody"></tbody>
+          </table>
+          <div class="empty-state" id="emptyState"><div class="spinner"></div><strong data-i18n="connecting">Подключаем радар…</strong><span data-i18n="noFake">Демо-данных нет — ждём реальные источники.</span></div>
+        </div>
+      </div>
+
+      <aside class="side-stack">
+        <section class="panel alert-panel">
+          <div class="panel-head small"><div><span class="panel-kicker" data-i18n="eventStream">EVENT STREAM</span><h2 data-i18n="importantNow">Важное сейчас</h2></div><span class="blink-tag">LIVE</span></div>
+          <div class="alert-list" id="alertList"></div>
+        </section>
+
+        <section class="panel source-panel">
+          <div class="panel-head small"><div><span class="panel-kicker">DATA</span><h2 data-i18n="sourceHealth">Источники</h2></div></div>
+          <div id="sourceList" class="source-list"></div>
+          <p class="source-note" data-i18n="sourceNote">Если источник недоступен, радар показывает это явно и не подменяет данные.</p>
+        </section>
+      </aside>
+    </section>
+
+    <section class="truth-bar">
+      <span>⚠</span>
+      <p data-i18n="disclaimer">Radar Score — приоритизация для исследования, а не прогноз доходности и не рекомендация купить. Микрокап-токены могут потерять всю стоимость. Проверяйте контракт и источники самостоятельно.</p>
+    </section>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="token-drawer" id="tokenDrawer" aria-hidden="true">
+    <button class="drawer-close" id="drawerClose">×</button>
+    <div id="drawerContent"></div>
+  </aside>
+
+  <div class="modal-backdrop" id="methodModal">
+    <div class="modal-card">
+      <button class="drawer-close" id="methodClose">×</button>
+      <span class="panel-kicker">METHODOLOGY</span>
+      <h2 data-i18n="methodTitle">Как читать Radar Score</h2>
+      <div class="method-grid">
+        <div><b>20</b><strong data-i18n="mMarket">Market quality</strong><span data-i18n="mMarketText">Ликвидность, глубина относительно market cap, наличие рынка.</span></div>
+        <div><b>20</b><strong data-i18n="mMomentum">Momentum</strong><span data-i18n="mMomentumText">Объём, транзакции, баланс buys/sells, ускорение.</span></div>
+        <div><b>20</b><strong data-i18n="mSecurity">On-chain security</strong><span data-i18n="mSecurityText">Mint/freeze authority и доступные security-флаги.</span></div>
+        <div><b>20</b><strong data-i18n="mDistribution">Distribution</strong><span data-i18n="mDistributionText">Концентрация крупнейших держателей после bonding curve.</span></div>
+        <div><b>15</b><strong data-i18n="mTransparency">Transparency</strong><span data-i18n="mTransparencyText">Сайт, X, Telegram, creator context.</span></div>
+        <div><b>5</b><strong data-i18n="mAttention">Public attention</strong><span data-i18n="mAttentionText">DEX boosts, graduation и совпадения названия/тикера с публичными CEX-анонсами.</span></div>
+      </div>
+      <p class="method-warning" data-i18n="methodWarning">Score не оценивает вероятность 10x/100x. Он нужен, чтобы быстро сузить поток и показать, почему токен поднялся в радаре.</p>
+    </div>
+  </div>
+
+  <script src="./app-1.js" defer></script>
+  <script src="./app-2.js" defer></script>
+  <script src="./app-3.js" defer></script>
+</body>
+</html>

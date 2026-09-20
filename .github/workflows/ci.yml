@@ -1,18 +1,17 @@
-name: Live Earth CI
+name: CI
 
 on:
   pull_request:
+  push:
     branches: [main]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - run: npm run build
-        env:
-          VITE_API_BASE: https://murdilimax-live-earth-api.onrender.com
+      - run: node --check web/app-1.js && node --check web/app-2.js && node --check web/app-3.js
+      - run: cd server && npm install && npm run check

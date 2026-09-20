@@ -1,8 +1,16 @@
 {
-  "name": "live-earth-api",
+  "name": "murdili-radar-api",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "start": "node index.js" },
-  "dependencies": { "cors": "^2.8.5", "express": "^5.1.0", "pg": "^8.13.1" }
+  "scripts": {
+    "start": "node index.js",
+    "check": "node --check index.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "pg": "^8.13.1"
+  }
 }
