@@ -1,0 +1,74 @@
+// NEXUS ALPHA Dormant Alpha: long-lived DEX universe + project-channel surveillance.
+sourceState.dormant=sourceState.dormant||{label:'Dormant Alpha',ok:false,lastOk:0,lastError:'',latency:null};
+const DORMANT_MAX_AGE_MS=365*24*3600_000;
+const DORMANT_MIN_AGE_MS=7*24*3600_000;
+const DORMANT_SCAN_INTERVAL=15*60_000;
+const dormantSeen=new Map();
+
+pruneTokens=function pruneExpandedUniverse(){
+  const cap=8000;if(tokens.size<=cap)return;
+  const ordered=[...tokens.values()].sort((a,b)=>{
+    const aClaim=(projectSignalState.get(a.mint)?.signals?.length||a.projectSignals?.length)?1:0,bClaim=(projectSignalState.get(b.mint)?.signals?.length||b.projectSignals?.length)?1:0;
+    if(aClaim!==bClaim)return aClaim-bClaim;
+    const aLinks=projectSourceList(a).length?1:0,bLinks=projectSourceList(b).length?1:0;if(aLinks!==bLinks)return aLinks-bLinks;
+    const aL=num(a.dex?.liquidityUsd),bL=num(b.dex?.liquidityUsd);if((aL>=10000)!==(bL>=10000))return (aL>=10000?1:0)-(bL>=10000?1:0);
+    return (a.lastUpdatedAt||0)-(b.lastUpdatedAt||0);
+  });
+  for(const token of ordered.slice(0,tokens.size-cap))tokens.delete(token.mint);
+};
+
+function geckoTokenMap(payload){const map=new Map();for(const item of payload?.included||[])if(item?.type==='token'){const a=item.attributes||{};map.set(item.id,{address:str(a.address),name:str(a.name),symbol:str(a.symbol),image:safeUrl(a.image_url),coingeckoId:str(a.coingecko_coin_id)})}return map}
+function upsertDormantPool(row,inc){
+  const a=row?.attributes||{},baseId=row?.relationships?.base_token?.data?.id||'',meta=inc.get(baseId)||{},mint=meta.address||str(baseId).replace(/^solana_/i,'');
+  if(!mint||mint.length<30)return null;
+  let token=tokens.get(mint);const isNew=!token;if(!token)token=createToken(mint);
+  const created=Date.parse(a.pool_created_at||'')||0,tx5=a.transactions?.m5||{},tx1=a.transactions?.h1||{};
+  token.name ||= meta.name;token.symbol ||= meta.symbol;token.image ||= meta.image;token.createdAt ||= created;token.lastUpdatedAt=now();
+  token.source=uniq([...(token.source||[]),'geckoterminal-trending']);
+  const old=token.dex||{};token.dex={...old,dexId:old.dexId||str(row?.relationships?.dex?.data?.id)||'geckoterminal',pairAddress:old.pairAddress||str(a.address),url:old.url||safeUrl(`https://www.geckoterminal.com/solana/pools/${str(a.address)}`),priceUsd:num(old.priceUsd)||num(a.base_token_price_usd),marketCap:num(old.marketCap)||num(a.market_cap_usd),fdv:num(old.fdv)||num(a.fdv_usd),liquidityUsd:num(old.liquidityUsd)||num(a.reserve_in_usd),volumeM5:num(old.volumeM5)||num(a.volume_usd?.m5),volumeH1:num(old.volumeH1)||num(a.volume_usd?.h1),volumeH6:num(old.volumeH6)||num(a.volume_usd?.h6),txM5:num(old.txM5)||num(tx5.buys)+num(tx5.sells),buysM5:num(old.buysM5)||num(tx5.buys),sellsM5:num(old.sellsM5)||num(tx5.sells),txH1:num(old.txH1)||num(tx1.buys)+num(tx1.sells),buysH1:num(old.buysH1)||num(tx1.buys),sellsH1:num(old.sellsH1)||num(tx1.sells),changeM5:Number.isFinite(Number(old.changeM5))?num(old.changeM5):num(a.price_change_percentage?.m5),changeH1:Number.isFinite(Number(old.changeH1))?num(old.changeH1):num(a.price_change_percentage?.h1),boosts:num(old.boosts),pairCreatedAt:num(old.pairCreatedAt)||created};
+  token.dormant={discoveredAt:token.dormant?.discoveredAt||now(),lastTrendingAt:now(),coingeckoId:meta.coingeckoId||token.dormant?.coingeckoId||'',ageDays:Math.floor(ageMs(token)/86400000)};
+  tokens.set(mint,token);scoreToken(token);recordSnapshot(token);dormantSeen.set(mint,now());if(isNew)broadcast('new-token',publicToken(token));return token;
+}
+
+async function fetchDormantPage(duration,page){return fetchJson(`https://api.geckoterminal.com/api/v2/networks/solana/trending_pools?include=base_token&page=${page}&duration=${duration}`,{timeout:12000})}
+async function enrichDormantDex(list){
+  const chosen=list.filter(t=>ageMs(t)>=DORMANT_MIN_AGE_MS).sort((a,b)=>(num(b.dex?.volumeH1)-num(a.dex?.volumeH1))||(num(b.dex?.liquidityUsd)-num(a.dex?.liquidityUsd))).slice(0,90);
+  for(const group of chunk(chosen.map(t=>t.mint),30)){
+    if(!group.length)continue;
+    try{const data=await fetchJson(`https://api.dexscreener.com/tokens/v1/solana/${group.join(',')}`,{timeout:9000}),pairs=Array.isArray(data)?data:[],best=new Map();for(const pair of pairs){const mint=str(pair?.baseToken?.address);if(!mint||!tokens.has(mint))continue;if(!best.has(mint)||num(pair?.liquidity?.usd)>num(best.get(mint)?.liquidity?.usd))best.set(mint,pair)}for(const[mint,pair]of best)applyDexPair(tokens.get(mint),pair)}catch(error){if(!compactError(error).includes('429'))sourceState.dormant.lastError=`DEX metadata: ${compactError(error)}`}
+    await sleep(1000);
+  }
+}
+
+async function pollDormantUniverse(){
+  const started=now(),observed=[];let pagesOk=0,lastError='';
+  try{
+    for(const duration of ['24h','6h'])for(let page=1;page<=5;page++){
+      try{const data=await fetchDormantPage(duration,page),inc=geckoTokenMap(data),rows=Array.isArray(data?.data)?data.data:[];if(!rows.length)break;pagesOk++;for(const row of rows){const token=upsertDormantPool(row,inc);if(token&&ageMs(token)>=DORMANT_MIN_AGE_MS&&ageMs(token)<=DORMANT_MAX_AGE_MS&&num(token.dex?.liquidityUsd)>=3000)observed.push(token)}}catch(error){lastError=compactError(error);if(page===1)break}
+      await sleep(850);
+    }
+    if(observed.length)await enrichDormantDex(uniq(observed.map(t=>t.mint)).map(m=>tokens.get(m)).filter(Boolean));
+    const persist=observed.filter(t=>projectSourceList(t).length||num(t.dex?.liquidityUsd)>=10000).sort((a,b)=>(num(b.dex?.volumeH1)-num(a.dex?.volumeH1))||(b.score-a.score)).slice(0,100);
+    if(pool)for(const token of persist){try{await persistToken(token)}catch{}}
+    if(pagesOk){touchSource('dormant',true,started);sourceState.dormant.lastError=''}else touchSource('dormant',false,started,lastError||'No legacy pool pages');
+    pruneTokens();
+  }catch(error){touchSource('dormant',false,started,error)}
+}
+
+projectChannelLoop=async function dormantProjectChannelLoop(){
+  const interval=4*60_000,maxPerPass=16;
+  while(true){const started=now();try{
+    const queue=[...tokens.values()].filter(t=>projectSourceList(t).length&&ageMs(t)<DORMANT_MAX_AGE_MS&&num(t.dex?.liquidityUsd)>=3000).sort((a,b)=>{const ac=(projectSignalState.get(a.mint)?.signals?.length||a.projectSignals?.length)?1:0,bc=(projectSignalState.get(b.mint)?.signals?.length||b.projectSignals?.length)?1:0;if(ac!==bc)return bc-ac;const av=num(a.dex?.volumeH1)+num(a.dex?.liquidityUsd)*.15,bv=num(b.dex?.volumeH1)+num(b.dex?.liquidityUsd)*.15;return bv-av});
+    for(const token of queue.slice(0,maxPerPass)){const st=projectSignalState.get(token.mint);if(st&&now()-st.lastScan<interval)continue;await scanProjectToken(token)}if(queue.length===0)sourceState.project.lastError='Waiting for eligible tokens with public project channels';
+  }catch(error){touchSource('project',false,started,error)}await sleep(interval)}
+};
+
+persistenceLoop=async function persistenceLoop365d(){while(true){if(pool){const keep=[...tokens.values()].sort((a,b)=>{const ac=(a.projectSignals?.length||projectSignalState.get(a.mint)?.signals?.length)?1:0,bc=(b.projectSignals?.length||projectSignalState.get(b.mint)?.signals?.length)?1:0;if(ac!==bc)return bc-ac;const al=projectSourceList(a).length?1:0,bl=projectSourceList(b).length?1:0;if(al!==bl)return bl-al;return (b.score-a.score)||(num(b.dex?.liquidityUsd)-num(a.dex?.liquidityUsd))}).slice(0,500);for(const token of keep){try{await persistToken(token)}catch{}}try{await pool.query('DELETE FROM radar_tokens WHERE updated_at < $1 AND score < 55',[now()-365*24*3600_000]);await pool.query('DELETE FROM radar_alerts WHERE created_at < $1',[now()-365*24*3600_000])}catch{}}await sleep(5*60_000)}};
+
+async function loadDormantHistory(){if(!pool)return;try{const{rows}=await pool.query('SELECT payload FROM radar_tokens ORDER BY updated_at DESC LIMIT 3000 OFFSET 400');for(const row of rows){const t=row.payload;if(t?.mint&&!tokens.has(t.mint))tokens.set(t.mint,{...createToken(t.mint),...t,source:t.source||[]})}pruneTokens()}catch{}}
+
+app.get('/api/radar-v3',(req,res)=>{const limit=clamp(num(req.query.limit)||600,20,800),minScore=clamp(num(req.query.minScore)||0,0,100),maxAgeHours=clamp(num(req.query.maxAgeHours)||8760,1,8760),rank=t=>{const claim=(projectSignalState.get(t.mint)?.signals?.length||t.projectSignals?.length)?1:0,old=ageMs(t)>=30*24*3600_000?1:0,active=Math.min(40,Math.log10(Math.max(1,num(t.dex?.volumeH1)))*6+Math.log10(Math.max(1,num(t.dex?.liquidityUsd)))*3);return claim*10000+(old?active:0)+num(t.score)};const list=[...tokens.values()].filter(t=>t.score>=minScore&&ageMs(t)<=maxAgeHours*3600_000).sort((a,b)=>rank(b)-rank(a)||(b.lastUpdatedAt-a.lastUpdatedAt)).slice(0,limit).map(t=>({...publicToken(t),dormant:t.dormant||null,intel:{setup:computeSetupIntel(t),cex:getCexIntel(t),buyLinks:buyLinksFor(t)}}));res.json({generatedAt:now(),stats:statsSnapshot(),sources:sourceState,tokens:list,alerts:alerts.slice(0,80),marketRegime:marketRegimeState,universeHours:maxAgeHours,dormant:{tracked:[...tokens.values()].filter(t=>ageMs(t)>=30*24*3600_000).length,source:'GeckoTerminal trending pools + accumulated history'}})});
+
+setTimeout(()=>loadDormantHistory().catch(()=>{}),18000);
+setTimeout(()=>pollDormantUniverse().catch(()=>{}),30000);
+setInterval(()=>pollDormantUniverse().catch(()=>{}),DORMANT_SCAN_INTERVAL);
