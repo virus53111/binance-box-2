@@ -194,8 +194,7 @@ const services = [
   "Ремонт техники",
 ];
 const inviteText =
-  "Labdien! Pamanījām Jūsu sludinājumu. Aicinām bez maksas pievienoties MURDILIMAX — izveidojiet meistara profilu un saņemiet jaunus pasūtījumus visā Latvijā.";
-const inviteUrl = "https://murdilimax.com";
+  "Labdien! Pamanījām Jūsu sludinājumu. Aicinām bez maksas pievienoties jaunai Latvijas meistaru un pasūtījumu platformai MURDILIMAX. Lai mūs atrastu, ierakstiet Google meklētājā: MURDILIMAX.";
 const fallback: Order[] = [
   {
     id: "demo1",
@@ -655,27 +654,12 @@ export default function App() {
     notify("Список очищен");
   };
   const sendInvite = async (lead: SsLead) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "MURDILIMAX",
-          text: inviteText,
-          url: inviteUrl,
-        });
-        notify("Приглашение передано для отправки");
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError")
-          return;
-      }
-    }
-    const fullText = `${inviteText}\n${inviteUrl}`;
+    window.open(lead.url, "_blank", "noopener,noreferrer");
     try {
-      await navigator.clipboard.writeText(fullText);
-      window.open(lead.url, "_blank", "noopener,noreferrer");
-      notify("Текст скопирован — вставьте его в сообщение");
+      await navigator.clipboard.writeText(inviteText);
+      notify("Текст без ссылки скопирован — вставьте его в форму SS.com");
     } catch {
-      notify("Не удалось открыть отправку. Разрешите доступ к буферу обмена");
+      notify("Объявление открыто. Разрешите копирование текста в браузере");
     }
   };
   const toggleBlock = async (target: AdminUser) => {
@@ -1243,7 +1227,7 @@ export default function App() {
                               onClick={() => sendInvite(lead)}
                             >
                               <Send />
-                              Отправить приглашение
+                              Открыть SS + скопировать текст
                             </button>
                             <button
                               className="danger"
