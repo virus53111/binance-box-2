@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-09-24T17:01:59.267Z",
+  "generatedAt": "2026-09-24T18:25:09.703Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvY25tbGwuaHRtbA",
+      "category": "builder",
+      "title": "Visu veidu apdares darbi. Рига, центр Средне-проф. LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cnmll.html",
+      "foundAt": "2026-09-24T18:25:09.703Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2FrbWNpLmh0bWw",
+      "category": "handyman",
+      "title": "В Юрмале выполняю работу не требующую особых навыков , работы по саду и территории, убор Юрмала, Булдури Среднее RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/akmci.html",
+      "foundAt": "2026-09-24T18:25:09.703Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2ZkaGppLmh0bWw",
       "category": "electrician",
