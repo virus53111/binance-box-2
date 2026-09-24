@@ -1,4 +1,68 @@
 {
-  "generatedAt": "2026-09-24T12:14:11.751Z",
-  "leads": []
+  "generatedAt": "2026-09-24T14:11:39.788Z",
+  "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvZ2loY2guaHRtbA",
+      "category": "builder",
+      "title": "Kosmētiskie remonti. Špaktelēšanas darbi Sienu griestu krāsošana un citi Grīdu nom Рига, Пурвциемс Начальное LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/gihch.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvY3Brb3AuaHRtbA",
+      "category": "builder",
+      "title": "Veicam kapitālos un kosmētiskos remontus. Būvniecības darbi Visa veida fasādes darbi Елгава и р-он, Елгава Средне-проф. LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cpkop.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2R4am5lLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis amatmeistars 00-24. Электрик ремесленник 00-24. Electrician craftsman 00-24. Рига, Югла Инженер LV, RU, EN, DE По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dxjne.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JiY2hqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis uz stundu 24/7. Электрик на час 24/7. Electrician for an hour 24/7. Rīgā un Рига, Кенгарагс Высшее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bbchj.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FtbGhqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis uz stundu 24/7. Электрик на час 24/7. Electrician for an hour 24/7. Novērš Рига, центр Инженер LV, RU, EN, DE Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/amlhj.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2draWJmLmh0bWw",
+      "category": "electrician",
+      "title": "Avārijas elektriķis 24/7. Аварийный электрик 24/7. Emergency electrician 24/7. Sertif Рига, центр Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gkibf.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2RobWNmLmh0bWw",
+      "category": "electrician",
+      "title": "Sertificēts elektriķis ar 30 gadu pieredzi veic jebkādas sarežģītības elektromontāžas un Рига, центр Высшее LV, RU, LT Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dhmcf.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VqaWNoLmh0bWw",
+      "category": "electrician",
+      "title": "Сертифицированный электрик со стажем более 30 лет, готов оказать помощь в проблемах элек Рига, центр Высшее LV, RU, LT Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ejich.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JqeGdjLmh0bWw",
+      "category": "electrician",
+      "title": "Elektrības meistars 24/7. Мастер электричества 24/7. Electricity craftsman 24/7. Piln Рига, Пардаугава Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bjxgc.html",
+      "foundAt": "2026-09-24T14:11:39.788Z"
+    }
+  ]
 }
