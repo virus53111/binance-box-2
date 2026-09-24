@@ -11,7 +11,7 @@ const found=[];
 for(const category of categories){
   const source=`${base}/ru/work/i-search-for-work/${category}/`;
   try{
-    const response=await fetch(source,{headers:{"user-agent":"MURDILIMAX listing monitor/1.0 (+https://murdilimax.com)","accept-language":"ru,lv;q=0.9"}});
+    const response=await fetch(source,{signal:AbortSignal.timeout(15000),headers:{"user-agent":"MURDILIMAX listing monitor/1.0 (+https://murdilimax.com)","accept-language":"ru,lv;q=0.9"}});
     if(!response.ok)throw new Error(`HTTP ${response.status}`);
     const html=await response.text();
     for(const match of html.matchAll(/<tr[^>]*\bid=["']tr_[^"']+["'][^>]*>([\s\S]*?)<\/tr>/gi)){
