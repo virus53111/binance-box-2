@@ -193,8 +193,6 @@ const services = [
   "Перевозка",
   "Ремонт техники",
 ];
-const inviteText =
-  "Labdien! Pamanījām Jūsu sludinājumu. Aicinām bez maksas pievienoties jaunai Latvijas meistaru un pasūtījumu platformai MURDILIMAX. Lai mūs atrastu, ierakstiet Google meklētājā: MURDILIMAX.";
 const fallback: Order[] = [
   {
     id: "demo1",
@@ -652,15 +650,6 @@ export default function App() {
       { merge: true },
     );
     notify("Список очищен");
-  };
-  const sendInvite = async (lead: SsLead) => {
-    window.open(lead.url, "_blank", "noopener,noreferrer");
-    try {
-      await navigator.clipboard.writeText(inviteText);
-      notify("Текст без ссылки скопирован — вставьте его в форму SS.com");
-    } catch {
-      notify("Объявление открыто. Разрешите копирование текста в браузере");
-    }
   };
   const toggleBlock = async (target: AdminUser) => {
     if (target.email?.toLowerCase() === OWNER_EMAIL)
@@ -1222,13 +1211,6 @@ export default function App() {
                               <ExternalLink />
                               Открыть
                             </a>
-                            <button
-                              className="send-invite"
-                              onClick={() => sendInvite(lead)}
-                            >
-                              <Send />
-                              Открыть SS + скопировать текст
-                            </button>
                             <button
                               className="danger"
                               onClick={() => hideLead(lead.id)}

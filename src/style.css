@@ -1192,10 +1192,6 @@ footer button {
   color: #b7472d;
   background: #fff0ec;
 }
-.lead-actions .send-invite {
-  background: var(--green);
-  color: white;
-}
 .admin-empty {
   padding: 28px;
   display: flex;
