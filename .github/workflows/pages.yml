@@ -23,7 +23,6 @@ jobs:
           cache: npm
       - run: npm install
       - name: Scan new SS.com construction listings
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: node scripts/scan-ss.mjs
       - run: npm run build
       - uses: actions/configure-pages@v5
@@ -33,7 +32,6 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
       - name: Save monitor state
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "murdilimax-monitor"
           git config user.email "actions@users.noreply.github.com"
