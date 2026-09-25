@@ -102,6 +102,17 @@ type SsLead = {
   url: string;
   foundAt: string;
 };
+type ExternalLead = {
+  id: string;
+  type: "task" | "helper";
+  category: string;
+  profession: string;
+  title: string;
+  city: string;
+  url: string;
+  source: string;
+  foundAt: string;
+};
 type AdminUser = {
   id: string;
   displayName?: string;
@@ -307,6 +318,8 @@ export default function App() {
     [messages, setMessages] = useState<Message[]>([]),
     [message, setMessage] = useState(""),
     [ssLeads, setSsLeads] = useState<SsLead[]>([]),
+    [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]),
+    [externalMode, setExternalMode] = useState<"task" | "helper">("task"),
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
@@ -369,6 +382,12 @@ export default function App() {
       }),
     [],
   );
+  useEffect(() => {
+    fetch(`/external-leads.json?v=${Date.now()}`)
+      .then((response) => response.json())
+      .then((data) => setExternalLeads(Array.isArray(data.leads) ? data.leads : []))
+      .catch(() => setExternalLeads([]));
+  }, []);
   useEffect(() => {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
     return onSnapshot(
@@ -486,6 +505,13 @@ export default function App() {
     );
   }, [orders, queryText]);
   const myOrders = orders.filter((o) => o.customerId === user?.uid);
+  const externalVisible = useMemo(() => {
+    const q = queryText.toLowerCase();
+    return externalLeads
+      .filter((lead) => lead.type === externalMode)
+      .filter((lead) => !q || `${lead.category} ${lead.title} ${lead.city}`.toLowerCase().includes(q))
+      .slice(0, 60);
+  }, [externalLeads, externalMode, queryText]);
   const login = async () => {
     try {
       setBusy(true);
@@ -1011,6 +1037,64 @@ export default function App() {
             </div>
           )}
         </aside>
+      </section>
+      <section className="opportunity-hub" id="latvia-opportunities">
+        <div className="opportunity-head">
+          <div>
+            <p className="eyebrow">РАДАР MURDILIMAX · LATVIJA</p>
+            <h2>Подработка и помощники по всей Латвии</h2>
+            <p>
+              Публичные объявления собираются автоматически. Контакты остаются
+              только на сайте-источнике.
+            </p>
+          </div>
+          <div className="opportunity-switch">
+            <button
+              className={externalMode === "task" ? "active" : ""}
+              onClick={() => setExternalMode("task")}
+            >
+              Ищут помощников
+            </button>
+            <button
+              className={externalMode === "helper" ? "active" : ""}
+              onClick={() => setExternalMode("helper")}
+            >
+              Предлагают помощь
+            </button>
+          </div>
+        </div>
+        <div className="opportunity-summary">
+          <b>{externalVisible.length}</b>
+          <span>
+            {externalMode === "task" ? "актуальных предложений" : "публичных анкет"}
+            {queryText ? ` по запросу «${queryText}»` : ""}
+          </span>
+          <a href={externalMode === "task" ? "/podrabotka/" : "/pomoshchniki/"}>
+            Открыть каталог для Google
+          </a>
+        </div>
+        <div className="opportunity-grid">
+          {externalVisible.map((lead) => (
+            <article key={`${lead.type}-${lead.id}`}>
+              <div className="opportunity-meta">
+                <span>{lead.category}</span>
+                <small><MapPin />{lead.city}</small>
+              </div>
+              <h3>{lead.title}</h3>
+              <div className="opportunity-card-foot">
+                <small>Внешний источник: {lead.source}</small>
+                <a href={lead.url} target="_blank" rel="nofollow noreferrer">
+                  Открыть оригинал <ExternalLink />
+                </a>
+              </div>
+            </article>
+          ))}
+          {!externalVisible.length && (
+            <div className="admin-empty">
+              <Search /> Подходящих объявлений пока не найдено
+            </div>
+          )}
+        </div>
       </section>
       <footer>
         <span>© 2026 MURDILIMAX</span>
