@@ -63,6 +63,7 @@ type Profile = {
 };
 type Order = {
   id: string;
+  category?: string;
   service: string;
   description: string;
   price: string;
@@ -117,88 +118,85 @@ const ui = {
   ru: {
     map: "Карта",
     orders: "Заявки",
-    masters: "Мастера",
+    masters: "Помощники",
     search: "Что нужно сделать?",
     newOrder: "Создать заявку",
-    roleC: "Я заказчик",
-    roleM: "Я исполнитель",
-    headline: "Найдите мастера рядом",
-    sub: "Разместите задачу — исполнители предложат цену",
+    roleC: "Мне нужна помощь",
+    roleM: "Хочу помогать",
+    headline: "Любая помощь рядом",
+    sub: "Доставка, поручения, помощь по дому и другие задачи — найдите человека рядом",
     login: "Войти через Google",
     profile: "Профиль",
     chats: "Чаты",
     near: "Заявки рядом",
-    respond: "Написать заказчику",
+    respond: "Предложить помощь",
     myOrders: "Мои объявления",
   },
   lv: {
     map: "Karte",
     orders: "Pasūtījumi",
-    masters: "Meistari",
+    masters: "Palīgi",
     search: "Kas jāizdara?",
     newOrder: "Izveidot pasūtījumu",
-    roleC: "Esmu klients",
-    roleM: "Esmu meistars",
-    headline: "Atrodiet meistaru tuvumā",
-    sub: "Publicējiet darbu — meistari piedāvās cenu",
+    roleC: "Man vajag palīdzību",
+    roleM: "Vēlos palīdzēt",
+    headline: "Jebkāda palīdzība tuvumā",
+    sub: "Piegāde, uzdevumi, palīdzība mājās un citi darbi — atrodiet cilvēku tuvumā",
     login: "Turpināt ar Google",
     profile: "Profils",
     chats: "Čati",
     near: "Pasūtījumi tuvumā",
-    respond: "Rakstīt klientam",
+    respond: "Piedāvāt palīdzību",
     myOrders: "Mani sludinājumi",
   },
   en: {
     map: "Map",
     orders: "Requests",
-    masters: "Pros",
+    masters: "Helpers",
     search: "What needs doing?",
     newOrder: "Post a request",
-    roleC: "I'm a customer",
-    roleM: "I'm a professional",
-    headline: "Find a pro nearby",
-    sub: "Post a task and receive offers",
+    roleC: "I need help",
+    roleM: "I want to help",
+    headline: "Any help nearby",
+    sub: "Delivery, errands, home help and more — find someone nearby",
     login: "Continue with Google",
     profile: "Profile",
     chats: "Chats",
     near: "Requests nearby",
-    respond: "Message customer",
+    respond: "Offer help",
     myOrders: "My listings",
   },
   uk: {
     map: "Карта",
     orders: "Заявки",
-    masters: "Майстри",
+    masters: "Помічники",
     search: "Що потрібно зробити?",
     newOrder: "Створити заявку",
-    roleC: "Я замовник",
-    roleM: "Я виконавець",
-    headline: "Знайдіть майстра поруч",
-    sub: "Опублікуйте завдання та отримайте пропозиції",
+    roleC: "Мені потрібна допомога",
+    roleM: "Хочу допомагати",
+    headline: "Будь-яка допомога поруч",
+    sub: "Доставка, доручення, допомога вдома та інші завдання",
     login: "Увійти через Google",
     profile: "Профіль",
     chats: "Чати",
     near: "Заявки поруч",
-    respond: "Написати замовнику",
+    respond: "Запропонувати допомогу",
     myOrders: "Мої оголошення",
   },
 };
-const services = [
-  "Сантехник",
-  "Плиточник",
-  "Электрик",
-  "Сборка мебели",
-  "Маляр",
-  "Уборка",
-  "Перевозка",
-  "Ремонт техники",
-];
+const categories: Record<Lang, string[]> = {
+  ru: ["Поручения", "Доставка", "Перевозка", "Помощь по дому", "Ремонт", "Уборка", "Животные", "Помощь пожилым", "Техника", "Другое"],
+  lv: ["Uzdevumi", "Piegāde", "Pārvadāšana", "Palīdzība mājās", "Remonts", "Uzkopšana", "Dzīvnieki", "Palīdzība senioriem", "Tehnika", "Cits"],
+  en: ["Errands", "Delivery", "Transport", "Home help", "Repairs", "Cleaning", "Pets", "Senior help", "Technology", "Other"],
+  uk: ["Доручення", "Доставка", "Перевезення", "Допомога вдома", "Ремонт", "Прибирання", "Тварини", "Допомога літнім", "Техніка", "Інше"],
+};
 const fallback: Order[] = [
   {
     id: "demo1",
-    service: "Установить смеситель",
-    description: "Нужно заменить старый смеситель",
-    price: "€35–50",
+    category: "Поручения",
+    service: "Забрать посылку и привезти домой",
+    description: "Забрать небольшую посылку в центре и привезти в Пурвциемс",
+    price: "€15",
     city: "Rīga",
     district: "Purvciems",
     date: "Сегодня",
@@ -210,9 +208,10 @@ const fallback: Order[] = [
   },
   {
     id: "demo2",
-    service: "Собрать шкаф IKEA",
-    description: "Шкаф PAX, 2 секции",
-    price: "€55–75",
+    category: "Животные",
+    service: "Погулять с собакой",
+    description: "Нужна прогулка на 45 минут",
+    price: "€12",
     city: "Rīga",
     district: "Centrs",
     date: "Завтра",
@@ -224,9 +223,10 @@ const fallback: Order[] = [
   },
   {
     id: "demo3",
-    service: "Положить плитку 12 м²",
-    description: "Ванная комната",
-    price: "€240–320",
+    category: "Помощь по дому",
+    service: "Помочь поднять мебель",
+    description: "Нужно поднять небольшой диван на третий этаж",
+    price: "€25",
     city: "Rīga",
     district: "Imanta",
     date: "На неделе",
@@ -427,7 +427,7 @@ export default function App() {
     return (orders.length ? orders : fallback).filter(
       (o) =>
         !q ||
-        `${o.service} ${o.description} ${o.district}`.toLowerCase().includes(q),
+        `${o.category || ""} ${o.service} ${o.description} ${o.district}`.toLowerCase().includes(q),
     );
   }, [orders, queryText]);
   const myOrders = orders.filter((o) => o.customerId === user?.uid);
@@ -531,6 +531,7 @@ export default function App() {
           ? `€${rawPrice}`
           : rawPrice || "Цена договорная",
       data = {
+        category: String(f.get("category") || "Другое").trim(),
         service: String(f.get("service")).trim(),
         description: String(f.get("description")).trim(),
         price,
@@ -541,7 +542,7 @@ export default function App() {
         lat: c.lat,
         lng: c.lng,
         customerId: user.uid,
-        customerName: profile?.displayName || user.displayName || "Заказчик",
+        customerName: profile?.displayName || user.displayName || "Пользователь",
         status: "open",
         updatedAt: serverTimestamp(),
       };
@@ -789,7 +790,7 @@ export default function App() {
           </button>
         </div>
         <div className="service-strip">
-          {services.map((s) => (
+          {categories[lang].map((s) => (
             <button key={s} onClick={() => setQueryText(s)}>
               {s}
             </button>
@@ -849,6 +850,7 @@ export default function App() {
               {o.photo && <img className="order-thumb" src={o.photo} alt="" />}
               <div className="job-top">
                 <div>
+                  {o.category && <span className="task-category">{o.category}</span>}
                   <h3>{o.service}</h3>
                   <p>
                     <MapPin />
@@ -922,7 +924,7 @@ export default function App() {
                   <CircleUserRound />
                 </div>
                 <h2>{t.login}</h2>
-                <p>Один аккаунт для заказчика и исполнителя.</p>
+                <p>Один аккаунт: просите о помощи или помогайте другим.</p>
                 <button className="google" disabled={busy} onClick={login}>
                   <b>G</b>
                   {busy ? "Подключение…" : t.login}
@@ -972,8 +974,8 @@ export default function App() {
                   <label>
                     Роль
                     <select name="role" defaultValue={profile?.role || role}>
-                      <option value="customer">Заказчик</option>
-                      <option value="master">Исполнитель</option>
+                      <option value="customer">Нужна помощь</option>
+                      <option value="master">Помощник</option>
                     </select>
                   </label>
                   <label className="wide">
@@ -985,11 +987,11 @@ export default function App() {
                     />
                   </label>
                   <label className="wide">
-                    Какие работы выполняете
+                    Чем можете помогать
                     <textarea
                       name="services"
                       defaultValue={profile?.services}
-                      placeholder="Сантехника, мебель, электрика…"
+                      placeholder="Доставка, уборка, ремонт, животные, поручения…"
                     />
                   </label>
                 </div>
@@ -1021,7 +1023,7 @@ export default function App() {
                   ) : (
                     <>
                       <Camera />
-                      <span>Добавить фото работы</span>
+                      <span>Добавить фото к заданию</span>
                     </>
                   )}
                   <input
@@ -1032,15 +1034,28 @@ export default function App() {
                 </label>
                 <div className="form-grid">
                   <label>
-                    Услуга
+                    Категория
+                    <select
+                      name="category"
+                      required
+                      defaultValue={editing?.category || categories[lang][0]}
+                    >
+                      {categories[lang].map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Что нужно сделать
                     <input
                       name="service"
                       required
+                      placeholder="Например, забрать посылку"
                       defaultValue={editing?.service}
                     />
                   </label>
                   <label>
-                    Цена
+                    Бюджет
                     <input
                       name="price"
                       placeholder="Например, €40–60"
@@ -1107,8 +1122,8 @@ export default function App() {
                   ))}
                   {!chats.length && (
                     <p>
-                      Пока нет чатов. Исполнитель может открыть чат из
-                      объявления.
+                      Пока нет чатов. Помощник может написать по опубликованному
+                      заданию.
                     </p>
                   )}
                 </aside>
@@ -1243,8 +1258,8 @@ export default function App() {
                           <small>
                             {person.email || "Email не указан"} ·{" "}
                             {person.role === "master"
-                              ? "исполнитель"
-                              : "заказчик"}
+                              ? "помощник"
+                              : "ищет помощь"}
                           </small>
                         </span>
                         <button

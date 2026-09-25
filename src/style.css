@@ -453,6 +453,16 @@ svg {
   margin: 0;
   font-size: 0.96rem;
 }
+.task-category {
+  display: inline-block;
+  margin-bottom: 7px;
+  padding: 4px 8px;
+  border-radius: 99px;
+  background: #edf4ef;
+  color: var(--green);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
 .job-top p {
   display: flex;
   align-items: center;
