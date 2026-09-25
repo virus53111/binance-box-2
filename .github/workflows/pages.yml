@@ -25,6 +25,8 @@ jobs:
       - run: npm install
       - name: Scan new SS.com construction listings
         run: node scripts/scan-ss.mjs
+      - name: Generate social preview pages for public tasks
+        run: node scripts/generate-task-pages.mjs
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

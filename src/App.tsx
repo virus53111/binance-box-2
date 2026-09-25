@@ -722,8 +722,7 @@ export default function App() {
   };
   const activeLeads = ssLeads.filter((x) => !dismissedLeads.includes(x.id));
   const buildShareUrl = (taskId?: string) => {
-    const url = new URL("/", location.origin);
-    if (taskId) url.searchParams.set("task", taskId);
+    const url = new URL(taskId ? `/task/${encodeURIComponent(taskId)}/` : "/", location.origin);
     if (user) url.searchParams.set("ref", user.uid);
     return url.toString();
   };
@@ -749,6 +748,10 @@ export default function App() {
       `${order.service}\n${order.district}, ${order.city} · ${order.date}\nБюджет: ${order.price}`,
       buildShareUrl(order.id),
     );
+  const shareOrderOnFacebook = (order: Order) => {
+    const shareUrl=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(buildShareUrl(order.id))}`;
+    window.open(shareUrl,"_blank","noopener,noreferrer");
+  };
   const inviteHelper = () =>
     shareContent(
       "MURDILIMAX — любая помощь рядом",
@@ -966,10 +969,19 @@ export default function App() {
                 <strong>{o.price}</strong>
               </div>
               <p className="order-description">{o.description}</p>
-              <button className="share-task" onClick={() => shareOrder(o)}>
-                <Share2 />
-                {t.share}
-              </button>
+              <div className="share-task-actions">
+                <button className="share-task" onClick={() => shareOrder(o)}>
+                  <Share2 />
+                  {t.share}
+                </button>
+                <button
+                  className="facebook-share"
+                  onClick={() => shareOrderOnFacebook(o)}
+                >
+                  <b>f</b>
+                  Facebook
+                </button>
+              </div>
               {o.customerId === user?.uid ? (
                 <div className="card-actions">
                   <button onClick={() => openOrder(o)}>
