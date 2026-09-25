@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-09-25T14:59:13.737Z",
+  "generatedAt": "2026-09-25T16:29:36.245Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvaGZtY2QuaHRtbA",
+      "category": "builder",
+      "title": "Meklēju darbu Rīgā un Rīgas apkārtnē Mani sauc Ivo, 32 gadi. Ir pieredze celtniecībā un Рига, Межапарк Среднее LV Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/hfmcd.html",
+      "foundAt": "2026-09-25T16:29:36.245Z"
+    },
+    {
+      "id": "hvdXNlLXBhaW50ZXIvYmhkZGwuaHRtbA",
+      "category": "house-painter",
+      "title": "Покраска кирпичных стен и текстурных. Стеклохолст. Венецианская штукатурка - есть свой м Рига, центр Средне-проф. - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/bhddl.html",
+      "foundAt": "2026-09-25T16:29:36.245Z"
+    },
     {
       "id": "3b3JrL2hhbmR5bWFuL2VrcGNsLmh0bWw",
       "category": "handyman",
