@@ -1,6 +1,41 @@
 {
-  "generatedAt": "2026-09-25T09:57:09.330Z",
+  "generatedAt": "2026-09-25T13:10:01.493Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYWxiZW0uaHRtbA",
+      "category": "builder",
+      "title": "SIA Ремонт домов, квартир, офисов под \"ключ\". Качественный капитальный или косметическ Рига, Другой Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/albem.html",
+      "foundAt": "2026-09-25T13:10:01.493Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZtY2ViLmh0bWw",
+      "category": "electrician",
+      "title": "Kvalificēts Elektriķis, Strādāju Rīgā un Rīgas rajonā. Veicu jaunu elektroinstalāciju. E Рига, Межциемс Высшее LV По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fmceb.html",
+      "foundAt": "2026-09-25T13:10:01.493Z"
+    },
+    {
+      "id": "L2VsZWN0cmljaWFuL2NleGhuZC5odG1s",
+      "category": "electrician",
+      "title": "Elektriķa pakalpojumi – droši, ātri un profesionāli. Piedāvāju kvalitatīvus elektriķ Рига, Кенгарагс Инженер LV, RU, DE Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cexhnd.html",
+      "foundAt": "2026-09-25T13:10:01.493Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZnZG5pLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Rīgā – mazi elektrības darbi Veicu dažādus mazus elektrības darbus dzīvokļos Рига, Ильгюциемс Высшее LV, RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fgdni.html",
+      "foundAt": "2026-09-25T13:10:01.493Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2Jjbm5uLmh0bWw",
+      "category": "handyman",
+      "title": "Meklēju darbu, fiziski izturīgs, Pieredze un spēja dažādos darbos, lauksaimniecība un ce Даугавпилс и р-он, Даугавпилс Среднее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bcnnn.html",
+      "foundAt": "2026-09-25T13:10:01.493Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvZWdnZGkuaHRtbA",
       "category": "builder",
