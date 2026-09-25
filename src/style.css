@@ -1119,6 +1119,7 @@ footer button {
   gap: 12px;
 }
 .opportunity-more { display: flex; margin: 20px auto 0; }
+.map-loading { display: grid; place-items: center; color: #637069; font-weight: 800; background: #eef2ef; }
 .opportunity-grid > article {
   min-width: 0;
   border: 1px solid var(--line);

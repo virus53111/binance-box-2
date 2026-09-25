@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -47,8 +47,10 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import MapPanel, { MapOrder } from "./MapPanel";
+import type { MapOrder } from "./MapPanel";
 import { auth, db, googleProvider, OWNER_EMAIL } from "./firebase";
+
+const MapPanel = lazy(() => import("./MapPanel"));
 
 type Lang = "ru" | "lv" | "en" | "uk";
 type Role = "customer" | "master";
@@ -951,7 +953,7 @@ export default function App() {
               Где я
             </button>
           </div>
-          <MapPanel
+          <Suspense fallback={<div className="real-map map-loading">Загружаем карту…</div>}><MapPanel
             center={center}
             orders={visible.map(
               (o) =>
@@ -969,7 +971,7 @@ export default function App() {
                 .getElementById(`order-${id}`)
                 ?.scrollIntoView({ behavior: "smooth", block: "center" })
             }
-          />
+          /></Suspense>
         </div>
         <aside className="feed" ref={selectedCard}>
           <div className="section-title">
