@@ -1118,6 +1118,7 @@ footer button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
+.opportunity-more { display: flex; margin: 20px auto 0; }
 .opportunity-grid > article {
   min-width: 0;
   border: 1px solid var(--line);

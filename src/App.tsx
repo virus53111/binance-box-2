@@ -320,6 +320,7 @@ export default function App() {
     [ssLeads, setSsLeads] = useState<SsLead[]>([]),
     [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]),
     [externalMode, setExternalMode] = useState<"task" | "helper">("task"),
+    [externalLimit, setExternalLimit] = useState(60),
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
@@ -505,13 +506,25 @@ export default function App() {
     );
   }, [orders, queryText]);
   const myOrders = orders.filter((o) => o.customerId === user?.uid);
-  const externalVisible = useMemo(() => {
+  const externalResults = useMemo(() => {
     const q = queryText.toLowerCase();
-    return externalLeads
+    const filtered = externalLeads
       .filter((lead) => lead.type === externalMode)
-      .filter((lead) => !q || `${lead.category} ${lead.title} ${lead.city}`.toLowerCase().includes(q))
-      .slice(0, 60);
-  }, [externalLeads, externalMode, queryText]);
+      .filter((lead) => !q || `${lead.category} ${lead.title} ${lead.city}`.toLowerCase().includes(q));
+    if (externalMode === "helper") return { items: filtered.slice(0, externalLimit), total: filtered.length };
+    const ss = filtered.filter((lead) => lead.source === "SS.com");
+    const nva = filtered.filter((lead) => lead.source.startsWith("NVA"));
+    const other = filtered.filter((lead) => lead.source !== "SS.com" && !lead.source.startsWith("NVA"));
+    const mixed: ExternalLead[] = [];
+    for (let index = 0; index < Math.max(ss.length, nva.length); index += 1) {
+      if (ss[index]) mixed.push(ss[index]);
+      if (nva[index]) mixed.push(nva[index]);
+    }
+    mixed.push(...other);
+    return { items: mixed.slice(0, externalLimit), total: filtered.length };
+  }, [externalLeads, externalMode, queryText, externalLimit]);
+  const externalVisible = externalResults.items;
+  useEffect(() => setExternalLimit(60), [externalMode, queryText]);
   const login = async () => {
     try {
       setBusy(true);
@@ -1064,7 +1077,7 @@ export default function App() {
           </div>
         </div>
         <div className="opportunity-summary">
-          <b>{externalVisible.length}</b>
+          <b>{externalVisible.length} из {externalResults.total}</b>
           <span>
             {externalMode === "task" ? "актуальных предложений" : "публичных анкет"}
             {queryText ? ` по запросу «${queryText}»` : ""}
@@ -1095,6 +1108,11 @@ export default function App() {
             </div>
           )}
         </div>
+        {externalVisible.length < externalResults.total && (
+          <button className="primary opportunity-more" onClick={() => setExternalLimit((value) => value + 60)}>
+            Показать ещё 60
+          </button>
+        )}
       </section>
       <footer>
         <span>© 2026 MURDILIMAX</span>
