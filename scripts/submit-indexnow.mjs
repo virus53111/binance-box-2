@@ -1,5 +1,5 @@
 import{readFile}from"node:fs/promises";
-const host="murdilimax.com",key="db9a2f8a6a61dee0f0175a78c8aaa98d",keyLocation=`https://${host}/${key}.txt`;
+const host="murdilimax.com",key="1436babd5412e15d775d48423d7d04ca",keyLocation=`https://${host}/${key}.txt`;
 try{
  const sitemap=await readFile("public/sitemap.xml","utf8");
  const urlList=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]).filter(url=>url.startsWith(`https://${host}/`)).slice(0,10000);
