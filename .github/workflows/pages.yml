@@ -29,8 +29,10 @@ jobs:
         run: node scripts/scan-public-opportunities.mjs
       - name: Generate Google pages for cities and categories
         run: node scripts/generate-radar-pages.mjs
-      - name: Generate social preview pages for public tasks
+       - name: Generate social preview pages for public tasks
         run: node scripts/generate-task-pages.mjs
+      - name: Notify IndexNow search engines
+        run: node scripts/submit-indexnow.mjs
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
@@ -47,4 +49,4 @@ jobs:
           git push
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs._page_url }}
