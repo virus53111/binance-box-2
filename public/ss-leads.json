@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-09-25T08:16:23.871Z",
+  "generatedAt": "2026-09-25T08:29:09.206Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2dpb3BvLmh0bWw",
+      "category": "electrician",
+      "title": "Выполню любые электро работы. Качественно. Цена договорная. Даугавпилс и р-он, Даугавпилс Средне-проф. LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/giopo.html",
+      "foundAt": "2026-09-25T08:29:09.206Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYmlqaHguaHRtbA",
       "category": "builder",
