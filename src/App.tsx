@@ -131,11 +131,6 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 type Modal = "login" | "order" | "profile" | "admin" | "chats" | null;
-type PendingAction = {
-  kind: "alerts" | "order";
-  city?: string;
-  category?: string;
-};
 const ui = {
   ru: {
     map: "Карта",
@@ -334,7 +329,6 @@ export default function App() {
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
-    [pendingAction, setPendingAction] = useState<PendingAction | null>(null),
     [alertsEnabled, setAlertsEnabled] = useState(
       () => localStorage.getItem("murdilimax-task-alerts") === "on",
     ),
@@ -344,7 +338,6 @@ export default function App() {
     );
   const selectedCard = useRef<HTMLDivElement | null>(null),
     knownOrderIds = useRef<Set<string> | null>(null),
-    incomingActionHandled = useRef(false),
     t = ui[lang],
     isOwner = user?.email?.toLowerCase() === OWNER_EMAIL,
     canModerate = isOwner || isModerator;
@@ -447,26 +440,6 @@ export default function App() {
       120,
     );
   }, [orders]);
-  useEffect(() => {
-    if (incomingActionHandled.current) return;
-    const params = new URLSearchParams(location.search),
-      action = params.get("action");
-    if (action !== "alerts" && action !== "order") return;
-    incomingActionHandled.current = true;
-    const next: PendingAction = {
-      kind: action,
-      city: params.get("city") || undefined,
-      category: params.get("category") || undefined,
-    };
-    setPendingAction(next);
-    if (next.category) setQueryText(next.category);
-    setRole(next.kind === "alerts" ? "master" : "customer");
-    setModal(user ? (next.kind === "alerts" ? "profile" : "order") : "login");
-  }, [user]);
-  useEffect(() => {
-    if (!user || modal !== "login" || !pendingAction) return;
-    setModal(pendingAction.kind === "alerts" ? "profile" : "order");
-  }, [user, modal, pendingAction]);
   useEffect(() => {
     if (!user) {
       setChats([]);
@@ -572,12 +545,6 @@ export default function App() {
       setBusy(false);
     }
   };
-  const startConversion = (action: PendingAction) => {
-    setPendingAction(action);
-    if (action.category) setQueryText(action.category);
-    setRole(action.kind === "alerts" ? "master" : "customer");
-    setModal(user ? (action.kind === "alerts" ? "profile" : "order") : "login");
-  };
   const locate = () => {
     if (!navigator.geolocation) return notify("Геолокация недоступна");
     setGeoStatus("Определяем…");
@@ -639,14 +606,7 @@ export default function App() {
       setProfile(data);
       setRole(data.role);
       setModal(null);
-      if (pendingAction?.kind === "alerts") {
-        localStorage.setItem("murdilimax-task-alerts", "on");
-        setAlertsEnabled(true);
-        if ("Notification" in window && Notification.permission === "default")
-          void Notification.requestPermission();
-        setPendingAction(null);
-        notify("Готово — подходящие задания будут появляться у вас");
-      } else notify("Профиль сохранён");
+      notify("Профиль сохранён");
     } catch (e) {
       console.error(e);
       notify("Ошибка сохранения профиля");
@@ -699,7 +659,6 @@ export default function App() {
         });
       setModal(null);
       setEditing(null);
-      setPendingAction(null);
       notify(editing ? "Объявление обновлено" : "Объявление опубликовано");
     } catch (err) {
       console.error(err);
@@ -1144,19 +1103,6 @@ export default function App() {
                 <small><MapPin />{lead.city}</small>
               </div>
               <h3>{lead.title}</h3>
-              <div className="opportunity-conversion">
-                <button
-                  onClick={() => startConversion({ kind: "alerts", city: lead.city, category: lead.category })}
-                >
-                  <Bell /> Получать похожие
-                </button>
-                <button
-                  className="secondary"
-                  onClick={() => startConversion({ kind: "order", city: lead.city, category: lead.category })}
-                >
-                  <Plus /> Разместить заявку
-                </button>
-              </div>
               <div className="opportunity-card-foot">
                 <small>Внешний источник: {lead.source}</small>
                 <a href={lead.url} target="_blank" rel="nofollow noreferrer">
@@ -1211,13 +1157,7 @@ export default function App() {
                   <CircleUserRound />
                 </div>
                 <h2>{t.login}</h2>
-                <p>
-                  {pendingAction?.kind === "alerts"
-                    ? "Войдите один раз, чтобы получать подходящие задания рядом."
-                    : pendingAction?.kind === "order"
-                      ? "Войдите один раз и бесплатно разместите свою заявку."
-                      : "Один аккаунт: просите о помощи или помогайте другим."}
-                </p>
+                <p>Один аккаунт: просите о помощи или помогайте другим.</p>
                 <button className="google" disabled={busy} onClick={login}>
                   <b>G</b>
                   {busy ? "Подключение…" : t.login}
@@ -1262,11 +1202,11 @@ export default function App() {
                   </label>
                   <label>
                     Город
-                    <input name="city" defaultValue={pendingAction?.city || profile?.city || "Rīga"} />
+                    <input name="city" defaultValue={profile?.city || "Rīga"} />
                   </label>
                   <label>
                     Роль
-                    <select name="role" defaultValue={pendingAction?.kind === "alerts" ? "master" : profile?.role || role}>
+                    <select name="role" defaultValue={profile?.role || role}>
                       <option value="customer">Нужна помощь</option>
                       <option value="master">Помощник</option>
                     </select>
@@ -1289,11 +1229,11 @@ export default function App() {
                   </label>
                   <label>
                     Город для уведомлений
-                    <input name="alertCity" defaultValue={pendingAction?.city || profile?.alertCity || profile?.city || "Rīga"} placeholder="Например, Rīga" />
+                    <input name="alertCity" defaultValue={profile?.alertCity || profile?.city || "Rīga"} placeholder="Например, Rīga" />
                   </label>
                   <label>
                     Нужные задания
-                    <input name="alertKeywords" defaultValue={pendingAction?.category || profile?.alertKeywords} placeholder="уборка, доставка, ремонт" />
+                    <input name="alertKeywords" defaultValue={profile?.alertKeywords} placeholder="уборка, доставка, ремонт" />
                   </label>
                 </div>
                 <button className="primary wide-button" disabled={busy}>
@@ -1347,7 +1287,7 @@ export default function App() {
                     <select
                       name="category"
                       required
-                      defaultValue={editing?.category || pendingAction?.category || categories[lang][0]}
+                      defaultValue={editing?.category || categories[lang][0]}
                     >
                       {categories[lang].map((category) => (
                         <option key={category} value={category}>{category}</option>
@@ -1376,7 +1316,7 @@ export default function App() {
                     <input
                       name="city"
                       required
-                      defaultValue={editing?.city || pendingAction?.city || profile?.city || "Rīga"}
+                      defaultValue={editing?.city || profile?.city || "Rīga"}
                     />
                   </label>
                   <label>

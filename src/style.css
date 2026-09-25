@@ -1120,7 +1120,6 @@ footer button {
 }
 .opportunity-more { display: flex; margin: 20px auto 0; }
 .map-loading { display: grid; place-items: center; color: #637069; font-weight: 800; background: #eef2ef; }
-.consent-check{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:12px;background:#f1f7f3;border-radius:14px;padding:14px}.consent-check input{width:22px!important;height:22px;margin-top:2px}.consent-check span{display:grid;gap:4px}.consent-check small{color:#68736d;line-height:1.35}
 .opportunity-grid > article {
   min-width: 0;
   border: 1px solid var(--line);
@@ -1161,29 +1160,6 @@ footer button {
   margin: 13px 0 18px;
   flex: 1;
 }
-.opportunity-conversion {
-  display: grid;
-  gap: 7px;
-  margin-bottom: 12px;
-}
-.opportunity-conversion button {
-  min-height: 42px;
-  border: 0;
-  border-radius: 11px;
-  background: var(--green);
-  color: white;
-  font-weight: 850;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-}
-.opportunity-conversion button.secondary {
-  background: #edf4ef;
-  color: var(--green);
-  border: 1px solid #d8e6dc;
-}
-.opportunity-conversion svg { width: 16px; height: 16px; }
 .opportunity-card-foot {
   border-top: 1px solid var(--line);
   padding-top: 11px;
