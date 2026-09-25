@@ -38,6 +38,7 @@ import {
   Plus,
   Search,
   Send,
+  Share2,
   ShieldCheck,
   Trash2,
   UserRound,
@@ -131,6 +132,8 @@ const ui = {
     near: "Заявки рядом",
     respond: "Предложить помощь",
     myOrders: "Мои объявления",
+    share: "Поделиться",
+    invite: "Пригласить помощника",
   },
   lv: {
     map: "Karte",
@@ -148,6 +151,8 @@ const ui = {
     near: "Pasūtījumi tuvumā",
     respond: "Piedāvāt palīdzību",
     myOrders: "Mani sludinājumi",
+    share: "Dalīties",
+    invite: "Uzaicināt palīgu",
   },
   en: {
     map: "Map",
@@ -165,6 +170,8 @@ const ui = {
     near: "Requests nearby",
     respond: "Offer help",
     myOrders: "My listings",
+    share: "Share",
+    invite: "Invite a helper",
   },
   uk: {
     map: "Карта",
@@ -182,6 +189,8 @@ const ui = {
     near: "Заявки поруч",
     respond: "Запропонувати допомогу",
     myOrders: "Мої оголошення",
+    share: "Поділитися",
+    invite: "Запросити помічника",
   },
 };
 const categories: Record<Lang, string[]> = {
@@ -301,10 +310,15 @@ export default function App() {
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
+    [alertsEnabled, setAlertsEnabled] = useState(
+      () => localStorage.getItem("murdilimax-task-alerts") === "on",
+    ),
+    [linkedTaskId, setLinkedTaskId] = useState<string | null>(null),
     [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(
       null,
     );
   const selectedCard = useRef<HTMLDivElement | null>(null),
+    knownOrderIds = useRef<Set<string> | null>(null),
     t = ui[lang],
     isOwner = user?.email?.toLowerCase() === OWNER_EMAIL,
     canModerate = isOwner || isModerator;
@@ -338,7 +352,12 @@ export default function App() {
         };
         if (snap.exists()) setProfile({ ...base, ...snap.data() } as Profile);
         else {
-          await setDoc(ref, { ...base, createdAt: serverTimestamp() });
+          const referredBy = new URLSearchParams(location.search).get("ref");
+          await setDoc(ref, {
+            ...base,
+            ...(referredBy && referredBy !== u.uid ? { referredBy } : {}),
+            createdAt: serverTimestamp(),
+          });
           setProfile(base);
         }
         if (u.email)
@@ -354,10 +373,46 @@ export default function App() {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
     return onSnapshot(
       q,
-      (s) => setOrders(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Order)),
+      (s) => {
+        const next = s.docs.map((d) => ({ id: d.id, ...d.data() }) as Order);
+        const known = knownOrderIds.current;
+        if (
+          known &&
+          localStorage.getItem("murdilimax-task-alerts") === "on" &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          const fresh = next.find(
+            (order) => !known.has(order.id) && order.customerId !== auth.currentUser?.uid,
+          );
+          if (fresh)
+            new Notification("Новое задание рядом · MURDILIMAX", {
+              body: `${fresh.service} · ${fresh.district}, ${fresh.city} · ${fresh.price}`,
+              icon: "/icon-192.png",
+            });
+        }
+        knownOrderIds.current = new Set(next.map((order) => order.id));
+        setOrders(next);
+      },
       () => setOrders([]),
     );
   }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search),
+      taskId = params.get("task"),
+      category = params.get("category");
+    if (category) setQueryText(category);
+    if (!taskId || !orders.some((order) => order.id === taskId)) return;
+    setLinkedTaskId(taskId);
+    setRole("master");
+    setTimeout(
+      () =>
+        document
+          .getElementById(`order-${taskId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      120,
+    );
+  }, [orders]);
   useEffect(() => {
     if (!user) {
       setChats([]);
@@ -666,6 +721,49 @@ export default function App() {
     );
   };
   const activeLeads = ssLeads.filter((x) => !dismissedLeads.includes(x.id));
+  const buildShareUrl = (taskId?: string) => {
+    const url = new URL("/", location.origin);
+    if (taskId) url.searchParams.set("task", taskId);
+    if (user) url.searchParams.set("ref", user.uid);
+    return url.toString();
+  };
+  const shareContent = async (title: string, text: string, url: string) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      notify("Ссылка скопирована");
+    } catch {
+      notify("Не удалось скопировать ссылку");
+    }
+  };
+  const shareOrder = (order: Order) =>
+    shareContent(
+      `${order.service} · MURDILIMAX`,
+      `${order.service}\n${order.district}, ${order.city} · ${order.date}\nБюджет: ${order.price}`,
+      buildShareUrl(order.id),
+    );
+  const inviteHelper = () =>
+    shareContent(
+      "MURDILIMAX — любая помощь рядом",
+      "Присоединяйтесь к MURDILIMAX: находите задания рядом или просите о помощи.",
+      buildShareUrl(),
+    );
+  const enableAlerts = async () => {
+    if (!("Notification" in window))
+      return notify("Уведомления не поддерживаются этим браузером");
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return notify("Уведомления не разрешены");
+    localStorage.setItem("murdilimax-task-alerts", "on");
+    setAlertsEnabled(true);
+    notify("Уведомления о новых заданиях включены");
+  };
   const installApp = async () => {
     if (!installPrompt)
       return notify(
@@ -841,12 +939,20 @@ export default function App() {
                   : "Войдите, чтобы публиковать и писать"}
               </p>
             </div>
-            <button>
+            <button
+              className={alertsEnabled ? "alerts-on" : ""}
+              onClick={enableAlerts}
+              title={alertsEnabled ? "Уведомления включены" : "Включить уведомления"}
+            >
               <Bell />
             </button>
           </div>
           {(role === "customer" && user ? myOrders : visible).map((o) => (
-            <article id={`order-${o.id}`} className="job-card rich" key={o.id}>
+            <article
+              id={`order-${o.id}`}
+              className={`job-card rich ${linkedTaskId === o.id ? "linked-task" : ""}`}
+              key={o.id}
+            >
               {o.photo && <img className="order-thumb" src={o.photo} alt="" />}
               <div className="job-top">
                 <div>
@@ -860,6 +966,10 @@ export default function App() {
                 <strong>{o.price}</strong>
               </div>
               <p className="order-description">{o.description}</p>
+              <button className="share-task" onClick={() => shareOrder(o)}>
+                <Share2 />
+                {t.share}
+              </button>
               {o.customerId === user?.uid ? (
                 <div className="card-actions">
                   <button onClick={() => openOrder(o)}>
@@ -998,6 +1108,14 @@ export default function App() {
                 <button className="primary wide-button" disabled={busy}>
                   <Check />
                   Сохранить профиль
+                </button>
+                <button
+                  type="button"
+                  className="invite-helper"
+                  onClick={inviteHelper}
+                >
+                  <Share2 />
+                  {t.invite}
                 </button>
                 <button
                   type="button"

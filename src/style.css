@@ -423,6 +423,10 @@ svg {
   border-radius: 11px;
   color: var(--green);
 }
+.section-title button.alerts-on {
+  background: var(--lime);
+  color: var(--ink);
+}
 .job-card,
 .pro-card {
   border: 1px solid var(--line);
@@ -856,6 +860,7 @@ footer button {
 }
 .job-card.rich .job-top,
 .job-card.rich > .order-description,
+.job-card.rich > .share-task,
 .job-card.rich > .card-actions,
 .job-card.rich > .chat-cta {
   margin-left: 14px;
@@ -874,6 +879,24 @@ footer button {
   color: var(--muted);
   font-size: 0.84rem;
   line-height: 1.45;
+}
+.share-task {
+  width: calc(100% - 28px);
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px;
+  background: white;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-weight: 800;
+}
+.linked-task {
+  border: 2px solid var(--green);
+  box-shadow: 0 0 0 4px #dafa7055;
 }
 .chat-cta {
   border: 0;
@@ -1006,6 +1029,20 @@ footer button {
   color: #b7472d;
   padding: 13px;
   margin-top: 8px;
+}
+.invite-helper {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #edf4ef;
+  color: var(--green);
+  padding: 13px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
 }
 .chat-modal {
   width: min(940px, 96vw);
