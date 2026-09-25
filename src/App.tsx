@@ -63,6 +63,9 @@ type Profile = {
   role: Role;
   avatar?: string;
   email?: string;
+  publicProfile?: boolean;
+  alertCity?: string;
+  alertKeywords?: string;
 };
 type Order = {
   id: string;
@@ -404,9 +407,11 @@ export default function App() {
           "Notification" in window &&
           Notification.permission === "granted"
         ) {
-          const fresh = next.find(
-            (order) => !known.has(order.id) && order.customerId !== auth.currentUser?.uid,
-          );
+          const city=(profile?.alertCity||"").trim().toLowerCase(),words=(profile?.alertKeywords||"").toLowerCase().split(",").map(x=>x.trim()).filter(Boolean);
+          const fresh = next.find((order) => {
+            const text=`${order.category||""} ${order.service} ${order.description}`.toLowerCase();
+            return !known.has(order.id) && order.customerId !== auth.currentUser?.uid && (!city||order.city.toLowerCase().includes(city)) && (!words.length||words.some(word=>text.includes(word)));
+          });
           if (fresh)
             new Notification("Новое задание рядом · MURDILIMAX", {
               body: `${fresh.service} · ${fresh.district}, ${fresh.city} · ${fresh.price}`,
@@ -418,7 +423,7 @@ export default function App() {
       },
       () => setOrders([]),
     );
-  }, []);
+  }, [profile?.alertCity, profile?.alertKeywords]);
   useEffect(() => {
     const params = new URLSearchParams(location.search),
       taskId = params.get("task"),
@@ -588,6 +593,8 @@ export default function App() {
         role: String(f.get("role") || "customer") as Role,
         avatar: avatar || profile?.avatar || user.photoURL || "",
         email: user.email || "",
+        alertCity: String(f.get("alertCity") || ""),
+        alertKeywords: String(f.get("alertKeywords") || ""),
       };
     try {
       setBusy(true);
@@ -1219,6 +1226,14 @@ export default function App() {
                       defaultValue={profile?.services}
                       placeholder="Доставка, уборка, ремонт, животные, поручения…"
                     />
+                  </label>
+                  <label>
+                    Город для уведомлений
+                    <input name="alertCity" defaultValue={profile?.alertCity || profile?.city || "Rīga"} placeholder="Например, Rīga" />
+                  </label>
+                  <label>
+                    Нужные задания
+                    <input name="alertKeywords" defaultValue={profile?.alertKeywords} placeholder="уборка, доставка, ремонт" />
                   </label>
                 </div>
                 <button className="primary wide-button" disabled={busy}>
