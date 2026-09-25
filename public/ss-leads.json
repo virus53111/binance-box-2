@@ -1,6 +1,41 @@
 {
-  "generatedAt": "2026-09-25T04:53:50.050Z",
+  "generatedAt": "2026-09-25T05:32:53.244Z",
   "leads": [
+    {
+      "id": "hvdXNlLXBhaW50ZXIvYWxmZmQuaHRtbA",
+      "category": "house-painter",
+      "title": "Ātri un kvalitatīvi varam pārkrāsots atsvaidzināt jūsu māju vai ofisu. Рига, Агенскалнс Высшее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/alffd.html",
+      "foundAt": "2026-09-25T05:32:53.244Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2RsZG9jLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis 24/7 Ātri, kvalitatīvi. Услуги Электрика 24/7. Профессионально. Оперативно Рига, Пурвциемс Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dldoc.html",
+      "foundAt": "2026-09-25T05:32:53.244Z"
+    },
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9iaWlvby5odG1s",
+      "category": "roofer",
+      "title": "Выполняем кровельные работы, застил вальцпрофиля, металочерепицы, битумной черепицы, мон Рига, Кенгарагс Средне-проф. LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/biioo.html",
+      "foundAt": "2026-09-25T05:32:53.244Z"
+    },
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9oZmpwZy5odG1s",
+      "category": "roofer",
+      "title": "Монтаж Вальц профиля, металлочерепица, битумная черепица, Монтаж окон в крышу, обшивка д Рига, Кенгарагс Среднее LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/hfjpg.html",
+      "foundAt": "2026-09-25T05:32:53.244Z"
+    },
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9naG9vai5odG1s",
+      "category": "roofer",
+      "title": "Кровельные работы, вальцпрофиль, битумнаячерепица, металлочерепица, обшивка дымоходов же Рига, Кенгарагс Средне-проф. LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/ghooj.html",
+      "foundAt": "2026-09-25T05:32:53.244Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvZmliamouaHRtbA",
       "category": "builder",
