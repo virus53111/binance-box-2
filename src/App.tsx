@@ -81,6 +81,7 @@ type Order = {
   lng: number;
   customerId: string;
   customerName: string;
+  customerAvatar?: string;
   status: string;
   createdAt?: unknown;
 };
@@ -125,7 +126,9 @@ type AdminUser = {
   role?: Role;
   blocked?: boolean;
   city?: string;
+  avatar?: string;
 };
+type AdminTab = "users" | "orders" | "leads";
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -330,6 +333,8 @@ export default function App() {
     [externalLimit, setExternalLimit] = useState(60),
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
+    [adminTab, setAdminTab] = useState<AdminTab>("leads"),
+    [orderOpenedFromAdmin, setOrderOpenedFromAdmin] = useState(false),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
     [alertsEnabled, setAlertsEnabled] = useState(
       () => localStorage.getItem("murdilimax-task-alerts") === "on",
@@ -630,11 +635,12 @@ export default function App() {
       setBusy(false);
     }
   };
-  const openOrder = (o?: Order) => {
+  const openOrder = (o?: Order, fromAdmin = false) => {
     if (!user) {
       setModal("login");
       return;
     }
+    setOrderOpenedFromAdmin(fromAdmin);
     setEditing(o || null);
     setOrderPhoto(o?.photo || "");
     setModal("order");
@@ -667,8 +673,14 @@ export default function App() {
         photo: orderPhoto,
         lat: c.lat,
         lng: c.lng,
-        customerId: user.uid,
-        customerName: profile?.displayName || user.displayName || "Пользователь",
+        customerId: editing?.customerId || user.uid,
+        customerName:
+          editing?.customerName ||
+          profile?.displayName ||
+          user.displayName ||
+          "Пользователь",
+        customerAvatar:
+          editing?.customerAvatar || profile?.avatar || user.photoURL || "",
         status: "open",
         updatedAt: serverTimestamp(),
       };
@@ -680,8 +692,9 @@ export default function App() {
           ...data,
           createdAt: serverTimestamp(),
         });
-      setModal(null);
+      setModal(orderOpenedFromAdmin ? "admin" : null);
       setEditing(null);
+      setOrderOpenedFromAdmin(false);
       notify(editing ? "Объявление обновлено" : "Объявление опубликовано");
     } catch (err) {
       console.error(err);
@@ -698,7 +711,7 @@ export default function App() {
     }
   };
   const removeOrder = async (o: Order) => {
-    if (!user || o.customerId !== user.uid) return;
+    if (!user || (o.customerId !== user.uid && !canModerate)) return;
     if (!confirm("Удалить объявление?")) return;
     try {
       await deleteDoc(doc(db, "orders", o.id));
@@ -1008,6 +1021,10 @@ export default function App() {
                   service: o.service,
                   price: o.price,
                   district: o.district,
+                  customerName: o.customerName,
+                  customerAvatar:
+                    o.customerAvatar ||
+                    adminUsers.find((person) => person.id === o.customerId)?.avatar,
                   lat: o.lat,
                   lng: o.lng,
                 }) as MapOrder,
@@ -1488,21 +1505,21 @@ export default function App() {
                     </p>
                   </div>
                 </div>
-                <div className="admin-stats">
-                  <div>
+                <div className="admin-stats" role="tablist" aria-label="Разделы админ-панели">
+                  <button className={adminTab === "users" ? "active" : ""} onClick={() => setAdminTab("users")}>
                     <strong>{adminUsers.length}</strong>
                     <span>пользователей</span>
-                  </div>
-                  <div>
+                  </button>
+                  <button className={adminTab === "orders" ? "active" : ""} onClick={() => setAdminTab("orders")}>
                     <strong>{orders.length}</strong>
                     <span>объявлений</span>
-                  </div>
-                  <div>
+                  </button>
+                  <button className={adminTab === "leads" ? "active" : ""} onClick={() => setAdminTab("leads")}>
                     <strong>{activeLeads.length}</strong>
                     <span>новых с SS.com</span>
-                  </div>
+                  </button>
                 </div>
-                <section className="admin-section">
+                {adminTab === "leads" && <section className="admin-section">
                   <div className="admin-section-head">
                     <div>
                       <h3>Новые исполнители с SS.com</h3>
@@ -1552,17 +1569,44 @@ export default function App() {
                       Новых объявлений пока нет
                     </div>
                   )}
-                </section>
-                <section className="admin-section">
+                </section>}
+                {adminTab === "orders" && <section className="admin-section">
+                  <h3>Все объявления MURDILIMAX</h3>
+                  <div className="admin-order-list">
+                    {orders.map((order) => (
+                      <article key={order.id}>
+                        {order.photo ? (
+                          <img src={order.photo} alt="" />
+                        ) : (
+                          <span className="admin-order-placeholder"><BriefcaseBusiness /></span>
+                        )}
+                        <div>
+                          <b>{order.service}</b>
+                          <small>{order.customerName || "Без имени"} · {order.district}, {order.city}</small>
+                          <span>{order.price}</span>
+                        </div>
+                        <div className="admin-order-actions">
+                          <button onClick={() => openTask(order.id)} title="Открыть"><ExternalLink /></button>
+                          <button onClick={() => openOrder(order, true)} title="Редактировать"><Pencil /></button>
+                          <button className="danger" onClick={() => removeOrder(order)} title="Удалить"><Trash2 /></button>
+                        </div>
+                      </article>
+                    ))}
+                    {!orders.length && <div className="admin-empty">Объявлений пока нет</div>}
+                  </div>
+                </section>}
+                {adminTab === "users" && <section className="admin-section">
                   <h3>Пользователи MURDILIMAX</h3>
                   <div className="user-table">
                     {adminUsers.map((person) => (
                       <div key={person.id}>
-                        <span className="mini-avatar">
-                          {(person.displayName || person.email || "?")
-                            .slice(0, 1)
-                            .toUpperCase()}
-                        </span>
+                        {person.avatar ? (
+                          <img className="mini-avatar" src={person.avatar} alt="" />
+                        ) : (
+                          <span className="mini-avatar">
+                            {(person.displayName || person.email || "?").slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
                         <span>
                           <b>{person.displayName || "Без имени"}</b>
                           <small>
@@ -1582,7 +1626,7 @@ export default function App() {
                       </div>
                     ))}
                   </div>
-                </section>
+                </section>}
                 {isOwner && (
                   <section className="admin-section">
                     <h3>Добавить модератора</h3>
