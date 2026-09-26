@@ -571,6 +571,11 @@ footer button {
   display: flex;
   gap: 6px;
 }
+footer a {
+  color: var(--green);
+  font-weight: 800;
+  text-decoration: none;
+}
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1120,6 +1125,7 @@ footer button {
 }
 .opportunity-more { display: flex; margin: 20px auto 0; }
 .map-loading { display: grid; place-items: center; color: #637069; font-weight: 800; background: #eef2ef; }
+.consent-check{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:12px;background:#f1f7f3;border-radius:14px;padding:14px}.consent-check input{width:22px!important;height:22px;margin-top:2px}.consent-check span{display:grid;gap:4px}.consent-check small{color:#68736d;line-height:1.35}
 .opportunity-grid > article {
   min-width: 0;
   border: 1px solid var(--line);

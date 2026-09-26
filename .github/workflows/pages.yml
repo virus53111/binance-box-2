@@ -29,6 +29,8 @@ jobs:
         run: node scripts/scan-public-opportunities.mjs
       - name: Generate Google pages for cities and categories
         run: node scripts/generate-radar-pages.mjs
+      - name: Generate construction price guide
+        run: node scripts/generate-price-pages.mjs
       - name: Generate social preview pages for public tasks
         run: node scripts/generate-task-pages.mjs
       - name: Notify IndexNow search engines

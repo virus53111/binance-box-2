@@ -1125,6 +1125,9 @@ export default function App() {
       </section>
       <footer>
         <span>© 2026 MURDILIMAX</span>
+        <a href={lang === "lv" ? "/lv/buvdarbu-cenas/" : "/stroitelnye-rascenki/"}>
+          {lang === "lv" ? "Būvdarbu cenas" : "Строительные расценки"}
+        </a>
         <button onClick={installApp}>
           <Download />
           Установить приложение
