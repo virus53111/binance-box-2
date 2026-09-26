@@ -827,6 +827,7 @@ footer a {
 .leaflet-control-zoom a {
   font-size: 20px !important;
 }
+.map-task-open { border: 0; border-radius: 8px; background: var(--green); color: white; font-weight: 800; padding: 7px 10px; margin-top: 8px; }
 .custom-leaflet-pin {
   background: none;
   border: 0;
@@ -930,6 +931,16 @@ footer a {
   justify-content: center;
   gap: 7px;
 }
+.task-details { padding-top: 6px; }
+.task-details-photo { width: calc(100% + 56px); max-height: 280px; object-fit: cover; margin: -34px -28px 22px; }
+.task-details-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.task-details-head h2 { margin: 8px 0; }
+.task-details-head > div > span { display: inline-block; padding: 5px 9px; border-radius: 99px; background: #edf4ef; color: var(--green); font-size: .75rem; font-weight: 800; }
+.task-details-head p { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+.task-details-head p svg { width: 16px; height: 16px; }
+.task-details-head > strong { color: var(--green); font-size: 1.25rem; white-space: nowrap; }
+.task-details-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: .82rem; }
+.task-details-description { line-height: 1.6; white-space: pre-wrap; margin: 20px 0; }
 .card-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

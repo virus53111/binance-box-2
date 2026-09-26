@@ -130,7 +130,7 @@ type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
-type Modal = "login" | "order" | "profile" | "admin" | "chats" | null;
+type Modal = "login" | "order" | "task" | "profile" | "admin" | "chats" | null;
 const ui = {
   ru: {
     map: "Карта",
@@ -312,6 +312,8 @@ export default function App() {
     [busy, setBusy] = useState(false),
     [orders, setOrders] = useState<Order[]>([]),
     [editing, setEditing] = useState<Order | null>(null),
+    [selectedOrder, setSelectedOrder] = useState<Order | null>(null),
+    [pendingChatOrderId, setPendingChatOrderId] = useState<string | null>(null),
     [orderPhoto, setOrderPhoto] = useState(""),
     [avatar, setAvatar] = useState(""),
     [center, setCenter] = useState<[number, number]>([56.9496, 24.1052]),
@@ -449,8 +451,13 @@ export default function App() {
       collection(db, "chats"),
       where("participants", "array-contains", user.uid),
     );
-    return onSnapshot(q, (s) =>
-      setChats(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Chat)),
+    return onSnapshot(
+      q,
+      (s) => setChats(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Chat)),
+      (error) => {
+        console.error(error);
+        notify("Не удалось загрузить список чатов");
+      },
     );
   }, [user]);
   useEffect(() => {
@@ -462,8 +469,13 @@ export default function App() {
       collection(db, "chats", activeChat.id, "messages"),
       orderBy("createdAt", "asc"),
     );
-    return onSnapshot(q, (s) =>
-      setMessages(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Message)),
+    return onSnapshot(
+      q,
+      (s) => setMessages(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Message)),
+      (error) => {
+        console.error(error);
+        notify("Не удалось загрузить сообщения");
+      },
     );
   }, [activeChat]);
   useEffect(() => {
@@ -623,6 +635,13 @@ export default function App() {
     setOrderPhoto(o?.photo || "");
     setModal("order");
   };
+  const openTask = (id: string) => {
+    const order = [...orders, ...fallback].find((item) => item.id === id);
+    if (!order) return notify("Задание больше недоступно");
+    setSelectedOrder(order);
+    setLinkedTaskId(id);
+    setModal("task");
+  };
   const saveOrder = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
@@ -682,50 +701,61 @@ export default function App() {
   };
   const startChat = async (o: Order) => {
     if (!user) {
+      setSelectedOrder(o);
+      setPendingChatOrderId(o.id);
       setModal("login");
       return;
     }
     if (o.customerId === user.uid) return notify("Это ваше объявление");
-    const id = `${o.id}_${o.customerId}_${user.uid}`,
-      ref = doc(db, "chats", id);
-    await setDoc(
-      ref,
-      {
+    try {
+      setBusy(true);
+      const id = `${o.id}_${o.customerId}_${user.uid}`,
+        ref = doc(db, "chats", id);
+      await setDoc(ref, {
         orderId: o.id,
         orderTitle: o.service,
         participants: [o.customerId, user.uid],
         customerId: o.customerId,
         masterId: user.uid,
         updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
-    const chat = {
-      id,
-      orderId: o.id,
-      orderTitle: o.service,
-      participants: [o.customerId, user.uid],
-      customerId: o.customerId,
-      masterId: user.uid,
-    };
-    setActiveChat(chat);
-    setModal("chats");
+      }, { merge: true });
+      const chat = { id, orderId: o.id, orderTitle: o.service, participants: [o.customerId, user.uid], customerId: o.customerId, masterId: user.uid };
+      setActiveChat(chat);
+      setPendingChatOrderId(null);
+      setModal("chats");
+    } catch (error) {
+      console.error(error);
+      notify("Не удалось открыть чат. Обновите страницу и повторите");
+    } finally {
+      setBusy(false);
+    }
   };
+  useEffect(() => {
+    if (!user || !pendingChatOrderId) return;
+    const order = [...orders, ...fallback].find((item) => item.id === pendingChatOrderId);
+    if (order) {
+      setPendingChatOrderId(null);
+      void startChat(order);
+    }
+  }, [user, pendingChatOrderId, orders]);
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!user || !activeChat || !message.trim()) return;
     const text = message.trim();
-    setMessage("");
-    await addDoc(collection(db, "chats", activeChat.id, "messages"), {
-      text,
-      senderId: user.uid,
-      senderName: profile?.displayName || user.displayName || "Пользователь",
-      createdAt: serverTimestamp(),
-    });
-    await updateDoc(doc(db, "chats", activeChat.id), {
-      lastMessage: text,
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      setMessage("");
+      await addDoc(collection(db, "chats", activeChat.id, "messages"), {
+        text,
+        senderId: user.uid,
+        senderName: profile?.displayName || user.displayName || "Пользователь",
+        createdAt: serverTimestamp(),
+      });
+      await updateDoc(doc(db, "chats", activeChat.id), { lastMessage: text, updatedAt: serverTimestamp() });
+    } catch (error) {
+      console.error(error);
+      setMessage(text);
+      notify("Сообщение не отправлено. Проверьте интернет и повторите");
+    }
   };
   const addModerator = async () => {
     const email = modEmail.trim().toLowerCase();
@@ -973,11 +1003,7 @@ export default function App() {
                   lng: o.lng,
                 }) as MapOrder,
             )}
-            onSelect={(id) =>
-              document
-                .getElementById(`order-${id}`)
-                ?.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
+            onSelect={openTask}
           /></Suspense>
         </div>
         <aside className="feed" ref={selectedCard}>
@@ -1166,6 +1192,29 @@ export default function App() {
                   {busy ? "Подключение…" : t.login}
                 </button>
               </>
+            )}
+            {modal === "task" && selectedOrder && (
+              <div className="task-details">
+                {selectedOrder.photo && <img className="task-details-photo" src={selectedOrder.photo} alt="" />}
+                <div className="task-details-head">
+                  <div>
+                    {selectedOrder.category && <span>{selectedOrder.category}</span>}
+                    <h2>{selectedOrder.service}</h2>
+                    <p><MapPin /> {selectedOrder.district}, {selectedOrder.city}</p>
+                  </div>
+                  <strong>{selectedOrder.price}</strong>
+                </div>
+                <div className="task-details-meta">
+                  <span>Когда: {selectedOrder.date}</span>
+                  <span>Заказчик: {selectedOrder.customerName}</span>
+                </div>
+                <p className="task-details-description">{selectedOrder.description}</p>
+                {selectedOrder.customerId === user?.uid ? (
+                  <button className="primary wide-button" onClick={() => openOrder(selectedOrder)}><Pencil /> Редактировать объявление</button>
+                ) : (
+                  <button className="primary wide-button" disabled={busy} onClick={() => startChat(selectedOrder)}><MessageCircle /> {busy ? "Открываем чат…" : "Написать заказчику"}</button>
+                )}
+              </div>
             )}
             {modal === "profile" && user && (
               <form onSubmit={saveProfile}>
@@ -1403,7 +1452,7 @@ export default function App() {
                           onChange={(e) => setMessage(e.target.value)}
                           placeholder="Напишите сообщение…"
                         />
-                        <button>
+                        <button disabled={!message.trim()}>
                           <Send />
                         </button>
                       </form>

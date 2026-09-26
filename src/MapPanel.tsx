@@ -15,6 +15,6 @@ export default function MapPanel({orders,center,onSelect}:{orders:MapOrder[];cen
   <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
   <Fly center={center}/><Circle center={center} radius={260} pathOptions={{color:"#176b45",fillColor:"#dafa70",fillOpacity:.22}}/>
   <Marker position={center} icon={locationPin}><Popup>Вы здесь</Popup></Marker>
-  {orders.map(o=><Marker key={o.id} position={[o.lat,o.lng]} icon={pin} eventHandlers={{click:()=>onSelect(o.id)}}><Popup><strong>{o.service}</strong><br/>{o.district||"Rīga"}<br/>{o.price||"Цена договорная"}</Popup></Marker>)}
+  {orders.map(o=><Marker key={o.id} position={[o.lat,o.lng]} icon={pin} eventHandlers={{click:()=>onSelect(o.id)}}><Popup><strong>{o.service}</strong><br/>{o.district||"Rīga"}<br/>{o.price||"Цена договорная"}<br/><button className="map-task-open" onClick={()=>onSelect(o.id)}>Открыть задание</button></Popup></Marker>)}
  </MapContainer>
 }
