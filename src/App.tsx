@@ -423,7 +423,11 @@ export default function App() {
         knownOrderIds.current = new Set(next.map((order) => order.id));
         setOrders(next);
       },
-      () => setOrders([]),
+      (error) => {
+        console.error(error);
+        setOrders([]);
+        notify("Не удалось загрузить заявки. Проверьте интернет и обновите страницу");
+      },
     );
   }, [profile?.alertCity, profile?.alertKeywords]);
   useEffect(() => {
@@ -696,8 +700,13 @@ export default function App() {
   const removeOrder = async (o: Order) => {
     if (!user || o.customerId !== user.uid) return;
     if (!confirm("Удалить объявление?")) return;
-    await deleteDoc(doc(db, "orders", o.id));
-    notify("Объявление удалено");
+    try {
+      await deleteDoc(doc(db, "orders", o.id));
+      notify("Объявление удалено");
+    } catch (error) {
+      console.error(error);
+      notify("Не удалось удалить объявление. Проверьте интернет и повторите");
+    }
   };
   const startChat = async (o: Order) => {
     if (!user) {
