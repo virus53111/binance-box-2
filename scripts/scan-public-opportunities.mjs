@@ -32,7 +32,7 @@ for(let index=0;index<sources.length;index+=6)await Promise.all(sources.slice(in
 const existingByUrl=new Map((current.leads||[]).map(item=>[item.url,item]));
 const fresh=[...new Map(found.map(item=>[item.url,{...item,foundAt:existingByUrl.get(item.url)?.foundAt||item.foundAt}])).values()];
 const combined=[...fresh,...(current.leads||[]).filter(item=>!fresh.some(next=>next.url===item.url))];
-const live=combined.filter(item=>item.source==="SS.com" && classifyConstruction(item.title,item.type) && Number.isFinite(Date.parse(item.foundAt)) && now-new Date(item.foundAt)<30*86400000);
+const live=combined.filter(item=>item.source==="SS.com" && Object.hasOwn(professions,item.profession) && classifyConstruction(item.title,item.type) && Number.isFinite(Date.parse(item.foundAt)) && now-new Date(item.foundAt)<30*86400000);
 const merged=[...live.filter(item=>item.type==="task").slice(0,250),...live.filter(item=>item.type==="helper").slice(0,300)];
 const seen=[...new Set([...fresh.map(item=>item.url),...(state.seen||[])])].slice(0,5000);
 await writeFile("public/external-leads.json",JSON.stringify({generatedAt:nowIso,leads:merged},null,2)+"\n");

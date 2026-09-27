@@ -9,6 +9,7 @@ test('private small jobs and helpers in Russian and Latvian',()=>{
 });
 test('exclude recruitment, unrelated work, companies and ambiguous listings',()=>{
  for(const s of ['SIA meklē elektriķi dzīvokļu remontam','Компания ищет мастера по ремонту квартир','Нужен сантехник в штат, зарплата 1500','Ищу няню в квартиру','Строитель ищет работу']) assert.equal(classify(s,'task'),null,s);
+ assert.equal(classify('Предлагаю уборку квартир после ремонта','helper'),null);
  assert.equal(classify('Бригада предлагает ремонт квартир','helper'),null);
  assert.equal(classify('Нужен электрик','task'),null);
 });
