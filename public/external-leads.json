@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T11:01:20.288Z",
+  "generatedAt": "2026-09-27T12:51:59.359Z",
   "leads": [
     {
       "id": "F1aXJlZC9wbGF0ZXIva2Nja20uaHRtbA",
@@ -101,50 +101,6 @@
       "foundAt": "2026-09-27T11:01:20.288Z"
     },
     {
-      "id": "L2VsZWN0cmljaWFuL2NleGhuZC5odG1s",
-      "type": "helper",
-      "category": "Электрика",
-      "profession": "electrician",
-      "title": "Elektriķa pakalpojumi – droši, ātri un profesionāli. Piedāvāju kvalitatīvus elektriķ Рига, Кенгарагс Инженер LV, RU, DE Любой",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cexhnd.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2JmYmhlLmh0bWw",
-      "type": "helper",
-      "category": "Электрика",
-      "profession": "electrician",
-      "title": "Услуги электрика. От мелких работ до полной замены проводки. Устранение неполадок, замен Рига, центр Средне-проф. LV, RU Любой",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bfbhe.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZtY2ViLmh0bWw",
-      "type": "helper",
-      "category": "Электрика",
-      "profession": "electrician",
-      "title": "Kvalificēts Elektriķis, Strādāju Rīgā un Rīgas rajonā. Veicu jaunu elektroinstalāciju. E Рига, Межциемс Высшее LV По выбору",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fmceb.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZnZG5pLmh0bWw",
-      "type": "helper",
-      "category": "Электрика",
-      "profession": "electrician",
-      "title": "Elektriķis Rīgā – mazi elektrības darbi Veicu dažādus mazus elektrības darbus dzīvokļos Рига, Ильгюциемс Высшее LV, RU По выбору",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fgdni.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
       "id": "ci13b3JrL3Jvb2Zlci9kYmpiay5odG1s",
       "type": "helper",
       "category": "Кровля",
@@ -185,6 +141,50 @@
       "title": "Veicu visa veida jumta nomainu un to remontus. Юрмала, Меллужи Средне-проф. LV, RU Ежедневно",
       "city": "Юрмала",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/apkhe.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-27T11:01:20.288Z"
+    },
+    {
+      "id": "L2VsZWN0cmljaWFuL2NleGhuZC5odG1s",
+      "type": "helper",
+      "category": "Электрика",
+      "profession": "electrician",
+      "title": "Elektriķa pakalpojumi – droši, ātri un profesionāli. Piedāvāju kvalitatīvus elektriķ Рига, Кенгарагс Инженер LV, RU, DE Любой",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cexhnd.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-27T11:01:20.288Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JmYmhlLmh0bWw",
+      "type": "helper",
+      "category": "Электрика",
+      "profession": "electrician",
+      "title": "Услуги электрика. От мелких работ до полной замены проводки. Устранение неполадок, замен Рига, центр Средне-проф. LV, RU Любой",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bfbhe.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-27T11:01:20.288Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZtY2ViLmh0bWw",
+      "type": "helper",
+      "category": "Электрика",
+      "profession": "electrician",
+      "title": "Kvalificēts Elektriķis, Strādāju Rīgā un Rīgas rajonā. Veicu jaunu elektroinstalāciju. E Рига, Межциемс Высшее LV По выбору",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fmceb.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-27T11:01:20.288Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZnZG5pLmh0bWw",
+      "type": "helper",
+      "category": "Электрика",
+      "profession": "electrician",
+      "title": "Elektriķis Rīgā – mazi elektrības darbi Veicu dažādus mazus elektrības darbus dzīvokļos Рига, Ильгюциемс Высшее LV, RU По выбору",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fgdni.html",
       "source": "SS.com",
       "foundAt": "2026-09-27T11:01:20.288Z"
     },
@@ -321,17 +321,6 @@
       "foundAt": "2026-09-27T11:01:20.288Z"
     },
     {
-      "id": "J5LXRlY2huaWNpYW4vZ2RiY2ouaHRtbA",
-      "type": "helper",
-      "category": "Сантехника",
-      "profession": "sanitary-technician",
-      "title": "Avārijas santehniķis Rīgā 24/7 Veicu santehniskos darbus: Poda, maisītāju, boileru, du Рига, Другой Высшее LV, RU, EN Ежедневно",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/sanitary-technician/gdbcj.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
       "id": "J5LXRlY2huaWNpYW4vZWdvYnguaHRtbA",
       "type": "helper",
       "category": "Сантехника",
@@ -339,6 +328,17 @@
       "title": "Mājas santehniķa pakalpojumi 24/7.Kvalitatīvi veicu sanitārtehniskos darbus Rīgā un Rīga Рига, Другой Высшее LV, RU, EN Ежедневно",
       "city": "Рига",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/sanitary-technician/egobx.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-27T11:01:20.288Z"
+    },
+    {
+      "id": "J5LXRlY2huaWNpYW4vZ2RiY2ouaHRtbA",
+      "type": "helper",
+      "category": "Сантехника",
+      "profession": "sanitary-technician",
+      "title": "Avārijas santehniķis Rīgā 24/7 Veicu santehniskos darbus: Poda, maisītāju, boileru, du Рига, Другой Высшее LV, RU, EN Ежедневно",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/sanitary-technician/gdbcj.html",
       "source": "SS.com",
       "foundAt": "2026-09-27T11:01:20.288Z"
     },
@@ -464,6 +464,17 @@
       "foundAt": "2026-09-27T11:01:20.288Z"
     },
     {
+      "id": "3b3JrL2hhbmR5bWFuL2NtZWxtLmh0bWw",
+      "type": "helper",
+      "category": "Мелкий ремонт",
+      "profession": "handyman",
+      "title": "Ищу подработку в строительной сфере. Выполняю различные строительные работы покраска и Рига, Ильгюциемс Среднее LV, RU Любой",
+      "city": "Рига",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/cmelm.html",
+      "source": "SS.com",
+      "foundAt": "2026-09-25T08:13:11.167Z"
+    },
+    {
       "id": "b3JrL3BsYXN0ZXJlci9kZmhmbC5odG1s",
       "type": "helper",
       "category": "Штукатурка",
@@ -484,39 +495,6 @@
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/ebioc.html",
       "source": "SS.com",
       "foundAt": "2026-09-27T11:01:20.288Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2NtZWxtLmh0bWw",
-      "type": "helper",
-      "category": "Мелкий ремонт",
-      "profession": "handyman",
-      "title": "Ищу подработку в строительной сфере. Выполняю различные строительные работы покраска и Рига, Ильгюциемс Среднее LV, RU Любой",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/cmelm.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-25T08:13:11.167Z"
-    },
-    {
-      "id": "13b3JrL2NsZWFuZXIvZmhmbW4uaHRtbA",
-      "type": "helper",
-      "category": "Уборка",
-      "profession": "cleaner",
-      "title": "Предлагаю свои услуги по уборке квартир и домов. Выполняю уборку после ремонта, генераль Рига, центр Бакалавр LV, RU, EN Любой",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/cleaner/fhfmn.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-25T08:13:11.167Z"
-    },
-    {
-      "id": "JrL2Fzc2lzdGFudHMvZWpkYmguaHRtbA",
-      "type": "helper",
-      "category": "Помощник",
-      "profession": "assistants",
-      "title": "Ищу подработку в сфере ремонта и отделочных работ с обучением. Интересуют малярные и шту Рига, Саркандаугава Среднее LV, RU Любой",
-      "city": "Рига",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/assistants/ejdbh.html",
-      "source": "SS.com",
-      "foundAt": "2026-09-25T08:13:11.167Z"
     }
   ]
 }
