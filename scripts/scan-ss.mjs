@@ -1,5 +1,4 @@
 import {readFile,writeFile} from "node:fs/promises";
-import {classifyConstruction} from "./construction-filter.mjs";
 
 const categories=["builder","plater","house-painter","electrician","plumber","roofer","handyman","plasterer","bricklayer","carpenter"];
 const base="https://www.ss.com";
@@ -20,7 +19,7 @@ for(const category of categories){
       if(!link)continue;
       const url=new URL(link[1],base).href;
       const text=clean(row);
-      if(text.length<12 || !classifyConstruction(text,"helper"))continue;
+      if(text.length<12)continue;
       found.push({id:Buffer.from(url).toString("base64url").slice(-32),category,title:text.slice(0,280),url,foundAt:now});
     }
   }catch(error){console.error(`SS category ${category}:`,error.message)}
@@ -29,7 +28,7 @@ for(const category of categories){
 const unique=[...new Map(found.map(item=>[item.url,item])).values()];
 const previous=new Set(state.seen||[]);
 const additions=state.initialized?unique.filter(item=>!previous.has(item.url)):[];
-const leads=[...additions,...(current.leads||[]).filter(item=>classifyConstruction(item.title,"helper"))].slice(0,250);
+const leads=[...additions,...(current.leads||[])].slice(0,250);
 const seen=[...new Set([...unique.map(item=>item.url),...(state.seen||[])])].slice(0,3000);
 await writeFile("public/ss-leads.json",JSON.stringify({generatedAt:now,leads},null,2)+"\n");
 await writeFile(".monitor/ss-state.json",JSON.stringify({initialized:true,seen},null,2)+"\n");

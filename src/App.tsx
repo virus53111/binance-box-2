@@ -218,6 +218,53 @@ const categories: Record<Lang, string[]> = {
   en: ["Errands", "Delivery", "Transport", "Home help", "Repairs", "Cleaning", "Pets", "Senior help", "Technology", "Other"],
   uk: ["Доручення", "Доставка", "Перевезення", "Допомога вдома", "Ремонт", "Прибирання", "Тварини", "Допомога літнім", "Техніка", "Інше"],
 };
+const fallback: Order[] = [
+  {
+    id: "demo1",
+    category: "Поручения",
+    service: "Забрать посылку и привезти домой",
+    description: "Забрать небольшую посылку в центре и привезти в Пурвциемс",
+    price: "€15",
+    city: "Rīga",
+    district: "Purvciems",
+    date: "Сегодня",
+    lat: 56.957,
+    lng: 24.18,
+    customerId: "demo",
+    customerName: "Anna",
+    status: "open",
+  },
+  {
+    id: "demo2",
+    category: "Животные",
+    service: "Погулять с собакой",
+    description: "Нужна прогулка на 45 минут",
+    price: "€12",
+    city: "Rīga",
+    district: "Centrs",
+    date: "Завтра",
+    lat: 56.952,
+    lng: 24.112,
+    customerId: "demo",
+    customerName: "Jānis",
+    status: "open",
+  },
+  {
+    id: "demo3",
+    category: "Помощь по дому",
+    service: "Помочь поднять мебель",
+    description: "Нужно поднять небольшой диван на третий этаж",
+    price: "€25",
+    city: "Rīga",
+    district: "Imanta",
+    date: "На неделе",
+    lat: 56.956,
+    lng: 24.01,
+    customerId: "demo",
+    customerName: "Maksims",
+    status: "open",
+  },
+];
 function compressImage(file: File, max = 900, quality = 0.72): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -480,7 +527,7 @@ export default function App() {
   }, []);
   const visible = useMemo(() => {
     const q = queryText.toLowerCase();
-    return orders.filter(
+    return (orders.length ? orders : fallback).filter(
       (o) =>
         !q ||
         `${o.category || ""} ${o.service} ${o.description} ${o.district}`.toLowerCase().includes(q),
@@ -494,8 +541,8 @@ export default function App() {
       .filter((lead) => !q || `${lead.category} ${lead.title} ${lead.city}`.toLowerCase().includes(q));
     if (externalMode === "helper") return { items: filtered.slice(0, externalLimit), total: filtered.length };
     const ss = filtered.filter((lead) => lead.source === "SS.com");
-    const nva: ExternalLead[] = [];
-    const other = filtered.filter((lead) => lead.source !== "SS.com");
+    const nva = filtered.filter((lead) => lead.source.startsWith("NVA"));
+    const other = filtered.filter((lead) => lead.source !== "SS.com" && !lead.source.startsWith("NVA"));
     const mixed: ExternalLead[] = [];
     for (let index = 0; index < Math.max(ss.length, nva.length); index += 1) {
       if (ss[index]) mixed.push(ss[index]);
@@ -599,7 +646,7 @@ export default function App() {
     setModal("order");
   };
   const openTask = (id: string) => {
-    const order = orders.find((item) => item.id === id);
+    const order = [...orders, ...fallback].find((item) => item.id === id);
     if (!order) return notify("Задание больше недоступно");
     setSelectedOrder(order);
     setLinkedTaskId(id);
@@ -707,7 +754,7 @@ export default function App() {
   };
   useEffect(() => {
     if (!user || !pendingChatOrderId) return;
-    const order = orders.find((item) => item.id === pendingChatOrderId);
+    const order = [...orders, ...fallback].find((item) => item.id === pendingChatOrderId);
     if (order) {
       setPendingChatOrderId(null);
       void startChat(order);
@@ -1071,8 +1118,8 @@ export default function App() {
             <p className="eyebrow">РАДАР MURDILIMAX · LATVIJA</p>
             <h2>Подработка и помощники по всей Латвии</h2>
             <p>
-              Публичные объявления по мелким строительным работам собираются
-              автоматически с SS.com. Контакты остаются на источнике.
+              Публичные объявления собираются автоматически с SS.com и из
+              официальных открытых данных NVA. Контакты остаются на источнике.
             </p>
           </div>
           <div className="opportunity-switch">
