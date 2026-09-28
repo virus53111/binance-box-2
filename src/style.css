@@ -718,6 +718,7 @@ footer a {
 .analytics-cards strong { font-size: 1.25rem; color: var(--green); }
 .analytics-cards span { font-size: .72rem; color: var(--muted); }
 .analytics-details { display: grid; gap: 5px; margin-top: 12px; font-size: .8rem; }
+.analytics-error { margin-top: 14px; padding: 13px; border-radius: 12px; background: #fff0ec; color: #a33c25; font-weight: 700; }
 .add-mod {
   display: grid;
   grid-template-columns: 1fr 48px;
