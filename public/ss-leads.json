@@ -1,6 +1,27 @@
 {
-  "generatedAt": "2026-09-28T08:07:36.348Z",
+  "generatedAt": "2026-09-28T11:06:54.426Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvZW1kcGcuaHRtbA",
+      "category": "builder",
+      "title": "Pašnodarbināts celtnieks meklē darbu Valmierā vai tās apkārtnē. Darbi kurus varu veikt Валмиера и р-он, Валмиера Среднее LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/emdpg.html",
+      "foundAt": "2026-09-28T11:06:54.426Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FtZm1pLmh0bWw",
+      "category": "electrician",
+      "title": "Опытный электромонтажник. Ищу постоянную работу или отдельные объекты под ключ в утренне Рига, Другой Средне-проф. RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/amfmi.html",
+      "foundAt": "2026-09-28T11:06:54.426Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VoZ29nLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķa pakalpojumi. Тукумс и р-он, Тукумс Средне-проф. LV, RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ehgog.html",
+      "foundAt": "2026-09-28T11:06:54.426Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYmhvcGkuaHRtbA",
       "category": "builder",
