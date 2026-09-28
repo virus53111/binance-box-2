@@ -23,16 +23,17 @@ export function track(event: string, extra: Record<string, string> = {}) {
     language: navigator.language,
     ...extra,
   });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(ENDPOINT, new Blob([body], { type: "application/json" }));
-    return;
-  }
   void fetch(ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain;charset=UTF-8" },
     body,
     keepalive: true,
-  }).catch(() => {});
+    mode: "cors",
+  }).catch(() => {
+    window.setTimeout(() => {
+      void fetch(ENDPOINT, { method: "POST", body, keepalive: true, mode: "cors" }).catch(() => {});
+    }, 2500);
+  });
 }
 
 track("page_view");
