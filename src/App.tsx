@@ -366,6 +366,7 @@ export default function App() {
     [adminTab, setAdminTab] = useState<AdminTab>("leads"),
     [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null),
     [analyticsLoading, setAnalyticsLoading] = useState(false),
+    [analyticsError, setAnalyticsError] = useState(""),
     [orderOpenedFromAdmin, setOrderOpenedFromAdmin] = useState(false),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
     [alertsEnabled, setAlertsEnabled] = useState(
@@ -387,12 +388,15 @@ export default function App() {
   const loadAnalytics = async () => {
     try {
       setAnalyticsLoading(true);
-      const response = await fetch(`https://cenaradar-feed-api.onrender.com/api/analytics/summary?t=${Date.now()}`);
+      setAnalyticsError("");
+      const response = await fetch(`https://cenaradar-feed-api.onrender.com/api/analytics/summary?t=${Date.now()}`, {
+        signal: AbortSignal.timeout(15000),
+      });
       if (!response.ok) throw new Error(`Analytics ${response.status}`);
       setAnalytics(await response.json());
     } catch (error) {
       console.error(error);
-      notify("Не удалось загрузить аналитику");
+      setAnalyticsError("Сервер статистики запускается. Нажмите «Повторить» через минуту.");
     } finally {
       setAnalyticsLoading(false);
     }
@@ -1578,9 +1582,10 @@ export default function App() {
                 {adminTab === "analytics" && <section className="admin-section analytics-section">
                   <div className="admin-section-head">
                     <div><h3>Посещаемость сайтов</h3><small>Без Google Analytics · данные начинают собираться с момента запуска</small></div>
-                    <button className="analytics-refresh" onClick={loadAnalytics} disabled={analyticsLoading}>{analyticsLoading ? "Загрузка…" : "Обновить"}</button>
+                    <button className="analytics-refresh" onClick={loadAnalytics} disabled={analyticsLoading}>{analyticsLoading ? "Загрузка…" : analyticsError ? "Повторить" : "Обновить"}</button>
                   </div>
                   {!analytics && analyticsLoading && <div className="admin-empty">Загружаем статистику…</div>}
+                  {!analyticsLoading && analyticsError && <div className="analytics-error">{analyticsError}</div>}
                   {analytics && [["murdilimax", "MURDILIMAX"], ["cenaradar", "CenaRadar"]].map(([key, name]) => {
                     const site = analytics.sites[key], week = analyticsRecent(site, 7), month = analyticsRecent(site, 30), source = analyticsTop(site?.sources), page = analyticsTop(site?.paths), device = analyticsTop(site?.devices);
                     const actions = Object.entries(site?.events || {}).filter(([event]) => event !== "page_view").reduce((sum, [, count]) => sum + count, 0);
