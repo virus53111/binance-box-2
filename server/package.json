@@ -7,10 +7,13 @@
     "start": "node index.js",
     "check": "node --check index.js"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "cors": "2.8.6",
     "express": "5.2.1",
-    "pg": "8.23.0"
+    "pg": "8.23.0",
+    "jose": "^6.1.0"
   }
 }
