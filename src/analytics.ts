@@ -1,4 +1,4 @@
-const ENDPOINT = "https://cenaradar-feed-api.onrender.com/api/analytics";
+const ENDPOINT = "https://murdilimax-analytics-api.onrender.com/api/analytics";
 const SESSION_KEY = "murdilimax:analytics-session";
 const session = localStorage.getItem(SESSION_KEY) || crypto.randomUUID();
 localStorage.setItem(SESSION_KEY, session);
