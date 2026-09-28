@@ -20,6 +20,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { track } from "./analytics";
 import {
   Ban,
   Bell,
@@ -128,7 +129,28 @@ type AdminUser = {
   city?: string;
   avatar?: string;
 };
-type AdminTab = "users" | "orders" | "leads";
+type AdminTab = "users" | "orders" | "leads" | "analytics";
+type AnalyticsDay = {
+  date: string;
+  views: number;
+  visitors: number;
+  events: Record<string, number>;
+  paths: Record<string, number>;
+  sources: Record<string, number>;
+  devices: Record<string, number>;
+  languages: Record<string, number>;
+};
+type AnalyticsSite = {
+  views: number;
+  visitors: number;
+  events: Record<string, number>;
+  paths: Record<string, number>;
+  sources: Record<string, number>;
+  devices: Record<string, number>;
+  languages: Record<string, number>;
+  daily: AnalyticsDay[];
+};
+type AnalyticsSummary = { generatedAt: string; sites: Record<string, AnalyticsSite> };
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -304,6 +326,14 @@ function coordsNear(center: [number, number]) {
   };
 }
 
+const analyticsTop = (values: Record<string, number> | undefined) =>
+  Object.entries(values || {}).sort((a, b) => b[1] - a[1])[0] || ["—", 0];
+const analyticsRecent = (site: AnalyticsSite | undefined, days: number) =>
+  (site?.daily || []).slice(-days).reduce(
+    (total, day) => ({ views: total.views + day.views, visitors: total.visitors + day.visitors }),
+    { views: 0, visitors: 0 },
+  );
+
 export default function App() {
   const [lang, setLang] = useState<Lang>("ru"),
     [role, setRole] = useState<Role>("customer"),
@@ -334,6 +364,8 @@ export default function App() {
     [dismissedLeads, setDismissedLeads] = useState<string[]>([]),
     [adminUsers, setAdminUsers] = useState<AdminUser[]>([]),
     [adminTab, setAdminTab] = useState<AdminTab>("leads"),
+    [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null),
+    [analyticsLoading, setAnalyticsLoading] = useState(false),
     [orderOpenedFromAdmin, setOrderOpenedFromAdmin] = useState(false),
     [leadUpdated, setLeadUpdated] = useState<string | null>(null),
     [alertsEnabled, setAlertsEnabled] = useState(
@@ -352,6 +384,22 @@ export default function App() {
     setToast(text);
     setTimeout(() => setToast(""), 2600);
   };
+  const loadAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const response = await fetch(`https://cenaradar-feed-api.onrender.com/api/analytics/summary?t=${Date.now()}`);
+      if (!response.ok) throw new Error(`Analytics ${response.status}`);
+      setAnalytics(await response.json());
+    } catch (error) {
+      console.error(error);
+      notify("Не удалось загрузить аналитику");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (modal === "admin" && adminTab === "analytics" && canModerate) void loadAnalytics();
+  }, [modal, adminTab, canModerate]);
   useEffect(
     () =>
       onAuthStateChanged(auth, async (u) => {
@@ -557,6 +605,7 @@ export default function App() {
     try {
       setBusy(true);
       await signInWithPopup(auth, googleProvider);
+      track("login_success");
       setModal(null);
       notify("Вход выполнен");
     } catch (e) {
@@ -692,6 +741,7 @@ export default function App() {
           ...data,
           createdAt: serverTimestamp(),
         });
+      track(editing ? "order_updated" : "order_created", { category: data.category });
       setModal(orderOpenedFromAdmin ? "admin" : null);
       setEditing(null);
       setOrderOpenedFromAdmin(false);
@@ -743,6 +793,7 @@ export default function App() {
       }, { merge: true });
       const chat = { id, orderId: o.id, orderTitle: o.service, participants: [o.customerId, user.uid], customerId: o.customerId, masterId: user.uid };
       setActiveChat(chat);
+      track("chat_started", { category: o.category || "Другое" });
       setPendingChatOrderId(null);
       setModal("chats");
     } catch (error) {
@@ -773,6 +824,7 @@ export default function App() {
         createdAt: serverTimestamp(),
       });
       await updateDoc(doc(db, "chats", activeChat.id), { lastMessage: text, updatedAt: serverTimestamp() });
+      track("message_sent");
     } catch (error) {
       console.error(error);
       setMessage(text);
@@ -1518,7 +1570,31 @@ export default function App() {
                     <strong>{activeLeads.length}</strong>
                     <span>новых с SS.com</span>
                   </button>
+                  <button className={adminTab === "analytics" ? "active" : ""} onClick={() => setAdminTab("analytics")}>
+                    <strong>{analytics?.sites?.murdilimax?.views || 0}</strong>
+                    <span>аналитика</span>
+                  </button>
                 </div>
+                {adminTab === "analytics" && <section className="admin-section analytics-section">
+                  <div className="admin-section-head">
+                    <div><h3>Посещаемость сайтов</h3><small>Без Google Analytics · данные начинают собираться с момента запуска</small></div>
+                    <button className="analytics-refresh" onClick={loadAnalytics} disabled={analyticsLoading}>{analyticsLoading ? "Загрузка…" : "Обновить"}</button>
+                  </div>
+                  {!analytics && analyticsLoading && <div className="admin-empty">Загружаем статистику…</div>}
+                  {analytics && [["murdilimax", "MURDILIMAX"], ["cenaradar", "CenaRadar"]].map(([key, name]) => {
+                    const site = analytics.sites[key], week = analyticsRecent(site, 7), month = analyticsRecent(site, 30), source = analyticsTop(site?.sources), page = analyticsTop(site?.paths), device = analyticsTop(site?.devices);
+                    const actions = Object.entries(site?.events || {}).filter(([event]) => event !== "page_view").reduce((sum, [, count]) => sum + count, 0);
+                    return <article className="analytics-site" key={key}>
+                      <div className="analytics-site-title"><b>{name}</b><small>обновлено {new Date(analytics.generatedAt).toLocaleString("ru-RU")}</small></div>
+                      <div className="analytics-cards">
+                        <div><strong>{site?.views || 0}</strong><span>просмотров всего</span></div><div><strong>{site?.visitors || 0}</strong><span>посетителей всего</span></div>
+                        <div><strong>{week.views}</strong><span>просмотров за 7 дней</span></div><div><strong>{month.views}</strong><span>просмотров за 30 дней</span></div>
+                        <div><strong>{actions}</strong><span>действий</span></div><div><strong>{week.visitors}</strong><span>людей за 7 дней</span></div>
+                      </div>
+                      <div className="analytics-details"><span>Главный источник <b>{source[0]}</b> ({source[1]})</span><span>Популярная страница <b>{page[0]}</b> ({page[1]})</span><span>Основное устройство <b>{device[0]}</b> ({device[1]})</span></div>
+                    </article>;
+                  })}
+                </section>}
                 {adminTab === "leads" && <section className="admin-section">
                   <div className="admin-section-head">
                     <div>
