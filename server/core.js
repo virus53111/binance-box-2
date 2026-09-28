@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import { registerTrafficRoutes } from './traffic.js';
 
 const require = createRequire(import.meta.url);
 const { TikTokLiveConnection, WebcastEvent = {} } = require('tiktok-live-connector');
@@ -328,6 +329,8 @@ async function restartServerConnector() {
   await delay(250);
   scheduleConnector(250);
 }
+
+registerTrafficRoutes({ app, pool });
 
 app.get('/api/health', async (_req,res) => {
   try {
