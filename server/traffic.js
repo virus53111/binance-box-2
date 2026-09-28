@@ -149,7 +149,7 @@ function analyzeHtml(html, finalUrl) {
   for (const match of html.matchAll(/<h[12]\b[^>]*>([\s\S]*?)<\/h[12]>/gi)) {
     const value = textOnly(match[1], 100);
     if (value.length >= 3 && !headings.some(x => x.toLowerCase() === value.toLowerCase())) headings.push(value);
-    if (headings.length >= 12) break;
+    if (headings.length >= 30) break;
   }
   const base = new URL(finalUrl);
   const links = [];
@@ -163,7 +163,7 @@ function analyzeHtml(html, finalUrl) {
       if (url.hostname.replace(/^www\./, '') !== base.hostname.replace(/^www\./, '')) continue;
       url.hash = '';
       if (!links.some(item => item.url === url.toString())) links.push({ text: label, url: url.toString() });
-      if (links.length >= 10) break;
+      if (links.length >= 30) break;
     } catch {}
   }
   const fallbackTopic = title.split(/\s+[|—–-]\s+/)[0]?.trim() || base.hostname.replace(/^www\./, '');
@@ -229,33 +229,163 @@ const COPY = {
   }
 };
 
-function pageDrafts(analysis) {
+const SEED_KINDS = [
+  'checklist','questions','compare','mistakes','first','value','price','timeline','options','faq',
+  'budget','requirements','before','after','risks','quality','planning','estimate','preparation','decision'
+];
+
+function seedTitle(language, kind, topic) {
+  const t = textOnly(topic, 78);
+  const ru = {
+    checklist: `${t}: чек-лист перед выбором`,
+    questions: `${t}: 7 вопросов перед решением`,
+    compare: `Как сравнить варианты: ${t}`,
+    mistakes: `${t}: частые ошибки при выборе`,
+    first: `${t}: с чего начать`,
+    value: `${t}: что важно проверить`,
+    price: `${t}: что влияет на итоговую цену`,
+    timeline: `${t}: сроки и что на них влияет`,
+    options: `${t}: варианты и как выбрать подходящий`,
+    faq: `${t}: частые вопросы и ответы`,
+    budget: `${t}: как заранее оценить бюджет`,
+    requirements: `${t}: что нужно подготовить заранее`,
+    before: `${t}: что проверить до заказа`,
+    after: `${t}: что проверить после выполнения`,
+    risks: `${t}: основные риски и как их снизить`,
+    quality: `${t}: как оценить качество`,
+    planning: `${t}: как правильно спланировать`,
+    estimate: `${t}: как оценить предложение перед выбором`,
+    preparation: `${t}: подготовка по шагам`,
+    decision: `${t}: как принять решение без лишних расходов`
+  };
+  const lv = {
+    checklist: `${t}: pārbaudes saraksts pirms izvēles`,
+    questions: `${t}: 7 jautājumi pirms lēmuma`,
+    compare: `Kā salīdzināt variantus: ${t}`,
+    mistakes: `${t}: biežākās kļūdas izvēloties`,
+    first: `${t}: ar ko sākt`,
+    value: `${t}: ko ir vērts pārbaudīt`,
+    price: `${t}: kas ietekmē gala cenu`,
+    timeline: `${t}: termiņi un kas tos ietekmē`,
+    options: `${t}: varianti un kā izvēlēties piemērotāko`,
+    faq: `${t}: biežākie jautājumi un atbildes`,
+    budget: `${t}: kā iepriekš novērtēt budžetu`,
+    requirements: `${t}: ko sagatavot iepriekš`,
+    before: `${t}: ko pārbaudīt pirms pasūtījuma`,
+    after: `${t}: ko pārbaudīt pēc izpildes`,
+    risks: `${t}: galvenie riski un kā tos mazināt`,
+    quality: `${t}: kā novērtēt kvalitāti`,
+    planning: `${t}: kā pareizi saplānot`,
+    estimate: `${t}: kā novērtēt piedāvājumu pirms izvēles`,
+    preparation: `${t}: sagatavošanās pa soļiem`,
+    decision: `${t}: kā pieņemt lēmumu bez liekiem izdevumiem`
+  };
+  const en = {
+    checklist: `${t}: checklist before you choose`,
+    questions: `${t}: 7 questions before deciding`,
+    compare: `How to compare options: ${t}`,
+    mistakes: `${t}: common mistakes to avoid`,
+    first: `${t}: where to start`,
+    value: `${t}: what is worth checking`,
+    price: `${t}: what affects the final price`,
+    timeline: `${t}: timing and what affects it`,
+    options: `${t}: options and how to choose`,
+    faq: `${t}: frequently asked questions`,
+    budget: `${t}: how to estimate the budget`,
+    requirements: `${t}: what to prepare in advance`,
+    before: `${t}: what to check before ordering`,
+    after: `${t}: what to check after completion`,
+    risks: `${t}: key risks and how to reduce them`,
+    quality: `${t}: how to assess quality`,
+    planning: `${t}: how to plan it properly`,
+    estimate: `${t}: how to evaluate an offer before choosing`,
+    preparation: `${t}: step-by-step preparation`,
+    decision: `${t}: how to decide without unnecessary cost`
+  };
+  const table = language === 'ru' ? ru : language === 'lv' ? lv : en;
+  return table[kind] || `${t}: practical guide`;
+}
+
+function pageDrafts(analysis, limit = 20) {
   const c = COPY[analysis.language] || COPY.en;
-  const candidates = [analysis.topic, ...analysis.headings].map(x => textOnly(x, 78)).filter(Boolean);
+  const rawCandidates = [
+    analysis.topic,
+    ...analysis.headings,
+    ...analysis.links.map(item => item.text)
+  ].map(x => textOnly(x, 78)).filter(x => x.length >= 3);
   const unique = [];
-  for (const item of candidates) if (!unique.some(x => x.toLowerCase() === item.toLowerCase())) unique.push(item);
-  while (unique.length < 6) unique.push(analysis.topic);
-  const kinds = ['checklist', 'questions', 'compare', 'mistakes', 'first', 'value'];
-  return kinds.map((kind, index) => {
-    const topic = unique[index] || analysis.topic;
-    const title = c[kind](topic);
-    return {
-      slug: `${kind}-${slugify(topic)}`.slice(0, 96),
+  for (const item of rawCandidates) {
+    if (!unique.some(x => x.toLowerCase() === item.toLowerCase())) unique.push(item);
+  }
+  if (!unique.length) unique.push(analysis.topic || analysis.host);
+
+  const drafts = [];
+  for (let index = 0; index < limit; index += 1) {
+    const kind = SEED_KINDS[index % SEED_KINDS.length];
+    const topic = unique[index % unique.length] || analysis.topic;
+    const title = seedTitle(analysis.language, kind, topic);
+    drafts.push({
+      slug: `seed-${kind}-${slugify(topic)}`.slice(0, 96),
       title,
-      description: c.desc(topic, analysis.host),
+      description: c.desc(title, analysis.host),
       topic,
       body: {
-        intro: c.intro(topic),
+        intro: c.intro(title),
         checklistTitle: c.checklistTitle,
         sectionsTitle: c.sectionsTitle,
         sourceLabel: c.source,
         scoreLabel: c.score,
         criteria: c.criteria,
-        sections: analysis.headings.slice(0, 7),
-        links: analysis.links.slice(0, 7)
+        sections: analysis.headings.slice(0, 10),
+        links: analysis.links.slice(0, 10)
       }
-    };
-  });
+    });
+  }
+  return drafts;
+}
+
+function adaptiveDrafts(analysis, topic) {
+  const c = COPY[analysis.language] || COPY.en;
+  const t = textOnly(topic || analysis.topic, 78);
+  const titles = analysis.language === 'ru'
+    ? [
+        ['deep', `Подробный практический гид: ${t}`],
+        ['cost', `${t}: от чего зависит итоговая стоимость`],
+        ['choose', `${t}: как выбрать подходящий вариант`],
+        ['examples', `${t}: типовые сценарии и что учитывать`],
+        ['plan', `${t}: понятный план действий по шагам`]
+      ]
+    : analysis.language === 'lv'
+      ? [
+          ['deep', `Praktisks ceļvedis: ${t}`],
+          ['cost', `${t}: no kā atkarīgas gala izmaksas`],
+          ['choose', `${t}: kā izvēlēties piemērotāko variantu`],
+          ['examples', `${t}: tipiski scenāriji un kas jāņem vērā`],
+          ['plan', `${t}: skaidrs rīcības plāns pa soļiem`]
+        ]
+      : [
+          ['deep', `Practical guide: ${t}`],
+          ['cost', `${t}: what affects the final cost`],
+          ['choose', `${t}: how to choose the right option`],
+          ['examples', `${t}: common scenarios and what to consider`],
+          ['plan', `${t}: a clear step-by-step action plan`]
+        ];
+  return titles.map(([kind, title]) => ({
+    slug: `expand-${kind}-${slugify(t)}`.slice(0, 96),
+    title,
+    description: c.desc(title, analysis.host),
+    topic: t,
+    body: {
+      intro: c.intro(title),
+      checklistTitle: c.checklistTitle,
+      sectionsTitle: c.sectionsTitle,
+      sourceLabel: c.source,
+      scoreLabel: c.score,
+      criteria: c.criteria,
+      sections: analysis.headings.slice(0, 10),
+      links: analysis.links.slice(0, 10)
+    }
+  }));
 }
 
 function isBot(ua) {
@@ -411,8 +541,9 @@ export function registerTrafficRoutes({ app, pool }) {
     const now = Date.now();
     await pool.query('UPDATE traffic_campaigns SET target_url=$2,host=$3,title=$4,description=$5,language=$6,status=\'active\',last_error=\'\',updated_at=$7,last_run_at=$7 WHERE id=$1',
       [campaign.id, analysis.url, analysis.host, analysis.title, analysis.description, analysis.language, now]);
+
     const rows = [];
-    for (const draft of pageDrafts(analysis)) {
+    const upsertDraft = async draft => {
       const found = await pool.query('SELECT id FROM traffic_pages WHERE campaign_id=$1 AND slug=$2', [campaign.id, draft.slug]);
       let id = found.rows[0]?.id;
       if (id) {
@@ -423,8 +554,41 @@ export function registerTrafficRoutes({ app, pool }) {
         await pool.query('INSERT INTO traffic_pages (id,campaign_id,slug,title,description,topic,body_json,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$8)',
           [id, campaign.id, draft.slug, draft.title, draft.description, draft.topic, JSON.stringify(draft.body), now]);
       }
-      rows.push({ id, slug: draft.slug });
+      rows.push({ id, slug:draft.slug });
+      return Boolean(!found.rows[0]?.id);
+    };
+
+    for (const draft of pageDrafts(analysis, 20)) await upsertDraft(draft);
+
+    const countResult = await pool.query('SELECT COUNT(*)::int AS count FROM traffic_pages WHERE campaign_id=$1', [campaign.id]);
+    let pageCount = Number(countResult.rows[0]?.count || 0);
+
+    if (pageCount < 60) {
+      const winners = await pool.query(`
+        SELECT topic, SUM(views)::int AS views, SUM(clicks)::int AS clicks
+        FROM traffic_pages
+        WHERE campaign_id=$1 AND topic <> ''
+        GROUP BY topic
+        HAVING SUM(views) >= 3 OR SUM(clicks) >= 1
+        ORDER BY SUM(clicks) DESC, SUM(views) DESC
+        LIMIT 6
+      `, [campaign.id]);
+      const existingResult = await pool.query('SELECT slug FROM traffic_pages WHERE campaign_id=$1', [campaign.id]);
+      const existingSlugs = new Set(existingResult.rows.map(row => row.slug));
+      let added = 0;
+      outer:
+      for (const winner of winners.rows) {
+        for (const draft of adaptiveDrafts(analysis, winner.topic)) {
+          if (pageCount >= 60 || added >= 8) break outer;
+          if (existingSlugs.has(draft.slug)) continue;
+          await upsertDraft(draft);
+          existingSlugs.add(draft.slug);
+          pageCount += 1;
+          added += 1;
+        }
+      }
     }
+
     const indexStatus = await submitIndexNow(rows, campaign.id);
     await pool.query('UPDATE traffic_campaigns SET indexnow_status=$2,updated_at=$3 WHERE id=$1', [campaign.id, indexStatus, Date.now()]);
   }
@@ -580,6 +744,32 @@ export function registerTrafficRoutes({ app, pool }) {
     }
   });
 
+  const backfillSeedPages = async () => {
+    try {
+      await ensureSchema();
+      const { rows } = await pool.query(`
+        SELECT c.*, COUNT(p.id)::int AS page_count
+        FROM traffic_campaigns c
+        LEFT JOIN traffic_pages p ON p.campaign_id=c.id
+        WHERE c.status='active'
+        GROUP BY c.id
+        HAVING COUNT(p.id) < 20
+        ORDER BY c.created_at ASC
+        LIMIT 2
+      `);
+      for (const campaign of rows) {
+        try {
+          await refreshCampaign(campaign);
+          console.log(`Traffic Lab seed backfill: ${campaign.host} -> 20 pages target`);
+        } catch (error) {
+          console.warn('Traffic Lab seed backfill failed:', campaign.target_url, error?.message || error);
+        }
+      }
+    } catch (error) {
+      console.warn('Traffic Lab seed backfill unavailable:', error?.message || error);
+    }
+  };
+
   const refreshDue = async () => {
     try {
       await ensureSchema();
@@ -598,6 +788,7 @@ export function registerTrafficRoutes({ app, pool }) {
     void ensureSchema()
       .then(() => console.log('Traffic Lab ready · postgres=ok · maxActive=2'))
       .catch(error => console.error('Traffic Lab startup failed:', error?.message || error));
+    setTimeout(() => void backfillSeedPages(), 20_000).unref();
     setTimeout(() => void refreshDue(), 90_000).unref();
     setInterval(() => void refreshDue(), 6 * 60 * 60 * 1000).unref();
   } else {
