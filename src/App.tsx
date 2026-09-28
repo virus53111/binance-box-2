@@ -52,6 +52,7 @@ import type { MapOrder } from "./MapPanel";
 import { auth, db, googleProvider, OWNER_EMAIL } from "./firebase";
 
 const MapPanel = lazy(() => import("./MapPanel"));
+const TrafficLab = lazy(() => import("./TrafficLab"));
 
 type Lang = "ru" | "lv" | "en" | "uk";
 type Role = "customer" | "master";
@@ -129,7 +130,7 @@ type AdminUser = {
   city?: string;
   avatar?: string;
 };
-type AdminTab = "users" | "orders" | "leads" | "analytics";
+type AdminTab = "users" | "orders" | "leads" | "analytics" | "traffic";
 type AnalyticsDay = {
   date: string;
   views: number;
@@ -1578,6 +1579,10 @@ export default function App() {
                     <strong>{analytics?.sites?.murdilimax?.views || 0}</strong>
                     <span>аналитика</span>
                   </button>
+                  {isOwner && <button className={adminTab === "traffic" ? "active" : ""} onClick={() => setAdminTab("traffic")}>
+                    <strong>SEO</strong>
+                    <span>Traffic Lab</span>
+                  </button>}
                 </div>
                 {adminTab === "analytics" && <section className="admin-section analytics-section">
                   <div className="admin-section-head">
@@ -1600,6 +1605,11 @@ export default function App() {
                     </article>;
                   })}
                 </section>}
+                {adminTab === "traffic" && isOwner && (
+                  <Suspense fallback={<div className="admin-empty">Загружаем Traffic Lab…</div>}>
+                    <TrafficLab />
+                  </Suspense>
+                )}
                 {adminTab === "leads" && <section className="admin-section">
                   <div className="admin-section-head">
                     <div>
