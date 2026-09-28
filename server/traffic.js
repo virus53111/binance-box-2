@@ -595,7 +595,12 @@ export function registerTrafficRoutes({ app, pool }) {
   };
 
   if (pool) {
+    void ensureSchema()
+      .then(() => console.log('Traffic Lab ready · postgres=ok · maxActive=2'))
+      .catch(error => console.error('Traffic Lab startup failed:', error?.message || error));
     setTimeout(() => void refreshDue(), 90_000).unref();
     setInterval(() => void refreshDue(), 6 * 60 * 60 * 1000).unref();
+  } else {
+    console.warn('Traffic Lab disabled: PostgreSQL is not configured');
   }
 }
