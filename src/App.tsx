@@ -389,14 +389,14 @@ export default function App() {
     try {
       setAnalyticsLoading(true);
       setAnalyticsError("");
-      const response = await fetch(`https://cenaradar-feed-api.onrender.com/api/analytics/summary?t=${Date.now()}`, {
-        signal: AbortSignal.timeout(15000),
+      const response = await fetch(`https://murdilimax-analytics-api.onrender.com/api/analytics/summary?t=${Date.now()}`, {
+        signal: AbortSignal.timeout(45000),
       });
       if (!response.ok) throw new Error(`Analytics ${response.status}`);
       setAnalytics(await response.json());
     } catch (error) {
       console.error(error);
-      setAnalyticsError("Сервер статистики запускается. Нажмите «Повторить» через минуту.");
+      setAnalyticsError("Не удалось связаться со статистикой. Нажмите «Повторить».");
     } finally {
       setAnalyticsLoading(false);
     }
