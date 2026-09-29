@@ -143,8 +143,8 @@ export default function TrafficLab() {
       </div>
       <p className="traffic-lab-note">
         Traffic Lab строит страницы под реальный поисковый спрос: цены, калькуляторы, сметы и сравнения.
-        Числовые ориентиры берутся только с публичного сайта-источника — система не выдумывает цены.
-        Темы с реальными просмотрами и переходами автоматически расширяются — до 60 страниц на сайт.
+        Числовые ориентиры берутся с целевого сайта или из опубликованного рыночного benchmark Murdilimax.
+        В sitemap попадают только страницы, прошедшие Quality Gate; слабые остаются noindex.
       </p>
 
       {!loaded && <div className="admin-empty">Загружаем Traffic Lab…</div>}
@@ -177,15 +177,15 @@ export default function TrafficLab() {
               </div>
 
               <div className="traffic-metrics">
-                <div><strong>{campaign.pageCount}</strong><span>страниц · {campaign.indexableCount || 0} в sitemap</span></div>
+                <div><strong>{campaign.indexableCount || 0}</strong><span>индексируемых · {Math.max(0, campaign.pageCount - (campaign.indexableCount || 0))} noindex</span></div>
                 <div><strong>{campaign.views}</strong><span>просмотров</span></div>
-                <div><strong>{campaign.crawls}</strong><span>ботов/краулеров</span></div>
+                <div><strong>{campaign.crawls}</strong><span>crawler hits</span></div>
                 <div><strong>{campaign.clicks}</strong><span>переходов на сайт</span></div>
               </div>
 
               <div className="traffic-meta">
                 <span>Последний запуск: {campaign.lastRunAt ? new Date(campaign.lastRunAt).toLocaleString("ru-RU") : "—"}</span>
-                <span>Источник: просмотрено до {campaign.crawlCount || 1} страниц · свежие задания на {campaign.pagesWithTasks || 0} страницах</span>
+                <span>Quality Gate: {campaign.indexableCount || 0}/{campaign.pageCount} страниц · HTML-скан источника: до {campaign.crawlCount || 1} стр.</span>
                 <span>IndexNow: {campaign.indexNowStatus || "ещё не отправлялся"}</span>
               </div>
 
@@ -195,7 +195,7 @@ export default function TrafficLab() {
                 {campaign.pages.map((page) => (
                   <a href={page.url} target="_blank" rel="noreferrer" key={page.id}>
                     <span>{page.title}</span>
-                    <small>{page.views} просмотров · {page.crawls} краулеров · {page.clicks} переходов</small>
+                    <small>{page.views} просмотров · {page.crawls} crawler hits · {page.clicks} переходов</small>
                   </a>
                 ))}
               </div>
