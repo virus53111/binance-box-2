@@ -815,7 +815,7 @@ function renderTrafficPage(row, relatedRows = []) {
     isPartOf:{ '@type':'WebSite', name:'Murdilimax Traffic Lab', url:campaignUrl(row.campaign_id) }
   };
 
-  const indexable = active && Number(body.qualityScore || 0) >= 3;
+  const indexable = active && Number(body.qualityScore || 0) >= 4;
   return renderShell({ title:row.title, description:row.description, canonical, lang:row.language || 'en', body:bodyHtml, robots:indexable?'index,follow,max-image-preview:large':'noindex,follow', imageUrl:body.imageUrl || '', schema });
 }
 
@@ -890,7 +890,7 @@ export function registerTrafficRoutes({ app, pool }) {
       COALESCE(SUM(p.crawls),0)::int AS crawls,
       COALESCE(SUM(p.clicks),0)::int AS clicks,
       COUNT(p.id)::int AS page_count,
-      COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3)::int AS indexable_count,
+      COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 4)::int AS indexable_count,
       COUNT(p.id) FILTER (WHERE jsonb_array_length(COALESCE(p.body_json->'freshTasks','[]'::jsonb)) > 0)::int AS pages_with_tasks,
       COALESCE(MAX(COALESCE(NULLIF(p.body_json->>'crawlCount','')::int,0)),0)::int AS crawl_count
       FROM traffic_campaigns c
@@ -924,7 +924,7 @@ export function registerTrafficRoutes({ app, pool }) {
   }
 
   async function submitIndexNow(pageRows, campaignId) {
-    const indexableRows = (pageRows || []).filter(row => Number(row.qualityScore || 0) >= 3);
+    const indexableRows = (pageRows || []).filter(row => Number(row.qualityScore || 0) >= 4);
     const urls = [campaignUrl(campaignId), ...indexableRows.map(pageUrl)];
     try {
       const response = await fetch('https://api.indexnow.org/indexnow', {
@@ -1047,7 +1047,7 @@ export function registerTrafficRoutes({ app, pool }) {
   app.get('/traffic/sitemap.xml', async (_req, res) => {
     try {
       await ensureSchema();
-      const { rows } = await pool.query(`SELECT p.id,p.slug,p.updated_at FROM traffic_pages p JOIN traffic_campaigns c ON c.id=p.campaign_id WHERE c.status='active' AND COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3 ORDER BY p.updated_at DESC`);
+      const { rows } = await pool.query(`SELECT p.id,p.slug,p.updated_at FROM traffic_pages p JOIN traffic_campaigns c ON c.id=p.campaign_id WHERE c.status='active' AND COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 4 ORDER BY p.updated_at DESC`);
       const urls = rows.map(row => `<url><loc>${xml(pageUrl(row))}</loc><lastmod>${new Date(Number(row.updated_at)).toISOString()}</lastmod></url>`).join('');
       res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
     } catch (error) {
@@ -1060,7 +1060,7 @@ export function registerTrafficRoutes({ app, pool }) {
       await ensureSchema();
       const campaign = await getCampaign(req.params.id);
       if (!campaign) return res.status(404).send('Not found');
-      const { rows } = await pool.query("SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND COALESCE(NULLIF(body_json->>'qualityScore','')::int,0) >= 3 ORDER BY created_at ASC", [campaign.id]);
+      const { rows } = await pool.query("SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND COALESCE(NULLIF(body_json->>'qualityScore','')::int,0) >= 4 ORDER BY created_at ASC", [campaign.id]);
       const list = rows.map(page => `<a href="${esc(pageUrl(page))}"><b>${esc(page.title)}</b><span>${esc(page.description)}</span></a>`).join('');
       const body = `<span class="tag">Murdilimax Traffic Lab</span><section class="card"><h1>${esc(campaign.title || campaign.host)}</h1><p>${esc(campaign.description || `Useful decision tools for ${campaign.host}`)}</p><div class="links">${list}</div><a class="cta" href="${esc(campaign.target_url)}" rel="noopener">Open ${esc(campaign.host)} →</a></section>`;
       res.type('html').send(renderShell({ title:`${campaign.title || campaign.host} — tools`, description:campaign.description || `Useful tools for ${campaign.host}`, canonical:campaignUrl(campaign.id), lang:campaign.language, body, robots:campaign.status === 'active' ? 'index,follow' : 'noindex,nofollow' }));
@@ -1212,7 +1212,7 @@ export function registerTrafficRoutes({ app, pool }) {
       const { rows } = await pool.query(`
         SELECT c.host,
           COUNT(p.id)::int AS pages,
-          COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3)::int AS indexable,
+          COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 4)::int AS indexable,
           COUNT(p.id) FILTER (WHERE jsonb_array_length(COALESCE(p.body_json->'freshTasks','[]'::jsonb)) > 0)::int AS with_tasks,
           COALESCE(MAX(COALESCE(NULLIF(p.body_json->>'crawlCount','')::int,0)),0)::int AS crawled
         FROM traffic_campaigns c
