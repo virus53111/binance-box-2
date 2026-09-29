@@ -360,6 +360,7 @@ async function analyzeSite(rawUrl) {
   const location = detectLocation(sample, language) || home.location;
 
   const freshTasks = siteType === 'construction' ? await loadFreshTasks() : [];
+  const marketPrices = siteType === 'construction' ? await loadConstructionPrices(language) : [];
   return {
     ...home,
     headings,
@@ -369,13 +370,16 @@ async function analyzeSite(rawUrl) {
     siteType,
     location,
     freshTasks,
+    marketPrices,
     crawledPages: analyses.map(x => ({ url:x.url, title:x.title })).slice(0, 7),
     crawlCount: analyses.length
   };
 }
 
 const TASK_FEED_URL = String(process.env.TRAFFIC_TASK_FEED_URL || 'https://murdilimax.com/task-feed.json');
+const PRICE_FEED_URL = String(process.env.TRAFFIC_PRICE_FEED_URL || 'https://murdilimax.com/construction-prices.json');
 let taskFeedCache = { at:0, tasks:[] };
+let priceFeedCache = { at:0, services:[], reviewedAt:'' };
 
 async function loadFreshTasks() {
   if (Date.now() - taskFeedCache.at < 5 * 60 * 1000) return taskFeedCache.tasks;
@@ -393,6 +397,41 @@ async function loadFreshTasks() {
     console.warn('Traffic Lab task feed unavailable:', error?.message || error);
     return taskFeedCache.tasks || [];
   }
+}
+
+async function loadConstructionPrices(language='ru') {
+  if (Date.now() - priceFeedCache.at >= 30 * 60 * 1000 || !priceFeedCache.services.length) {
+    try {
+      const response = await fetch(PRICE_FEED_URL, {
+        headers: { 'user-agent':'MurdilimaxTrafficLab/2.0 (+https://murdilimax.com)', accept:'application/json' },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      priceFeedCache = {
+        at:Date.now(),
+        services:Array.isArray(payload.services) ? payload.services : [],
+        reviewedAt:String(payload.reviewedAt || ''),
+        sources:Array.isArray(payload.sources) ? payload.sources : []
+      };
+    } catch (error) {
+      console.warn('Traffic Lab price feed unavailable:', error?.message || error);
+    }
+  }
+  const isLv = language === 'lv';
+  const guideUrl = isLv ? 'https://murdilimax.com/lv/buvdarbu-cenas/' : 'https://murdilimax.com/stroitelnye-rascenki/';
+  return (priceFeedCache.services || []).map(service => ({
+    topic:textOnly(isLv ? service.nameLv : service.nameRu, 100),
+    category:textOnly(isLv ? service.categoryLv : service.categoryRu, 100),
+    text:`${textOnly(isLv ? service.nameLv : service.nameRu, 100)} — €${service.min}–${service.max}/${textOnly(isLv ? service.unitLv : service.unitRu,20)}`,
+    min:Number(service.min),
+    max:Number(service.max),
+    unit:textOnly(isLv ? service.unitLv : service.unitRu,20),
+    sourceUrl:guideUrl,
+    sourceLabel:'MURDILIMAX market benchmark',
+    reviewedAt:priceFeedCache.reviewedAt,
+    benchmark:true
+  })).filter(item => item.topic && item.min > 0 && item.max > 0);
 }
 
 function constructionCluster(value) {
@@ -523,8 +562,12 @@ function bestSourceLink(analysis, topic) {
 }
 
 function matchedPriceSignals(analysis, topic) {
-  const ranked = analysis.priceSignals
-    .map(signal => ({ ...signal, score: overlapScore(topic, signal.text) }))
+  const combined = [...(analysis.priceSignals || []), ...(analysis.marketPrices || [])];
+  const ranked = combined
+    .map(signal => ({
+      ...signal,
+      score: overlapScore(topic, signal.topic || signal.text) + (signal.benchmark ? 0 : 2)
+    }))
     .sort((a,b) => b.score - a.score);
   const matched = ranked.filter(x => x.score > 0).slice(0, 5);
   return matched.length ? matched : [];
@@ -588,6 +631,7 @@ function buildIntentDraft(analysis, topic, intent='guide', slugPrefix='intent') 
   const freshTasks = analysis.siteType === 'construction'
     ? freshTasksForTopic(cleanTopic, analysis.freshTasks || [], 3)
     : [];
+  const usesBenchmark = Boolean(primary?.benchmark);
   let qualityScore = 0;
   if (signals.length) qualityScore += 4;
   if (sourceLinks.length) qualityScore += 2;
@@ -621,7 +665,10 @@ function buildIntentDraft(analysis, topic, intent='guide', slugPrefix='intent') 
       baseMax: primary?.max || null,
       unit: primary?.unit || '',
       freshTasks,
-      sourceDataLabel: c.sourceData,
+      priceOrigin: usesBenchmark ? 'market-benchmark' : (primary ? 'target-site' : 'none'),
+      sourceDataLabel: usesBenchmark
+        ? (analysis.language === 'ru' ? 'Рыночный ориентир по Латвии' : analysis.language === 'lv' ? 'Tirgus orientieris Latvijā' : 'Latvia market benchmark')
+        : c.sourceData,
       sourceCheckedLabel: c.sourceChecked,
       exactLabel: c.exact,
       openCalculatorLabel: c.openCalculator,
@@ -645,7 +692,8 @@ function rankedTopics(analysis) {
   const constructionHints = /ремонт|строит|отдел|плит|шпак|штукатур|покрас|маляр|электр|сантех|ванн|кухн|пол|ламин|паркет|кров|фасад|buv|remont|fliz|santeh|kras|apdar|jumt|grīd|grid|elektr|renovat|til|plumb|paint|floor|roof/i;
   const seen = new Set();
   const scored = [];
-  for (const raw of [analysis.topic, ...(analysis.topics || []), ...analysis.headings, ...analysis.links.map(x=>x.text)]) {
+  const benchmarkTopics = (analysis.marketPrices || []).map(x => x.topic);
+  for (const raw of [...benchmarkTopics, analysis.topic, ...(analysis.topics || []), ...analysis.headings, ...analysis.links.map(x=>x.text)]) {
     const topic = cleanTopicCandidate(raw);
     if (!topic) continue;
     const key = topicNorm(topic);
@@ -653,7 +701,9 @@ function rankedTopics(analysis) {
     seen.add(key);
     let score = 0;
     if (analysis.siteType === 'construction' && constructionHints.test(topic)) score += 8;
-    if (analysis.priceSignals.some(s => overlapScore(topic, s.text) > 0)) score += 6;
+    if ((analysis.priceSignals || []).some(s => overlapScore(topic, s.text) > 0)) score += 6;
+    if ((analysis.marketPrices || []).some(s => topicNorm(s.topic) === topicNorm(topic))) score += 14;
+    else if ((analysis.marketPrices || []).some(s => overlapScore(topic, s.topic) > 0)) score += 8;
     if (analysis.links.some(x => overlapScore(topic, x.text) > 0)) score += 2;
     if (topic.length >= 10 && topic.length <= 64) score += 2;
     scored.push({topic,score});
