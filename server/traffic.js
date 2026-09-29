@@ -286,12 +286,156 @@ function analyzeHtml(html, finalUrl) {
     headings,
     links,
     topics,
-    priceSignals: priceSignalsFromText(sourceText),
+    priceSignals: priceSignalsFromText(sourceText).map(signal => ({ ...signal, sourceUrl: finalUrl })),
+    sourceText: sourceText.slice(0, 25000),
     language,
     siteType,
     location,
     topic: topics[0] || fallbackTopic || base.hostname
   };
+}
+
+function uniqueBy(items, keyFn, limit = 100) {
+  const out = [];
+  const seen = new Set();
+  for (const item of items || []) {
+    const key = keyFn(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function crawlPriority(link) {
+  const text = topicNorm(`${link.text || ''} ${link.url || ''}`);
+  let score = 0;
+  const strong = ['цен','price','cena','расцен','стоим','calculator','калькуля','smeta','смет','услуг','service','pakalpoj','remont','ремонт','buv','строит','fliz','плит','elektr','сантех','santeh','paint','krās','покрас','roof','jumt','кров'];
+  for (const key of strong) if (text.includes(topicNorm(key))) score += 2;
+  if (/\/(?:ru|lv|en)?\/?[^?#]{3,}\/?$/i.test(new URL(link.url).pathname)) score += 1;
+  return score;
+}
+
+function crawlableInternal(link, host) {
+  try {
+    const url = new URL(link.url);
+    if (url.hostname.replace(/^www\./,'') !== host.replace(/^www\./,'')) return false;
+    if (url.search || url.hash) return false;
+    if (/\.(?:pdf|jpg|jpeg|png|gif|webp|svg|zip|rar|mp4|mp3|xml|json)$/i.test(url.pathname)) return false;
+    if (/\/(?:admin|login|signin|signup|account|cart|checkout|privacy|terms|cookie)(?:\/|$)/i.test(url.pathname)) return false;
+    return url.pathname !== '/' && url.pathname.length <= 180;
+  } catch {
+    return false;
+  }
+}
+
+async function analyzeSite(rawUrl) {
+  const fetched = await fetchHtml(rawUrl);
+  const home = analyzeHtml(fetched.html, fetched.finalUrl);
+  const candidates = home.links
+    .filter(link => crawlableInternal(link, home.host))
+    .map(link => ({ ...link, priority:crawlPriority(link) }))
+    .sort((a,b) => b.priority - a.priority)
+    .slice(0, 10);
+
+  const analyses = [home];
+  for (const link of candidates) {
+    if (analyses.length >= 7) break;
+    try {
+      const page = await fetchHtml(link.url);
+      analyses.push(analyzeHtml(page.html, page.finalUrl));
+    } catch (error) {
+      console.warn('Traffic Lab internal crawl skipped:', link.url, error?.message || error);
+    }
+  }
+
+  const headings = uniqueBy(analyses.flatMap(x => x.headings || []), x => topicNorm(x), 100);
+  const links = uniqueBy(analyses.flatMap(x => x.links || []), x => x.url, 140);
+  const topics = uniqueBy(analyses.flatMap(x => x.topics || []), x => topicNorm(x), 80);
+  const priceSignals = uniqueBy(analyses.flatMap(x => x.priceSignals || []), x => `${topicNorm(x.text)}|${x.min}|${x.max}`, 120);
+  const sample = analyses.map(x => `${x.title} ${x.description} ${x.sourceText || ''}`).join(' ').slice(0, 70000);
+  const siteType = analyses.some(x => x.siteType === 'construction') ? 'construction' : home.siteType;
+  const language = home.language;
+  const location = detectLocation(sample, language) || home.location;
+
+  return {
+    ...home,
+    headings,
+    links,
+    topics,
+    priceSignals,
+    siteType,
+    location,
+    crawledPages: analyses.map(x => ({ url:x.url, title:x.title })).slice(0, 7),
+    crawlCount: analyses.length
+  };
+}
+
+const TASK_FEED_URL = String(process.env.TRAFFIC_TASK_FEED_URL || 'https://murdilimax.com/task-feed.json');
+let taskFeedCache = { at:0, tasks:[] };
+
+async function loadFreshTasks() {
+  if (Date.now() - taskFeedCache.at < 5 * 60 * 1000) return taskFeedCache.tasks;
+  try {
+    const response = await fetch(TASK_FEED_URL, {
+      headers: { 'user-agent':'MurdilimaxTrafficLab/2.0 (+https://murdilimax.com)', accept:'application/json' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+    taskFeedCache = { at:Date.now(), tasks:tasks.slice(0,300) };
+    return taskFeedCache.tasks;
+  } catch (error) {
+    console.warn('Traffic Lab task feed unavailable:', error?.message || error);
+    return taskFeedCache.tasks || [];
+  }
+}
+
+function constructionCluster(value) {
+  const s = topicNorm(value);
+  const clusters = [
+    ['electrician', ['электр','elektr']],
+    ['plumber', ['сантех','водопровод','канализ','santeh','cauru','plumb']],
+    ['painter', ['маляр','покрас','шпакл','штукатур','krās','spakte','apmet','paint','plaster']],
+    ['tiler', ['плит','кафел','fliz','tile']],
+    ['roofer', ['кров','крыша','jumt','roof']],
+    ['floor', ['ламин','паркет','пол','grīd','floor']],
+    ['carpenter', ['плотниц','дерев','galdnie','koka','carpent']],
+    ['door', ['двер','durv']],
+    ['builder', ['ремонт','строит','отдел','buv','celtn','remont','renovat','construction']]
+  ];
+  return clusters.find(([,keys]) => keys.some(key => s.includes(topicNorm(key))))?.[0] || 'builder';
+}
+
+function freshTasksForTopic(topic, tasks, limit = 3) {
+  const cluster = constructionCluster(topic);
+  const now = Date.now();
+  return (tasks || [])
+    .map(task => {
+      const taskCluster = constructionCluster(`${task.service || ''} ${task.category || ''}`);
+      const published = Date.parse(task.publishedAt || '') || 0;
+      const ageDays = published ? (now - published) / 86400000 : 999;
+      let score = overlapScore(topic, `${task.service || ''} ${task.category || ''}`);
+      if (taskCluster === cluster) score += 6;
+      if (taskCluster === 'builder' && cluster !== 'builder') score += 1;
+      if (ageDays <= 7) score += 2;
+      return { task, score, published, ageDays };
+    })
+    .filter(x => x.score >= 5 && x.ageDays <= 45)
+    .sort((a,b) => b.score - a.score || b.published - a.published)
+    .slice(0, limit)
+    .map(({task}) => ({
+      service:textOnly(task.service,120),
+      category:textOnly(task.category,80),
+      city:textOnly(task.city,80),
+      district:textOnly(task.district,80),
+      price:textOnly(task.price,60),
+      date:textOnly(task.date,40),
+      url:String(task.url || ''),
+      publishedAt:String(task.publishedAt || '')
+    }));
 }
 
 const COPY = {
