@@ -96,4 +96,25 @@ const additions = [`${BASE}/stroitelnye-rascenki/`, `${BASE}/lv/buvdarbu-cenas/`
   .join("\n");
 if (additions) sitemap = sitemap.replace("</urlset>", `${additions}\n</urlset>`);
 await writeFile(sitemapPath, sitemap, "utf8");
-console.log("Generated RU/LV construction price pages");
+const priceFeed = {
+  generatedAt: new Date().toISOString(),
+  reviewedAt: REVIEWED,
+  market: "Latvia",
+  services: groups.flatMap(group => group[3].map(item => ({
+    categoryRu: group[1],
+    categoryLv: group[2],
+    nameRu: item[0],
+    nameLv: item[1],
+    unitRu: item[2],
+    unitLv: item[3],
+    min: item[4],
+    max: item[5]
+  }))),
+  sources: sources.map(([name,url]) => ({name,url}))
+};
+await writeFile(
+  join("public","construction-prices.json"),
+  JSON.stringify(priceFeed,null,2)+"\n",
+  "utf8"
+);
+console.log(`Generated RU/LV construction price pages and ${priceFeed.services.length} benchmark prices`);
