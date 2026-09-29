@@ -27,6 +27,9 @@ type TrafficCampaign = {
   crawls: number;
   clicks: number;
   pageCount: number;
+  indexableCount: number;
+  pagesWithTasks: number;
+  crawlCount: number;
   publicHubUrl: string;
   pages: TrafficPage[];
 };
@@ -174,7 +177,7 @@ export default function TrafficLab() {
               </div>
 
               <div className="traffic-metrics">
-                <div><strong>{campaign.pageCount}</strong><span>страниц</span></div>
+                <div><strong>{campaign.pageCount}</strong><span>страниц · {campaign.indexableCount || 0} в sitemap</span></div>
                 <div><strong>{campaign.views}</strong><span>просмотров</span></div>
                 <div><strong>{campaign.crawls}</strong><span>ботов/краулеров</span></div>
                 <div><strong>{campaign.clicks}</strong><span>переходов на сайт</span></div>
@@ -182,6 +185,7 @@ export default function TrafficLab() {
 
               <div className="traffic-meta">
                 <span>Последний запуск: {campaign.lastRunAt ? new Date(campaign.lastRunAt).toLocaleString("ru-RU") : "—"}</span>
+                <span>Источник: просмотрено до {campaign.crawlCount || 1} страниц · свежие задания на {campaign.pagesWithTasks || 0} страницах</span>
                 <span>IndexNow: {campaign.indexNowStatus || "ещё не отправлялся"}</span>
               </div>
 
