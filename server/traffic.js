@@ -1235,6 +1235,22 @@ export function registerTrafficRoutes({ app, pool }) {
     }
   });
 
+  app.get('/traffic/track/:id/pixel.gif', async (req, res) => {
+    try {
+      await ensureSchema();
+      const { rows } = await pool.query('SELECT id FROM traffic_pages WHERE id=$1', [req.params.id]);
+      if (rows[0]) {
+        const column = isBot(req.get('user-agent')) ? 'crawls' : 'views';
+        await pool.query(`UPDATE traffic_pages SET ${column}=${column}+1 WHERE id=$1`, [req.params.id]);
+      }
+    } catch (error) {
+      console.warn('Traffic pixel failed:', error?.message || error);
+    }
+    const gif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==','base64');
+    res.setHeader('Cache-Control','no-store,max-age=0');
+    res.type('image/gif').send(gif);
+  });
+
   app.get('/traffic/c/:id', async (req, res) => {
     try {
       await ensureSchema();
