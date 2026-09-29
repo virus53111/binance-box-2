@@ -35,6 +35,8 @@ jobs:
         run: node scripts/generate-price-pages.mjs
       - name: Generate social preview pages for public tasks
         run: node scripts/generate-task-pages.mjs
+      - name: Generate branded Traffic Lab pages
+        run: node scripts/generate-traffic-pages.mjs
       - name: Notify IndexNow search engines
         run: node scripts/submit-indexnow.mjs
       - run: npm run build
