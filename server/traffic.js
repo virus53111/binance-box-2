@@ -378,8 +378,10 @@ async function analyzeSite(rawUrl) {
 
 const TASK_FEED_URL = String(process.env.TRAFFIC_TASK_FEED_URL || 'https://murdilimax.com/task-feed.json');
 const PRICE_FEED_URL = String(process.env.TRAFFIC_PRICE_FEED_URL || 'https://murdilimax.com/construction-prices.json');
+const MARKET_SIGNAL_URL = String(process.env.TRAFFIC_MARKET_SIGNAL_URL || 'https://murdilimax.com/construction-market-signals.json');
 let taskFeedCache = { at:0, tasks:[] };
 let priceFeedCache = { at:0, services:[], reviewedAt:'' };
+let marketSignalCache = { at:0, generatedAt:'', signals:[] };
 
 async function loadFreshTasks() {
   if (Date.now() - taskFeedCache.at < 5 * 60 * 1000) return taskFeedCache.tasks;
@@ -432,6 +434,43 @@ async function loadConstructionPrices(language='ru') {
     reviewedAt:priceFeedCache.reviewedAt,
     benchmark:true
   })).filter(item => item.topic && item.min > 0 && item.max > 0);
+}
+
+async function loadConstructionMarketSignals() {
+  if (Date.now() - marketSignalCache.at < 10 * 60 * 1000 && marketSignalCache.signals.length) return marketSignalCache;
+  try {
+    const response = await fetch(MARKET_SIGNAL_URL, {
+      headers: { 'user-agent':'MurdilimaxTrafficLab/3.0 (+https://murdilimax.com)', accept:'application/json' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    marketSignalCache = {
+      at:Date.now(),
+      generatedAt:String(payload.generatedAt || ''),
+      signals:Array.isArray(payload.signals) ? payload.signals : []
+    };
+  } catch (error) {
+    console.warn('Traffic Lab market pulse unavailable:', error?.message || error);
+  }
+  return marketSignalCache;
+}
+
+function marketPulseForTopic(topic, signals) {
+  const cluster = constructionCluster(topic);
+  if (!cluster) return null;
+  const row = (signals || []).find(item => item.cluster === cluster);
+  if (!row) return null;
+  return {
+    cluster,
+    labelRu:textOnly(row.labelRu || '',80),
+    labelLv:textOnly(row.labelLv || '',80),
+    last24h:Number(row.last24h || 0),
+    last7d:Number(row.last7d || 0),
+    riga7d:Number(row.riga7d || 0),
+    total:Number(row.total || 0),
+    latestAt:String(row.latestAt || '')
+  };
 }
 
 function constructionCluster(value) {
@@ -780,12 +819,12 @@ function renderShell({ title, description, canonical, lang = 'en', body, robots 
   const schemaTag = schema ? `<script type="application/ld+json">${safeJson(schema)}</script>` : '';
   return `<!doctype html><html lang="${esc(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${esc(robots)}"><link rel="canonical" href="${esc(canonical)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(canonical)}"><meta property="og:type" content="article">${imageMeta}${schemaTag}<style>
   :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17202a;background:#f6f7f4;--ink:#17202a;--muted:#65717c;--line:#dde3de;--card:#fff;--accent:#146c55;--accent2:#0b4d3c;--soft:#eef6f1}
-  *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f8faf7 0,#f3f5f2 100%);min-height:100vh;color:var(--ink)}a{color:inherit}main{width:min(1080px,92vw);margin:0 auto;padding:24px 0 72px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 24px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.02em}.brandmark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--accent);color:#fff}.fresh{font-size:12px;color:var(--muted);padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}.hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:stretch}.heroCard,.panel{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 14px 44px rgba(29,46,38,.06)}.heroCard{padding:clamp(24px,5vw,54px);position:relative;overflow:hidden}.heroCard:after{content:"";position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#d9f0e5 0,rgba(217,240,229,0) 70%);pointer-events:none}.eyebrow{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--soft);color:var(--accent2);font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.hero h1{font-size:clamp(34px,5.6vw,66px);line-height:.98;letter-spacing:-.052em;margin:16px 0 18px;max-width:820px}.hero p{font-size:18px;line-height:1.65;color:var(--muted);max-width:760px}.heroSide{padding:20px;display:flex;flex-direction:column;justify-content:space-between;gap:16px}.heroImage{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:17px;background:linear-gradient(135deg,#e7efe9,#d7e7dd)}.priceLabel{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}.priceBig{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:4px 0}.priceNote{font-size:13px;line-height:1.45;color:var(--muted)}.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:var(--accent);color:#fff;padding:14px 18px;border-radius:14px;font-weight:900;border:0}.cta:hover{background:var(--accent2)}.cta.secondary{background:#fff;color:var(--accent2);border:1px solid var(--line)}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:18px}.panel{padding:24px}.panel h2{font-size:24px;letter-spacing:-.03em;margin:0 0 14px}.panel p{color:var(--muted);line-height:1.6}.facts{display:grid;gap:10px}.fact{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #e5e9e5;border-radius:16px;background:#fbfcfa}.num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:900;color:var(--accent2)}.sourceSignals{display:grid;gap:9px}.signal{padding:13px 14px;border-radius:14px;background:#f7f9f6;border:1px solid #e5e9e5}.signal b{display:block;margin-bottom:4px}.signal small{display:block;color:var(--muted);line-height:1.4}.signal a{display:inline-block;margin-top:7px;color:var(--accent2);font-size:11px;font-weight:900;text-decoration:none}.calc{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.calc label{font-size:12px;font-weight:800;color:var(--muted);display:grid;gap:7px}.calc input{width:100%;padding:13px 14px;border:1px solid #ccd5ce;border-radius:12px;font:inherit;background:#fff}.calcResult{padding:13px 14px;border-radius:12px;background:var(--soft)}.calcResult strong{display:block;font-size:23px;color:var(--accent2)}.checklist{display:grid;gap:9px}.check{display:flex;gap:10px;align-items:flex-start}.check i{font-style:normal;width:24px;height:24px;border-radius:8px;background:#e6f4ec;color:var(--accent2);display:grid;place-items:center;font-weight:950;flex:0 0 24px}.sourceLinks,.related{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mini{display:block;text-decoration:none;padding:14px;border:1px solid var(--line);border-radius:15px;background:#fff}.mini b{display:block;font-size:14px;line-height:1.35}.mini small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.footerCta{margin-top:18px;padding:28px;border-radius:24px;background:#173b31;color:#fff;display:flex;justify-content:space-between;gap:20px;align-items:center}.footerCta h2{margin:0 0 8px;font-size:28px}.footerCta p{margin:0;color:#c8d8d1;line-height:1.5}.footerCta .cta{background:#fff;color:#173b31;white-space:nowrap}.taskGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.taskCard{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fbfcfa;display:flex;flex-direction:column;gap:10px}.taskCard h3{font-size:16px;line-height:1.35;margin:0}.taskMeta{display:flex;flex-wrap:wrap;gap:6px}.taskMeta span{font-size:11px;padding:6px 8px;border-radius:999px;background:var(--soft);color:var(--accent2);font-weight:800}.taskCard a{font-size:12px;font-weight:900;color:var(--accent2);text-decoration:none;margin-top:auto}.qualityNote{margin-top:8px;font-size:11px;color:var(--muted)}.disclaimer{margin-top:18px;color:#7b8580;font-size:12px;line-height:1.5;text-align:center}
-  @media(max-width:780px){main{width:min(94vw,720px);padding-top:12px}.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:clamp(34px,11vw,54px)}.heroCard{padding:26px 22px}.hero p{font-size:16px}.sourceLinks,.related,.taskGrid{grid-template-columns:1fr}.footerCta{align-items:flex-start;flex-direction:column}.footerCta .cta{width:100%}.calc{grid-template-columns:1fr}}
+  *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f8faf7 0,#f3f5f2 100%);min-height:100vh;color:var(--ink)}a{color:inherit}main{width:min(1080px,92vw);margin:0 auto;padding:24px 0 72px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 24px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.02em}.brandmark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--accent);color:#fff}.fresh{font-size:12px;color:var(--muted);padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}.hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:stretch}.heroCard,.panel{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 14px 44px rgba(29,46,38,.06)}.heroCard{padding:clamp(24px,5vw,54px);position:relative;overflow:hidden}.heroCard:after{content:"";position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#d9f0e5 0,rgba(217,240,229,0) 70%);pointer-events:none}.eyebrow{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--soft);color:var(--accent2);font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.hero h1{font-size:clamp(34px,5.6vw,66px);line-height:.98;letter-spacing:-.052em;margin:16px 0 18px;max-width:820px}.hero p{font-size:18px;line-height:1.65;color:var(--muted);max-width:760px}.heroSide{padding:20px;display:flex;flex-direction:column;justify-content:space-between;gap:16px}.heroImage{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:17px;background:linear-gradient(135deg,#e7efe9,#d7e7dd)}.priceLabel{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}.priceBig{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:4px 0}.priceNote{font-size:13px;line-height:1.45;color:var(--muted)}.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:var(--accent);color:#fff;padding:14px 18px;border-radius:14px;font-weight:900;border:0}.cta:hover{background:var(--accent2)}.cta.secondary{background:#fff;color:var(--accent2);border:1px solid var(--line)}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:18px}.panel{padding:24px}.panel h2{font-size:24px;letter-spacing:-.03em;margin:0 0 14px}.panel p{color:var(--muted);line-height:1.6}.facts{display:grid;gap:10px}.fact{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #e5e9e5;border-radius:16px;background:#fbfcfa}.num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:900;color:var(--accent2)}.sourceSignals{display:grid;gap:9px}.signal{padding:13px 14px;border-radius:14px;background:#f7f9f6;border:1px solid #e5e9e5}.signal b{display:block;margin-bottom:4px}.signal small{display:block;color:var(--muted);line-height:1.4}.signal a{display:inline-block;margin-top:7px;color:var(--accent2);font-size:11px;font-weight:900;text-decoration:none}.calc{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.calc label{font-size:12px;font-weight:800;color:var(--muted);display:grid;gap:7px}.calc input{width:100%;padding:13px 14px;border:1px solid #ccd5ce;border-radius:12px;font:inherit;background:#fff}.calcResult{padding:13px 14px;border-radius:12px;background:var(--soft)}.calcResult strong{display:block;font-size:23px;color:var(--accent2)}.checklist{display:grid;gap:9px}.check{display:flex;gap:10px;align-items:flex-start}.check i{font-style:normal;width:24px;height:24px;border-radius:8px;background:#e6f4ec;color:var(--accent2);display:grid;place-items:center;font-weight:950;flex:0 0 24px}.sourceLinks,.related{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mini{display:block;text-decoration:none;padding:14px;border:1px solid var(--line);border-radius:15px;background:#fff}.mini b{display:block;font-size:14px;line-height:1.35}.mini small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.footerCta{margin-top:18px;padding:28px;border-radius:24px;background:#173b31;color:#fff;display:flex;justify-content:space-between;gap:20px;align-items:center}.footerCta h2{margin:0 0 8px;font-size:28px}.footerCta p{margin:0;color:#c8d8d1;line-height:1.5}.footerCta .cta{background:#fff;color:#173b31;white-space:nowrap}.marketPulse{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.marketMetric{padding:18px;border-radius:16px;background:var(--soft);border:1px solid #dce9e1}.marketMetric strong{display:block;font-size:30px;letter-spacing:-.04em;color:var(--accent2)}.marketMetric span{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.35}.taskGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.taskCard{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fbfcfa;display:flex;flex-direction:column;gap:10px}.taskCard h3{font-size:16px;line-height:1.35;margin:0}.taskMeta{display:flex;flex-wrap:wrap;gap:6px}.taskMeta span{font-size:11px;padding:6px 8px;border-radius:999px;background:var(--soft);color:var(--accent2);font-weight:800}.taskCard a{font-size:12px;font-weight:900;color:var(--accent2);text-decoration:none;margin-top:auto}.qualityNote{margin-top:8px;font-size:11px;color:var(--muted)}.disclaimer{margin-top:18px;color:#7b8580;font-size:12px;line-height:1.5;text-align:center}
+  @media(max-width:780px){main{width:min(94vw,720px);padding-top:12px}.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:clamp(34px,11vw,54px)}.heroCard{padding:26px 22px}.hero p{font-size:16px}.sourceLinks,.related,.taskGrid,.marketPulse{grid-template-columns:1fr}.footerCta{align-items:flex-start;flex-direction:column}.footerCta .cta{width:100%}.calc{grid-template-columns:1fr}}
   </style></head><body><main>${body}</main></body></html>`;
 }
 
-function renderTrafficPage(row, relatedRows = []) {
+function renderTrafficPage(row, relatedRows = [], marketPulse = null, marketGeneratedAt = '') {
   const body = row.body_json || {};
   const canonical = pageUrl(row);
   const active = row.status === 'active';
@@ -821,6 +860,17 @@ function renderTrafficPage(row, relatedRows = []) {
     ].filter(Boolean).join('');
     return `<article class="taskCard"><div class="taskMeta">${meta}</div><h3>${esc(task.service || task.category || 'Задание')}</h3><a href="${esc(task.url)}" target="_blank" rel="noopener">Открыть публичное задание →</a></article>`;
   }).join('');
+  const marketLabel = marketPulse
+    ? (row.language === 'lv' ? marketPulse.labelLv : row.language === 'ru' ? marketPulse.labelRu : marketPulse.labelRu)
+    : '';
+  const marketDate = marketGeneratedAt ? new Date(marketGeneratedAt).toLocaleString(row.language === 'lv' ? 'lv-LV' : row.language === 'ru' ? 'ru-RU' : 'en-GB') : '';
+  const marketHtml = marketPulse ? `
+    <div class="marketPulse">
+      <div class="marketMetric"><strong>${marketPulse.last24h}</strong><span>${esc(row.language === 'ru' ? 'новых публичных предложений специалистов за 24 часа' : row.language === 'lv' ? 'jauni publiski speciālistu piedāvājumi 24 stundās' : 'new public specialist listings in 24h')}</span></div>
+      <div class="marketMetric"><strong>${marketPulse.last7d}</strong><span>${esc(row.language === 'ru' ? 'за последние 7 дней' : row.language === 'lv' ? 'pēdējās 7 dienās' : 'in the last 7 days')}</span></div>
+      <div class="marketMetric"><strong>${marketPulse.riga7d}</strong><span>${esc(row.language === 'ru' ? 'из них с упоминанием Риги за 7 дней' : row.language === 'lv' ? 'no tiem ar Rīgas pieminējumu 7 dienās' : 'mentioning Riga in 7 days')}</span></div>
+    </div>
+  ` : '';
 
   const calcHtml = hasPrice ? `<div class="calc"><label>${esc(body.quantityLabel || 'Quantity')}<input id="qty" type="number" value="1" min="0.1" step="0.1" inputmode="decimal"></label><div class="calcResult"><small>${esc(body.resultLabel || 'Estimated total')}</small><strong id="calcValue">${priceText}</strong></div></div><p class="priceNote">${esc(body.exactLabel || '')}</p>` : `<p>${esc(body.noPriceLabel || '')}</p><a class="cta secondary" href="${source}">${esc(body.openCalculatorLabel || 'Open website')} →</a>`;
 
@@ -850,6 +900,7 @@ function renderTrafficPage(row, relatedRows = []) {
       <article class="panel"><h2>${esc(body.checklistTitle || 'Before ordering')}</h2><div class="checklist">${checksHtml}</div></article>
     </section>
 
+    ${marketHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(row.language === 'ru' ? `Пульс рынка: ${marketLabel || 'ремонт'}` : row.language === 'lv' ? `Tirgus pulss: ${marketLabel || 'remonts'}` : `Market pulse: ${marketLabel || 'renovation'}`)}</h2><p>${esc(row.language === 'ru' ? `Агрегированная активность публичных предложений специалистов из мониторинга Murdilimax. Это не число заказов и не гарантия спроса.${marketDate ? ' Обновлено: '+marketDate+'.' : ''}` : row.language === 'lv' ? `Apkopota publisko speciālistu piedāvājumu aktivitāte Murdilimax monitoringā. Tas nav pasūtījumu skaits un negarantē pieprasījumu.${marketDate ? ' Atjaunots: '+marketDate+'.' : ''}` : `Aggregated public specialist-listing activity from Murdilimax monitoring. This is not an order count or a demand guarantee.${marketDate ? ' Updated: '+marketDate+'.' : ''}`)}</p>${marketHtml}</section>` : ''}
     ${tasksHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(row.language === 'ru' ? 'Свежие реальные задания' : row.language === 'lv' ? 'Svaigi reāli uzdevumi' : 'Fresh real tasks')}</h2><p>${esc(row.language === 'ru' ? 'Публичные задания из Murdilimax по близкой теме. Показываем только услугу, место, дату и бюджет — без личных данных.' : row.language === 'lv' ? 'Publiski Murdilimax uzdevumi par līdzīgu tēmu. Rādām tikai pakalpojumu, vietu, datumu un budžetu — bez personas datiem.' : 'Public Murdilimax tasks on a related topic. Only service, location, date and budget are shown — no personal data.')}</p><div class="taskGrid">${tasksHtml}</div></section>` : ''}
     ${sourceLinksHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(row.language === 'ru' ? 'Разделы исходного сайта по этой теме' : row.language === 'lv' ? 'Avota vietnes sadaļas par šo tēmu' : 'Relevant source sections')}</h2><div class="sourceLinks">${sourceLinksHtml}</div></section>` : ''}
     ${relatedHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(body.relatedTitle || 'Related')}</h2><div class="related">${relatedHtml}</div></section>` : ''}
@@ -1127,11 +1178,13 @@ export function registerTrafficRoutes({ app, pool }) {
       const column = isBot(req.get('user-agent')) ? 'crawls' : 'views';
       await pool.query(`UPDATE traffic_pages SET ${column}=${column}+1 WHERE id=$1`, [row.id]);
       const related = await pool.query(
-        'SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND id<>$2 ORDER BY clicks DESC,views DESC,created_at ASC LIMIT 6',
+        'SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND id<>$2 AND COALESCE(NULLIF(body_json->>\'qualityScore\',\'\')::int,0) >= 4 ORDER BY clicks DESC,views DESC,created_at ASC LIMIT 6',
         [row.campaign_id, row.id]
       );
+      const market = row.body_json?.siteType === 'construction' ? await loadConstructionMarketSignals() : { signals:[], generatedAt:'' };
+      const pulse = marketPulseForTopic(row.topic || row.body_json?.topic || '', market.signals);
       res.setHeader('Cache-Control', 'public, max-age=300');
-      res.type('html').send(renderTrafficPage(row, related.rows));
+      res.type('html').send(renderTrafficPage(row, related.rows, pulse, market.generatedAt));
     } catch (error) {
       console.error('Traffic page error', error);
       res.status(500).send('Traffic page unavailable');
@@ -1257,6 +1310,7 @@ export function registerTrafficRoutes({ app, pool }) {
     try {
       const taskCount = (await loadFreshTasks()).length;
       const priceCount = (await loadConstructionPrices('ru')).length;
+      const marketCount = (await loadConstructionMarketSignals()).signals.length;
       const { rows } = await pool.query(`
         SELECT c.host,
           COUNT(p.id)::int AS pages,
@@ -1268,7 +1322,7 @@ export function registerTrafficRoutes({ app, pool }) {
         GROUP BY c.host
         ORDER BY c.host
       `);
-      console.log('Traffic Lab v3 health', JSON.stringify({ taskFeed:taskCount, priceFeed:priceCount, campaigns:rows }));
+      console.log('Traffic Lab v3 health', JSON.stringify({ taskFeed:taskCount, priceFeed:priceCount, marketSignals:marketCount, campaigns:rows }));
     } catch (error) {
       console.warn('Traffic Lab v3 health unavailable:', error?.message || error);
     }
