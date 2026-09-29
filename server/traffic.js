@@ -359,6 +359,7 @@ async function analyzeSite(rawUrl) {
   const language = home.language;
   const location = detectLocation(sample, language) || home.location;
 
+  const freshTasks = siteType === 'construction' ? await loadFreshTasks() : [];
   return {
     ...home,
     headings,
@@ -367,6 +368,7 @@ async function analyzeSite(rawUrl) {
     priceSignals,
     siteType,
     location,
+    freshTasks,
     crawledPages: analyses.map(x => ({ url:x.url, title:x.title })).slice(0, 7),
     crawlCount: analyses.length
   };
@@ -916,7 +918,8 @@ export function registerTrafficRoutes({ app, pool }) {
   }
 
   async function submitIndexNow(pageRows, campaignId) {
-    const urls = [campaignUrl(campaignId), ...pageRows.map(pageUrl)];
+    const indexableRows = (pageRows || []).filter(row => Number(row.qualityScore || 0) >= 3);
+    const urls = [campaignUrl(campaignId), ...indexableRows.map(pageUrl)];
     try {
       const response = await fetch('https://api.indexnow.org/indexnow', {
         method: 'POST',
@@ -952,7 +955,7 @@ export function registerTrafficRoutes({ app, pool }) {
         await pool.query('INSERT INTO traffic_pages (id,campaign_id,slug,title,description,topic,body_json,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$8)',
           [id, campaign.id, draft.slug, draft.title, draft.description, draft.topic, JSON.stringify(draft.body), now]);
       }
-      rows.push({ id, slug:draft.slug });
+      rows.push({ id, slug:draft.slug, qualityScore:Number(draft.body?.qualityScore || 0) });
       return Boolean(!found.rows[0]?.id);
     };
 
@@ -971,14 +974,14 @@ export function registerTrafficRoutes({ app, pool }) {
     const legacy = await pool.query('SELECT id,slug,topic,body_json FROM traffic_pages WHERE campaign_id=$1 ORDER BY created_at ASC', [campaign.id]);
     let legacyIndex = 0;
     for (const page of legacy.rows) {
-      if (Number(page.body_json?.version || 0) >= 2) continue;
+      if (Number(page.body_json?.version || 0) >= 3) continue;
       const intent = INTENTS[legacyIndex % INTENTS.length] || 'guide';
       const upgraded = buildIntentDraft(analysis, page.topic || analysis.topic, intent, 'legacy');
       await pool.query(
         'UPDATE traffic_pages SET title=$3,description=$4,topic=$5,body_json=$6::jsonb,updated_at=$7 WHERE id=$1 AND campaign_id=$2',
         [page.id, campaign.id, upgraded.title, upgraded.description, upgraded.topic, JSON.stringify(upgraded.body), now]
       );
-      rows.push({ id:page.id, slug:page.slug });
+      rows.push({ id:page.id, slug:page.slug, qualityScore:Number(upgraded.body?.qualityScore || 0) });
       legacyIndex += 1;
     }
 
@@ -1017,8 +1020,7 @@ export function registerTrafficRoutes({ app, pool }) {
 
   async function refreshCampaign(campaign) {
     try {
-      const fetched = await fetchHtml(campaign.target_url);
-      const analysis = analyzeHtml(fetched.html, fetched.finalUrl);
+      const analysis = await analyzeSite(campaign.target_url);
       await persistAnalysis(campaign, analysis);
       return true;
     } catch (error) {
@@ -1039,7 +1041,7 @@ export function registerTrafficRoutes({ app, pool }) {
   app.get('/traffic/sitemap.xml', async (_req, res) => {
     try {
       await ensureSchema();
-      const { rows } = await pool.query(`SELECT p.id,p.slug,p.updated_at FROM traffic_pages p JOIN traffic_campaigns c ON c.id=p.campaign_id WHERE c.status='active' ORDER BY p.updated_at DESC`);
+      const { rows } = await pool.query(`SELECT p.id,p.slug,p.updated_at FROM traffic_pages p JOIN traffic_campaigns c ON c.id=p.campaign_id WHERE c.status='active' AND COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3 ORDER BY p.updated_at DESC`);
       const urls = rows.map(row => `<url><loc>${xml(pageUrl(row))}</loc><lastmod>${new Date(Number(row.updated_at)).toISOString()}</lastmod></url>`).join('');
       res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
     } catch (error) {
@@ -1052,7 +1054,7 @@ export function registerTrafficRoutes({ app, pool }) {
       await ensureSchema();
       const campaign = await getCampaign(req.params.id);
       if (!campaign) return res.status(404).send('Not found');
-      const { rows } = await pool.query('SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 ORDER BY created_at ASC', [campaign.id]);
+      const { rows } = await pool.query("SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND COALESCE(NULLIF(body_json->>'qualityScore','')::int,0) >= 3 ORDER BY created_at ASC", [campaign.id]);
       const list = rows.map(page => `<a href="${esc(pageUrl(page))}"><b>${esc(page.title)}</b><span>${esc(page.description)}</span></a>`).join('');
       const body = `<span class="tag">Murdilimax Traffic Lab</span><section class="card"><h1>${esc(campaign.title || campaign.host)}</h1><p>${esc(campaign.description || `Useful decision tools for ${campaign.host}`)}</p><div class="links">${list}</div><a class="cta" href="${esc(campaign.target_url)}" rel="noopener">Open ${esc(campaign.host)} →</a></section>`;
       res.type('html').send(renderShell({ title:`${campaign.title || campaign.host} — tools`, description:campaign.description || `Useful tools for ${campaign.host}`, canonical:campaignUrl(campaign.id), lang:campaign.language, body, robots:campaign.status === 'active' ? 'index,follow' : 'noindex,nofollow' }));
@@ -1117,8 +1119,7 @@ export function registerTrafficRoutes({ app, pool }) {
         const count = await pool.query("SELECT COUNT(*)::int AS count FROM traffic_campaigns WHERE status='active'");
         if (Number(count.rows[0]?.count || 0) >= 2) return res.status(409).json({ error: 'В тесте уже запущены два сайта. Остановите один из них.' });
       }
-      const fetched = await fetchHtml(requested);
-      const analysis = analyzeHtml(fetched.html, fetched.finalUrl);
+      const analysis = await analyzeSite(requested);
       const now = Date.now();
       let campaign = existing.rows[0];
       if (campaign) {
@@ -1182,7 +1183,7 @@ export function registerTrafficRoutes({ app, pool }) {
         FROM traffic_campaigns c
         JOIN traffic_pages p ON p.campaign_id=c.id
         WHERE c.status='active'
-          AND COALESCE(NULLIF(p.body_json->>'version','')::int,0) < 2
+          AND COALESCE(NULLIF(p.body_json->>'version','')::int,0) < 3
         ORDER BY c.created_at ASC
         LIMIT 2
       `);
