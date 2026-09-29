@@ -889,7 +889,10 @@ export function registerTrafficRoutes({ app, pool }) {
       COALESCE(SUM(p.views),0)::int AS views,
       COALESCE(SUM(p.crawls),0)::int AS crawls,
       COALESCE(SUM(p.clicks),0)::int AS clicks,
-      COUNT(p.id)::int AS page_count
+      COUNT(p.id)::int AS page_count,
+      COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3)::int AS indexable_count,
+      COUNT(p.id) FILTER (WHERE jsonb_array_length(COALESCE(p.body_json->'freshTasks','[]'::jsonb)) > 0)::int AS pages_with_tasks,
+      COALESCE(MAX(COALESCE(NULLIF(p.body_json->>'crawlCount','')::int,0)),0)::int AS crawl_count
       FROM traffic_campaigns c
       LEFT JOIN traffic_pages p ON p.campaign_id=c.id
       GROUP BY c.id
@@ -912,6 +915,9 @@ export function registerTrafficRoutes({ app, pool }) {
       crawls: Number(c.crawls || 0),
       clicks: Number(c.clicks || 0),
       pageCount: Number(c.page_count || 0),
+      indexableCount: Number(c.indexable_count || 0),
+      pagesWithTasks: Number(c.pages_with_tasks || 0),
+      crawlCount: Number(c.crawl_count || 0),
       publicHubUrl: campaignUrl(c.id),
       pages: pages.filter(p => p.campaign_id === c.id).map(p => ({ ...p, views:Number(p.views||0), crawls:Number(p.crawls||0), clicks:Number(p.clicks||0), url:pageUrl(p) }))
     }));
@@ -1190,13 +1196,33 @@ export function registerTrafficRoutes({ app, pool }) {
       for (const campaign of rows) {
         try {
           await refreshCampaign(campaign);
-          console.log(`Traffic Lab intent upgrade: ${campaign.host} -> v2`);
+          console.log(`Traffic Lab intent upgrade: ${campaign.host} -> v3`);
         } catch (error) {
           console.warn('Traffic Lab intent upgrade failed:', campaign.target_url, error?.message || error);
         }
       }
     } catch (error) {
       console.warn('Traffic Lab intent upgrade unavailable:', error?.message || error);
+    }
+  };
+
+  const logTrafficHealth = async () => {
+    try {
+      const taskCount = (await loadFreshTasks()).length;
+      const { rows } = await pool.query(`
+        SELECT c.host,
+          COUNT(p.id)::int AS pages,
+          COUNT(p.id) FILTER (WHERE COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 3)::int AS indexable,
+          COUNT(p.id) FILTER (WHERE jsonb_array_length(COALESCE(p.body_json->'freshTasks','[]'::jsonb)) > 0)::int AS with_tasks,
+          COALESCE(MAX(COALESCE(NULLIF(p.body_json->>'crawlCount','')::int,0)),0)::int AS crawled
+        FROM traffic_campaigns c
+        LEFT JOIN traffic_pages p ON p.campaign_id=c.id
+        GROUP BY c.host
+        ORDER BY c.host
+      `);
+      console.log('Traffic Lab v3 health', JSON.stringify({ taskFeed:taskCount, campaigns:rows }));
+    } catch (error) {
+      console.warn('Traffic Lab v3 health unavailable:', error?.message || error);
     }
   };
 
@@ -1245,7 +1271,8 @@ export function registerTrafficRoutes({ app, pool }) {
       .then(() => console.log('Traffic Lab ready · postgres=ok · maxActive=2'))
       .catch(error => console.error('Traffic Lab startup failed:', error?.message || error));
     setTimeout(() => void upgradeLegacyCampaigns(), 12_000).unref();
-    setTimeout(() => void backfillSeedPages(), 30_000).unref();
+    setTimeout(() => void logTrafficHealth(), 24_000).unref();
+    setTimeout(() => void backfillSeedPages(), 35_000).unref();
     setTimeout(() => void refreshDue(), 90_000).unref();
     setInterval(() => void refreshDue(), 6 * 60 * 60 * 1000).unref();
   } else {
