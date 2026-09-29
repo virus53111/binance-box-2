@@ -134,28 +134,124 @@ function detectLanguage(html, sample) {
   return 'en';
 }
 
-function analyzeHtml(html, finalUrl) {
-  const title = textOnly(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '', 140);
-  let description = '';
-  const metas = html.match(/<meta\b[^>]*>/gi) || [];
+function plainText(html) {
+  return decode(String(html || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<(?:br\s*\/?>|\/(?:p|div|li|tr|h[1-6]|section|article))>/gi, '\n')
+    .replace(/<[^>]+>/g, ' '))
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+function metaValue(metas, keys) {
+  const wanted = new Set(keys.map(x => x.toLowerCase()));
   for (const tag of metas) {
     const key = (attr(tag, 'name') || attr(tag, 'property')).toLowerCase();
-    if (key === 'description' || key === 'og:description') {
-      description = textOnly(attr(tag, 'content'), 260);
-      if (description) break;
+    if (wanted.has(key)) {
+      const value = textOnly(attr(tag, 'content'), 500);
+      if (value) return value;
     }
   }
-  const headings = [];
-  for (const match of html.matchAll(/<h[12]\b[^>]*>([\s\S]*?)<\/h[12]>/gi)) {
-    const value = textOnly(match[1], 100);
-    if (value.length >= 3 && !headings.some(x => x.toLowerCase() === value.toLowerCase())) headings.push(value);
-    if (headings.length >= 30) break;
+  return '';
+}
+
+function topicNorm(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9а-яёāčēģīķļņšūž]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const TOPIC_NOISE = /^(главная|home|menu|меню|контакты|contacts?|о нас|about|privacy|cookies?|login|войти|регистрация|register|поиск|search|далее|подробнее|читать|more|ru|lv|en)$/i;
+function usefulTopic(value) {
+  const clean = textOnly(value, 96).replace(/\s*[|·•]\s*.*$/, '').trim();
+  if (clean.length < 4 || clean.length > 96 || TOPIC_NOISE.test(clean)) return '';
+  if (/^(murdilimax|cenaradar)$/i.test(clean)) return '';
+  return clean;
+}
+
+function classifySite(sample) {
+  const s = topicNorm(sample);
+  const construction = [
+    'ремонт','строитель','строительство','отделка','плитк','шпаклев','штукатур','покраск','маляр',
+    'электрик','электромонтаж','сантех','ванн','кухн','пол','ламинат','паркет','кровл','фасад',
+    'buvniec','remont','fliz','santeh','krasos','apdare','jumt','grida','elektr','renovat',
+    'construction','renovation','tiling','plumbing','painting','flooring','roofing','electrician'
+  ];
+  if (construction.some(k => s.includes(topicNorm(k)))) return 'construction';
+  const commerce = ['цена','цены','купить','товар','магазин','price','prices','shop','product','cena','veikals'];
+  if (commerce.some(k => s.includes(topicNorm(k)))) return 'commerce';
+  return 'general';
+}
+
+function parsePriceSignal(line) {
+  const raw = textOnly(line, 260);
+  if (!/(?:€|\bEUR\b)/i.test(raw)) return null;
+  let min = null;
+  let max = null;
+  const range = raw.match(/(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:-|–|—|\bдо\b|\bto\b)\s*(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:€|EUR)/i);
+  if (range) {
+    min = Number(range[1].replace(',', '.'));
+    max = Number(range[2].replace(',', '.'));
+  } else {
+    const after = raw.match(/(?:€|EUR)\s*(\d{1,5}(?:[.,]\d{1,2})?)/i);
+    const before = raw.match(/(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:€|EUR)/i);
+    const value = Number((after?.[1] || before?.[1] || '').replace(',', '.'));
+    if (Number.isFinite(value) && value > 0) min = max = value;
   }
+  if (!(min > 0) || !(max > 0) || min > 100000 || max > 100000) return null;
+  const unitMatch = raw.match(/(?:\/\s*)?(м²|m²|m2|м2|м\^2|m\^2|час|часа|h|st\.?|gab\.?|шт\.?|vien\.?|м|m)\b/i);
+  return { text: raw, min: Math.min(min, max), max: Math.max(min, max), unit: unitMatch?.[1] || '' };
+}
+
+function priceSignalsFromText(text) {
+  const out = [];
+  for (const line of String(text || '').split('\n')) {
+    const parsed = parsePriceSignal(line);
+    if (!parsed) continue;
+    const key = topicNorm(parsed.text);
+    if (!out.some(x => topicNorm(x.text) === key)) out.push(parsed);
+    if (out.length >= 40) break;
+  }
+  return out;
+}
+
+function detectLocation(sample, language) {
+  const s = String(sample || '');
+  if (/\b(riga|rīga|рига)\b/i.test(s)) return language === 'lv' ? 'Rīgā' : language === 'ru' ? 'Риге' : 'Riga';
+  if (/\b(latvia|latvija|латви[ия])\b/i.test(s)) return language === 'lv' ? 'Latvijā' : language === 'ru' ? 'Латвии' : 'Latvia';
+  return '';
+}
+
+function analyzeHtml(html, finalUrl) {
+  const title = textOnly(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '', 150);
+  const metas = html.match(/<meta\b[^>]*>/gi) || [];
+  const description = metaValue(metas, ['description', 'og:description']);
+  const imageUrlRaw = metaValue(metas, ['og:image', 'twitter:image']);
   const base = new URL(finalUrl);
+  let imageUrl = '';
+  if (imageUrlRaw) {
+    try { imageUrl = new URL(imageUrlRaw, base).toString(); } catch {}
+  }
+
+  const headings = [];
+  for (const match of html.matchAll(/<h[1-3]\b[^>]*>([\s\S]*?)<\/h[1-3]>/gi)) {
+    const value = usefulTopic(match[1]);
+    if (value && !headings.some(x => topicNorm(x) === topicNorm(value))) headings.push(value);
+    if (headings.length >= 50) break;
+  }
+
   const links = [];
   for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
     const href = attr(match[1], 'href');
-    const label = textOnly(match[2], 70);
+    const label = usefulTopic(match[2]);
     if (!href || !label || href.startsWith('#') || /^(mailto:|tel:|javascript:)/i.test(href)) continue;
     try {
       const url = new URL(href, base);
@@ -163,229 +259,286 @@ function analyzeHtml(html, finalUrl) {
       if (url.hostname.replace(/^www\./, '') !== base.hostname.replace(/^www\./, '')) continue;
       url.hash = '';
       if (!links.some(item => item.url === url.toString())) links.push({ text: label, url: url.toString() });
-      if (links.length >= 30) break;
+      if (links.length >= 60) break;
     } catch {}
   }
-  const fallbackTopic = title.split(/\s+[|—–-]\s+/)[0]?.trim() || base.hostname.replace(/^www\./, '');
-  const primaryTopic = headings[0] || fallbackTopic;
-  const sample = [title, description, ...headings].join(' ');
+
+  const sourceText = plainText(html).slice(0, 90000);
+  const language = detectLanguage(html, [title, description, sourceText.slice(0, 12000)].join(' '));
+  const sample = [title, description, ...headings, ...links.map(x => x.text), sourceText.slice(0, 20000)].join(' ');
+  const siteType = classifySite(sample);
+  const location = detectLocation(sample, language);
+  const fallbackTopic = usefulTopic(title.split(/\s+[|—–-]\s+/)[0]) || base.hostname.replace(/^www\./, '');
+  const topics = [];
+  for (const candidate of [headings[0], ...headings, ...links.map(x => x.text), fallbackTopic]) {
+    const value = usefulTopic(candidate);
+    if (!value) continue;
+    if (!topics.some(x => topicNorm(x) === topicNorm(value))) topics.push(value);
+    if (topics.length >= 40) break;
+  }
+
   return {
     url: finalUrl,
     host: base.hostname.replace(/^www\./, ''),
     title: title || base.hostname,
     description,
+    imageUrl,
     headings,
     links,
-    language: detectLanguage(html, sample),
-    topic: textOnly(primaryTopic, 80) || base.hostname
+    topics,
+    priceSignals: priceSignalsFromText(sourceText),
+    language,
+    siteType,
+    location,
+    topic: topics[0] || fallbackTopic || base.hostname
   };
 }
 
 const COPY = {
   ru: {
-    checklist: t => `${t}: чек-лист перед выбором`,
-    questions: t => `${t}: 7 вопросов перед решением`,
-    compare: t => `Как сравнить варианты: ${t}`,
-    mistakes: t => `${t}: частые ошибки при выборе`,
-    first: t => `${t}: с чего начать`,
-    value: t => `${t}: что важно проверить`,
-    desc: (t, h) => `Короткий интерактивный чек-лист по теме «${t}» со ссылками на полезные разделы ${h}.`,
-    intro: t => `Используйте этот мини-инструмент, чтобы быстро проверить основные пункты перед решением по теме «${t}».`,
-    checklistTitle: 'Быстрая проверка',
-    sectionsTitle: 'Полезные разделы источника',
-    source: 'Перейти на сайт',
-    score: 'Отмечено',
-    criteria: ['Цена и полная стоимость понятны', 'Условия и ограничения подходят', 'Есть понятный способ связи/поддержки', 'Сравнены хотя бы два варианта', 'Проверены сроки, возврат или отмена']
+    sourceChecked: 'Источник проверен',
+    sourceData: 'Данные с сайта-источника',
+    exact: 'Точная цена зависит от объёма и условий',
+    openCalculator: 'Рассчитать на сайте',
+    viewSource: 'Открыть источник',
+    factors: 'Что сильнее всего влияет на стоимость',
+    beforeOrder: 'Что проверить перед заказом',
+    related: 'Ещё полезное по теме',
+    calculator: 'Быстрый расчёт',
+    quantity: 'Количество / площадь',
+    result: 'Ориентировочная сумма',
+    perUnit: 'за единицу',
+    noPrice: 'На исходной странице не найден надёжный числовой ориентир — поэтому мы не придумываем цену.',
+    facts: ['Подготовка поверхности и демонтаж', 'Материалы и расходники — входят или оплачиваются отдельно', 'Сложность, доступ и объём работ', 'Вывоз мусора, доставка и дополнительные работы'],
+    checklist: ['Цена указана за понятную единицу измерения', 'Понятно, входят ли материалы', 'Согласованы сроки и дополнительные работы', 'Есть итоговая смета до начала работ']
   },
   lv: {
-    checklist: t => `${t}: pārbaudes saraksts pirms izvēles`,
-    questions: t => `${t}: 7 jautājumi pirms lēmuma`,
-    compare: t => `Kā salīdzināt variantus: ${t}`,
-    mistakes: t => `${t}: biežākās kļūdas izvēloties`,
-    first: t => `${t}: ar ko sākt`,
-    value: t => `${t}: ko ir vērts pārbaudīt`,
-    desc: (t, h) => `Īss interaktīvs kontrolsaraksts par “${t}” ar saitēm uz noderīgām ${h} sadaļām.`,
-    intro: t => `Izmantojiet šo mini rīku, lai ātri pārbaudītu svarīgākos punktus pirms lēmuma par “${t}”.`,
-    checklistTitle: 'Ātrā pārbaude',
-    sectionsTitle: 'Noderīgas avota sadaļas',
-    source: 'Atvērt vietni',
-    score: 'Atzīmēts',
-    criteria: ['Cena un kopējās izmaksas ir saprotamas', 'Nosacījumi un ierobežojumi der', 'Ir skaidrs saziņas vai atbalsta veids', 'Salīdzināti vismaz divi varianti', 'Pārbaudīti termiņi, atgriešana vai atcelšana']
+    sourceChecked: 'Avots pārbaudīts',
+    sourceData: 'Dati no avota vietnes',
+    exact: 'Precīza cena atkarīga no apjoma un apstākļiem',
+    openCalculator: 'Aprēķināt vietnē',
+    viewSource: 'Atvērt avotu',
+    factors: 'Kas visvairāk ietekmē izmaksas',
+    beforeOrder: 'Ko pārbaudīt pirms pasūtījuma',
+    related: 'Vēl noderīgi par tēmu',
+    calculator: 'Ātrais aprēķins',
+    quantity: 'Daudzums / platība',
+    result: 'Aptuvenā summa',
+    perUnit: 'par vienību',
+    noPrice: 'Avota lapā netika atrasts pietiekami drošs skaitlisks orientieris, tāpēc cenu neizdomājam.',
+    facts: ['Virsmas sagatavošana un demontāža', 'Materiāli un palīgmateriāli — iekļauti vai atsevišķi', 'Darbu sarežģītība, piekļuve un apjoms', 'Atkritumu izvešana, piegāde un papildu darbi'],
+    checklist: ['Cena norādīta par saprotamu mērvienību', 'Skaidrs, vai materiāli ir iekļauti', 'Saskaņoti termiņi un papildu darbi', 'Pirms darbu sākuma ir gala tāme']
   },
   en: {
-    checklist: t => `${t}: checklist before you choose`,
-    questions: t => `${t}: 7 questions before deciding`,
-    compare: t => `How to compare options: ${t}`,
-    mistakes: t => `${t}: common mistakes to avoid`,
-    first: t => `${t}: where to start`,
-    value: t => `${t}: what is worth checking`,
-    desc: (t, h) => `A short interactive checklist for “${t}” with links to useful sections of ${h}.`,
-    intro: t => `Use this mini tool to check the main points before making a decision about “${t}”.`,
-    checklistTitle: 'Quick check',
-    sectionsTitle: 'Useful source sections',
-    source: 'Open website',
-    score: 'Checked',
-    criteria: ['Price and total cost are clear', 'Terms and limits fit your needs', 'Contact or support options are clear', 'At least two options were compared', 'Timing, returns or cancellation were checked']
+    sourceChecked: 'Source checked',
+    sourceData: 'Data from the source website',
+    exact: 'Exact price depends on scope and conditions',
+    openCalculator: 'Calculate on website',
+    viewSource: 'Open source',
+    factors: 'What affects the cost most',
+    beforeOrder: 'What to check before ordering',
+    related: 'More useful pages',
+    calculator: 'Quick estimate',
+    quantity: 'Quantity / area',
+    result: 'Estimated total',
+    perUnit: 'per unit',
+    noPrice: 'No reliable numeric price was found on the source page, so we do not invent one.',
+    facts: ['Preparation and demolition', 'Materials and consumables — included or separate', 'Complexity, access and job size', 'Waste removal, delivery and extra work'],
+    checklist: ['Price uses a clear unit', 'Material inclusion is clear', 'Timing and extras are agreed', 'A final estimate exists before work starts']
   }
 };
 
-const SEED_KINDS = [
-  'checklist','questions','compare','mistakes','first','value','price','timeline','options','faq',
-  'budget','requirements','before','after','risks','quality','planning','estimate','preparation','decision'
-];
+const INTENTS = ['price','calculator','estimate','compare','guide'];
 
-function seedTitle(language, kind, topic) {
-  const t = textOnly(topic, 78);
+function cleanTopicCandidate(value) {
+  return usefulTopic(String(value || '')
+    .replace(/\b(?:CenaRadar|MURDILIMAX|Traffic Lab)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim());
+}
+
+function topicTokens(value) {
+  return topicNorm(value).split(' ').filter(x => x.length >= 4 && !/^(цена|цены|стоимость|работы|работа|latvija|латвии|riga|риге|cena|darbi|price|cost|work)$/.test(x));
+}
+
+function overlapScore(a, b) {
+  const aa = topicTokens(a);
+  const bb = new Set(topicTokens(b));
+  let score = 0;
+  for (const token of aa) if (bb.has(token)) score += token.length >= 7 ? 3 : 2;
+  return score;
+}
+
+function bestSourceLink(analysis, topic) {
+  const ranked = analysis.links
+    .map(item => ({ ...item, score: overlapScore(topic, item.text) }))
+    .sort((a,b) => b.score - a.score);
+  return ranked[0]?.score > 0 ? ranked[0].url : analysis.url;
+}
+
+function matchedPriceSignals(analysis, topic) {
+  const ranked = analysis.priceSignals
+    .map(signal => ({ ...signal, score: overlapScore(topic, signal.text) }))
+    .sort((a,b) => b.score - a.score);
+  const matched = ranked.filter(x => x.score > 0).slice(0, 5);
+  return matched.length ? matched : [];
+}
+
+function intentTitle(language, intent, topic, location='') {
+  const t = textOnly(topic, 82);
+  const place = location ? (language === 'ru' ? ` в ${location}` : language === 'lv' ? ` ${location}` : ` in ${location}`) : '';
   const ru = {
-    checklist: `${t}: чек-лист перед выбором`,
-    questions: `${t}: 7 вопросов перед решением`,
-    compare: `Как сравнить варианты: ${t}`,
-    mistakes: `${t}: частые ошибки при выборе`,
-    first: `${t}: с чего начать`,
-    value: `${t}: что важно проверить`,
-    price: `${t}: что влияет на итоговую цену`,
-    timeline: `${t}: сроки и что на них влияет`,
-    options: `${t}: варианты и как выбрать подходящий`,
-    faq: `${t}: частые вопросы и ответы`,
-    budget: `${t}: как заранее оценить бюджет`,
-    requirements: `${t}: что нужно подготовить заранее`,
-    before: `${t}: что проверить до заказа`,
-    after: `${t}: что проверить после выполнения`,
-    risks: `${t}: основные риски и как их снизить`,
-    quality: `${t}: как оценить качество`,
-    planning: `${t}: как правильно спланировать`,
-    estimate: `${t}: как оценить предложение перед выбором`,
-    preparation: `${t}: подготовка по шагам`,
-    decision: `${t}: как принять решение без лишних расходов`
+    price: `Сколько стоит ${t}${place}: цены и что входит`,
+    calculator: `Калькулятор стоимости: ${t}${place}`,
+    estimate: `Смета на ${t}: из чего складывается цена`,
+    compare: `Как сравнить цены на ${t} и не переплатить`,
+    guide: `${t}: цены, расчёт и что проверить перед заказом`
   };
   const lv = {
-    checklist: `${t}: pārbaudes saraksts pirms izvēles`,
-    questions: `${t}: 7 jautājumi pirms lēmuma`,
-    compare: `Kā salīdzināt variantus: ${t}`,
-    mistakes: `${t}: biežākās kļūdas izvēloties`,
-    first: `${t}: ar ko sākt`,
-    value: `${t}: ko ir vērts pārbaudīt`,
-    price: `${t}: kas ietekmē gala cenu`,
-    timeline: `${t}: termiņi un kas tos ietekmē`,
-    options: `${t}: varianti un kā izvēlēties piemērotāko`,
-    faq: `${t}: biežākie jautājumi un atbildes`,
-    budget: `${t}: kā iepriekš novērtēt budžetu`,
-    requirements: `${t}: ko sagatavot iepriekš`,
-    before: `${t}: ko pārbaudīt pirms pasūtījuma`,
-    after: `${t}: ko pārbaudīt pēc izpildes`,
-    risks: `${t}: galvenie riski un kā tos mazināt`,
-    quality: `${t}: kā novērtēt kvalitāti`,
-    planning: `${t}: kā pareizi saplānot`,
-    estimate: `${t}: kā novērtēt piedāvājumu pirms izvēles`,
-    preparation: `${t}: sagatavošanās pa soļiem`,
-    decision: `${t}: kā pieņemt lēmumu bez liekiem izdevumiem`
+    price: `Cik maksā ${t}${place}: cenas un kas ir iekļauts`,
+    calculator: `${t} izmaksu kalkulators${place}`,
+    estimate: `${t} tāme: no kā veidojas cena`,
+    compare: `Kā salīdzināt ${t} cenas un nepārmaksāt`,
+    guide: `${t}: cenas, aprēķins un ko pārbaudīt pirms pasūtījuma`
   };
   const en = {
-    checklist: `${t}: checklist before you choose`,
-    questions: `${t}: 7 questions before deciding`,
-    compare: `How to compare options: ${t}`,
-    mistakes: `${t}: common mistakes to avoid`,
-    first: `${t}: where to start`,
-    value: `${t}: what is worth checking`,
-    price: `${t}: what affects the final price`,
-    timeline: `${t}: timing and what affects it`,
-    options: `${t}: options and how to choose`,
-    faq: `${t}: frequently asked questions`,
-    budget: `${t}: how to estimate the budget`,
-    requirements: `${t}: what to prepare in advance`,
-    before: `${t}: what to check before ordering`,
-    after: `${t}: what to check after completion`,
-    risks: `${t}: key risks and how to reduce them`,
-    quality: `${t}: how to assess quality`,
-    planning: `${t}: how to plan it properly`,
-    estimate: `${t}: how to evaluate an offer before choosing`,
-    preparation: `${t}: step-by-step preparation`,
-    decision: `${t}: how to decide without unnecessary cost`
+    price: `How much does ${t} cost${place}: prices and inclusions`,
+    calculator: `${t} cost calculator${place}`,
+    estimate: `${t} estimate: what makes up the price`,
+    compare: `How to compare ${t} prices without overpaying`,
+    guide: `${t}: prices, estimate and what to check before ordering`
   };
   const table = language === 'ru' ? ru : language === 'lv' ? lv : en;
-  return table[kind] || `${t}: practical guide`;
+  return table[intent] || table.guide;
+}
+
+function introText(language, topic, intent, host, hasPrice) {
+  if (language === 'ru') {
+    if (hasPrice) return `Разбираем «${topic}» на основе актуально доступных данных ${host}: ориентиры по цене, что влияет на итоговую сумму и как быстро проверить предложение.`;
+    return `Практическая страница по теме «${topic}»: что влияет на стоимость, как сравнить предложения и где получить точный расчёт на ${host}.`;
+  }
+  if (language === 'lv') {
+    if (hasPrice) return `“${topic}” apskats, izmantojot pašlaik pieejamos ${host} datus: cenu orientieri, galvenie izmaksu faktori un piedāvājumu salīdzināšana.`;
+    return `Praktiska lapa par “${topic}”: kas ietekmē cenu, kā salīdzināt piedāvājumus un kur saņemt precīzu aprēķinu vietnē ${host}.`;
+  }
+  if (hasPrice) return `A practical ${topic} guide based on currently available data from ${host}: price signals, cost drivers and how to compare quotes.`;
+  return `A practical guide to ${topic}: what affects cost, how to compare quotes and where to get an exact calculation on ${host}.`;
+}
+
+function buildIntentDraft(analysis, topic, intent='guide', slugPrefix='intent') {
+  const c = COPY[analysis.language] || COPY.en;
+  const cleanTopic = cleanTopicCandidate(topic) || analysis.topic;
+  const signals = matchedPriceSignals(analysis, cleanTopic);
+  const primary = signals[0] || null;
+  const targetUrl = bestSourceLink(analysis, cleanTopic);
+  const title = intentTitle(analysis.language, intent, cleanTopic, analysis.location);
+  const checkedAt = new Date().toISOString();
+  return {
+    slug: `${slugPrefix}-${intent}-${slugify(cleanTopic)}`.slice(0, 110),
+    title,
+    description: introText(analysis.language, cleanTopic, intent, analysis.host, Boolean(primary)).slice(0, 260),
+    topic: cleanTopic,
+    body: {
+      version: 2,
+      template: 'intent-page',
+      intent,
+      siteType: analysis.siteType,
+      topic: cleanTopic,
+      location: analysis.location,
+      host: analysis.host,
+      intro: introText(analysis.language, cleanTopic, intent, analysis.host, Boolean(primary)),
+      sourceCheckedAt: checkedAt,
+      imageUrl: analysis.imageUrl || '',
+      targetUrl,
+      priceSignals: signals,
+      baseMin: primary?.min || null,
+      baseMax: primary?.max || null,
+      unit: primary?.unit || '',
+      sourceDataLabel: c.sourceData,
+      sourceCheckedLabel: c.sourceChecked,
+      exactLabel: c.exact,
+      openCalculatorLabel: c.openCalculator,
+      viewSourceLabel: c.viewSource,
+      factorsTitle: c.factors,
+      checklistTitle: c.beforeOrder,
+      relatedTitle: c.related,
+      calculatorTitle: c.calculator,
+      quantityLabel: c.quantity,
+      resultLabel: c.result,
+      perUnitLabel: c.perUnit,
+      noPriceLabel: c.noPrice,
+      facts: c.facts,
+      checklist: c.checklist,
+      sourceLinks: analysis.links
+        .map(item => ({ ...item, score:overlapScore(cleanTopic, item.text) }))
+        .sort((a,b)=>b.score-a.score)
+        .filter(item => item.score > 0)
+        .slice(0, 5)
+        .map(({text,url}) => ({text,url}))
+    }
+  };
+}
+
+function rankedTopics(analysis) {
+  const constructionHints = /ремонт|строит|отдел|плит|шпак|штукатур|покрас|маляр|электр|сантех|ванн|кухн|пол|ламин|паркет|кров|фасад|buv|remont|fliz|santeh|kras|apdar|jumt|grīd|grid|elektr|renovat|til|plumb|paint|floor|roof/i;
+  const seen = new Set();
+  const scored = [];
+  for (const raw of [analysis.topic, ...(analysis.topics || []), ...analysis.headings, ...analysis.links.map(x=>x.text)]) {
+    const topic = cleanTopicCandidate(raw);
+    if (!topic) continue;
+    const key = topicNorm(topic);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    let score = 0;
+    if (analysis.siteType === 'construction' && constructionHints.test(topic)) score += 8;
+    if (analysis.priceSignals.some(s => overlapScore(topic, s.text) > 0)) score += 6;
+    if (analysis.links.some(x => overlapScore(topic, x.text) > 0)) score += 2;
+    if (topic.length >= 10 && topic.length <= 64) score += 2;
+    scored.push({topic,score});
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.map(x=>x.topic).slice(0, 18);
 }
 
 function pageDrafts(analysis, limit = 20) {
-  const c = COPY[analysis.language] || COPY.en;
-  const rawCandidates = [
-    analysis.topic,
-    ...analysis.headings,
-    ...analysis.links.map(item => item.text)
-  ].map(x => textOnly(x, 78)).filter(x => x.length >= 3);
-  const unique = [];
-  for (const item of rawCandidates) {
-    if (!unique.some(x => x.toLowerCase() === item.toLowerCase())) unique.push(item);
-  }
-  if (!unique.length) unique.push(analysis.topic || analysis.host);
-
+  const topics = rankedTopics(analysis);
+  if (!topics.length) topics.push(analysis.topic || analysis.host);
   const drafts = [];
-  for (let index = 0; index < limit; index += 1) {
-    const kind = SEED_KINDS[index % SEED_KINDS.length];
-    const topic = unique[index % unique.length] || analysis.topic;
-    const title = seedTitle(analysis.language, kind, topic);
-    drafts.push({
-      slug: `seed-${kind}-${slugify(topic)}`.slice(0, 96),
-      title,
-      description: c.desc(title, analysis.host),
-      topic,
-      body: {
-        intro: c.intro(title),
-        checklistTitle: c.checklistTitle,
-        sectionsTitle: c.sectionsTitle,
-        sourceLabel: c.source,
-        scoreLabel: c.score,
-        criteria: c.criteria,
-        sections: analysis.headings.slice(0, 10),
-        links: analysis.links.slice(0, 10)
-      }
-    });
+  const seen = new Set();
+
+  const push = (topic, intent) => {
+    const draft = buildIntentDraft(analysis, topic, intent, 'intent');
+    if (seen.has(draft.slug)) return;
+    seen.add(draft.slug);
+    drafts.push(draft);
+  };
+
+  for (const topic of topics.slice(0, 8)) {
+    push(topic, 'price');
+    if (drafts.length >= limit) break;
+    push(topic, 'calculator');
+    if (drafts.length >= limit) break;
   }
-  return drafts;
+  for (const topic of topics.slice(0, 6)) {
+    if (drafts.length >= limit) break;
+    push(topic, 'estimate');
+    if (drafts.length >= limit) break;
+    push(topic, 'compare');
+  }
+  let cursor = 0;
+  while (drafts.length < limit && cursor < topics.length * INTENTS.length) {
+    const topic = topics[cursor % topics.length];
+    const intent = INTENTS[Math.floor(cursor / topics.length) % INTENTS.length];
+    push(topic, intent);
+    cursor += 1;
+  }
+  return drafts.slice(0, limit);
 }
 
 function adaptiveDrafts(analysis, topic) {
-  const c = COPY[analysis.language] || COPY.en;
-  const t = textOnly(topic || analysis.topic, 78);
-  const titles = analysis.language === 'ru'
-    ? [
-        ['deep', `Подробный практический гид: ${t}`],
-        ['cost', `${t}: от чего зависит итоговая стоимость`],
-        ['choose', `${t}: как выбрать подходящий вариант`],
-        ['examples', `${t}: типовые сценарии и что учитывать`],
-        ['plan', `${t}: понятный план действий по шагам`]
-      ]
-    : analysis.language === 'lv'
-      ? [
-          ['deep', `Praktisks ceļvedis: ${t}`],
-          ['cost', `${t}: no kā atkarīgas gala izmaksas`],
-          ['choose', `${t}: kā izvēlēties piemērotāko variantu`],
-          ['examples', `${t}: tipiski scenāriji un kas jāņem vērā`],
-          ['plan', `${t}: skaidrs rīcības plāns pa soļiem`]
-        ]
-      : [
-          ['deep', `Practical guide: ${t}`],
-          ['cost', `${t}: what affects the final cost`],
-          ['choose', `${t}: how to choose the right option`],
-          ['examples', `${t}: common scenarios and what to consider`],
-          ['plan', `${t}: a clear step-by-step action plan`]
-        ];
-  return titles.map(([kind, title]) => ({
-    slug: `expand-${kind}-${slugify(t)}`.slice(0, 96),
-    title,
-    description: c.desc(title, analysis.host),
-    topic: t,
-    body: {
-      intro: c.intro(title),
-      checklistTitle: c.checklistTitle,
-      sectionsTitle: c.sectionsTitle,
-      sourceLabel: c.source,
-      scoreLabel: c.score,
-      criteria: c.criteria,
-      sections: analysis.headings.slice(0, 10),
-      links: analysis.links.slice(0, 10)
-    }
-  }));
+  return ['guide','estimate','compare','price','calculator'].map(intent =>
+    buildIntentDraft(analysis, topic, intent, 'expand')
+  );
 }
 
 function isBot(ua) {
@@ -400,23 +553,96 @@ function campaignUrl(id) {
   return `${PUBLIC_BASE}/traffic/c/${encodeURIComponent(id)}`;
 }
 
-function renderShell({ title, description, canonical, lang = 'en', body, robots = 'index,follow' }) {
-  return `<!doctype html><html lang="${esc(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${esc(robots)}"><link rel="canonical" href="${esc(canonical)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(canonical)}"><meta property="og:type" content="website"><style>
-  :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eaf5ff;background:#061019}
-  *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#153652,#061019 42%,#03070b);min-height:100vh}main{width:min(880px,92vw);margin:0 auto;padding:52px 0 70px}.tag{display:inline-flex;padding:7px 10px;border:1px solid #24516c;border-radius:999px;color:#7cdbff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}.card{margin-top:18px;padding:24px;border:1px solid #17384c;border-radius:22px;background:rgba(6,19,30,.9);box-shadow:0 22px 70px rgba(0,0,0,.28)}h1{font-size:clamp(31px,5vw,56px);line-height:1.02;letter-spacing:-.04em;margin:14px 0}h2{font-size:20px;margin:28px 0 10px}p{color:#9ab2c3;line-height:1.65}label{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)}input{margin-top:3px}.score{margin:14px 0;color:#7de1ff;font-weight:800}.links{display:grid;gap:8px}.links a{color:#a8e8ff;text-decoration:none;padding:10px 12px;border-radius:12px;background:#0a1d2b}.cta{display:inline-flex;margin-top:22px;padding:13px 18px;border-radius:13px;background:#6cddff;color:#001018;text-decoration:none;font-weight:900}.small{font-size:12px;color:#66859b}
+function safeJson(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function formatPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n);
+}
+
+function renderShell({ title, description, canonical, lang = 'en', body, robots = 'index,follow', imageUrl = '', schema = null }) {
+  const imageMeta = imageUrl ? `<meta property="og:image" content="${esc(imageUrl)}">` : '';
+  const schemaTag = schema ? `<script type="application/ld+json">${safeJson(schema)}</script>` : '';
+  return `<!doctype html><html lang="${esc(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${esc(robots)}"><link rel="canonical" href="${esc(canonical)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(canonical)}"><meta property="og:type" content="article">${imageMeta}${schemaTag}<style>
+  :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17202a;background:#f6f7f4;--ink:#17202a;--muted:#65717c;--line:#dde3de;--card:#fff;--accent:#146c55;--accent2:#0b4d3c;--soft:#eef6f1}
+  *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f8faf7 0,#f3f5f2 100%);min-height:100vh;color:var(--ink)}a{color:inherit}main{width:min(1080px,92vw);margin:0 auto;padding:24px 0 72px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 24px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.02em}.brandmark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--accent);color:#fff}.fresh{font-size:12px;color:var(--muted);padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}.hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:stretch}.heroCard,.panel{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 14px 44px rgba(29,46,38,.06)}.heroCard{padding:clamp(24px,5vw,54px);position:relative;overflow:hidden}.heroCard:after{content:"";position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#d9f0e5 0,rgba(217,240,229,0) 70%);pointer-events:none}.eyebrow{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--soft);color:var(--accent2);font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.hero h1{font-size:clamp(34px,5.6vw,66px);line-height:.98;letter-spacing:-.052em;margin:16px 0 18px;max-width:820px}.hero p{font-size:18px;line-height:1.65;color:var(--muted);max-width:760px}.heroSide{padding:20px;display:flex;flex-direction:column;justify-content:space-between;gap:16px}.heroImage{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:17px;background:linear-gradient(135deg,#e7efe9,#d7e7dd)}.priceLabel{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}.priceBig{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:4px 0}.priceNote{font-size:13px;line-height:1.45;color:var(--muted)}.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:var(--accent);color:#fff;padding:14px 18px;border-radius:14px;font-weight:900;border:0}.cta:hover{background:var(--accent2)}.cta.secondary{background:#fff;color:var(--accent2);border:1px solid var(--line)}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:18px}.panel{padding:24px}.panel h2{font-size:24px;letter-spacing:-.03em;margin:0 0 14px}.panel p{color:var(--muted);line-height:1.6}.facts{display:grid;gap:10px}.fact{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #e5e9e5;border-radius:16px;background:#fbfcfa}.num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:900;color:var(--accent2)}.sourceSignals{display:grid;gap:9px}.signal{padding:13px 14px;border-radius:14px;background:#f7f9f6;border:1px solid #e5e9e5}.signal b{display:block;margin-bottom:4px}.signal small{color:var(--muted);line-height:1.4}.calc{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.calc label{font-size:12px;font-weight:800;color:var(--muted);display:grid;gap:7px}.calc input{width:100%;padding:13px 14px;border:1px solid #ccd5ce;border-radius:12px;font:inherit;background:#fff}.calcResult{padding:13px 14px;border-radius:12px;background:var(--soft)}.calcResult strong{display:block;font-size:23px;color:var(--accent2)}.checklist{display:grid;gap:9px}.check{display:flex;gap:10px;align-items:flex-start}.check i{font-style:normal;width:24px;height:24px;border-radius:8px;background:#e6f4ec;color:var(--accent2);display:grid;place-items:center;font-weight:950;flex:0 0 24px}.sourceLinks,.related{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mini{display:block;text-decoration:none;padding:14px;border:1px solid var(--line);border-radius:15px;background:#fff}.mini b{display:block;font-size:14px;line-height:1.35}.mini small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.footerCta{margin-top:18px;padding:28px;border-radius:24px;background:#173b31;color:#fff;display:flex;justify-content:space-between;gap:20px;align-items:center}.footerCta h2{margin:0 0 8px;font-size:28px}.footerCta p{margin:0;color:#c8d8d1;line-height:1.5}.footerCta .cta{background:#fff;color:#173b31;white-space:nowrap}.disclaimer{margin-top:18px;color:#7b8580;font-size:12px;line-height:1.5;text-align:center}
+  @media(max-width:780px){main{width:min(94vw,720px);padding-top:12px}.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:clamp(34px,11vw,54px)}.heroCard{padding:26px 22px}.hero p{font-size:16px}.sourceLinks,.related{grid-template-columns:1fr}.footerCta{align-items:flex-start;flex-direction:column}.footerCta .cta{width:100%}.calc{grid-template-columns:1fr}}
   </style></head><body><main>${body}</main></body></html>`;
 }
 
-function renderTrafficPage(row) {
+function renderTrafficPage(row, relatedRows = []) {
   const body = row.body_json || {};
   const canonical = pageUrl(row);
   const active = row.status === 'active';
-  const criteria = (body.criteria || []).map((item, i) => `<label><input class="criterion" type="checkbox" value="${i}"><span>${esc(item)}</span></label>`).join('');
-  const sections = (body.sections || []).map(item => `<li>${esc(item)}</li>`).join('');
-  const links = (body.links || []).map(item => `<a href="${esc(item.url)}" rel="noopener">${esc(item.text)}</a>`).join('');
+  const checked = body.sourceCheckedAt ? new Date(body.sourceCheckedAt).toLocaleDateString(row.language === 'ru' ? 'ru-RU' : row.language === 'lv' ? 'lv-LV' : 'en-GB') : '';
+  const priceSignals = Array.isArray(body.priceSignals) ? body.priceSignals : [];
+  const min = Number(body.baseMin || 0);
+  const max = Number(body.baseMax || 0);
+  const hasPrice = min > 0 && max > 0;
+  const unit = body.unit ? ` / ${esc(body.unit)}` : '';
+  const priceText = hasPrice ? (min === max ? `${formatPrice(min)} €${unit}` : `${formatPrice(min)}–${formatPrice(max)} €${unit}`) : '—';
   const source = `/traffic/go/${encodeURIComponent(row.id)}`;
-  const htmlBody = `<span class="tag">Murdilimax Traffic Lab</span><section class="card"><h1>${esc(row.title)}</h1><p>${esc(body.intro || row.description)}</p><h2>${esc(body.checklistTitle || 'Quick check')}</h2><div id="criteria">${criteria}</div><div class="score"><span id="done">0</span>/${(body.criteria || []).length} ${esc(body.scoreLabel || 'checked')}</div>${sections ? `<h2>${esc(body.sectionsTitle || 'Useful sections')}</h2><ul>${sections}</ul>` : ''}${links ? `<div class="links">${links}</div>` : ''}<a class="cta" href="${source}">${esc(body.sourceLabel || 'Open website')} →</a><p class="small">Source: ${esc(row.host)} · utility page generated from publicly visible website information.</p></section><script>const boxes=[...document.querySelectorAll('.criterion')],done=document.getElementById('done');function update(){done.textContent=String(boxes.filter(x=>x.checked).length)}boxes.forEach(x=>x.addEventListener('change',update));</script>`;
-  return renderShell({ title: row.title, description: row.description, canonical, lang: row.language || 'en', body: htmlBody, robots: active ? 'index,follow' : 'noindex,nofollow' });
+
+  const signalsHtml = priceSignals.length
+    ? priceSignals.map(signal => `<div class="signal"><b>${formatPrice(signal.min)}${Number(signal.max)!==Number(signal.min)?`–${formatPrice(signal.max)}`:''} €${signal.unit?` / ${esc(signal.unit)}`:''}</b><small>${esc(signal.text)}</small></div>`).join('')
+    : `<div class="signal"><small>${esc(body.noPriceLabel || 'No reliable numeric price found.')}</small></div>`;
+
+  const factsHtml = (body.facts || []).map((item,i)=>`<div class="fact"><span class="num">${i+1}</span><div>${esc(item)}</div></div>`).join('');
+  const checksHtml = (body.checklist || []).map(item=>`<div class="check"><i>✓</i><span>${esc(item)}</span></div>`).join('');
+  const sourceLinksHtml = (body.sourceLinks || []).map(item=>`<a class="mini" href="${esc(item.url)}" rel="noopener"><b>${esc(item.text)}</b><small>${esc(row.host)}</small></a>`).join('');
+  const relatedHtml = relatedRows.map(item=>`<a class="mini" href="${esc(pageUrl(item))}"><b>${esc(item.title)}</b><small>${esc(item.description || '')}</small></a>`).join('');
+
+  const calcHtml = hasPrice ? `<div class="calc"><label>${esc(body.quantityLabel || 'Quantity')}<input id="qty" type="number" value="1" min="0.1" step="0.1" inputmode="decimal"></label><div class="calcResult"><small>${esc(body.resultLabel || 'Estimated total')}</small><strong id="calcValue">${priceText}</strong></div></div><p class="priceNote">${esc(body.exactLabel || '')}</p>` : `<p>${esc(body.noPriceLabel || '')}</p><a class="cta secondary" href="${source}">${esc(body.openCalculatorLabel || 'Open website')} →</a>`;
+
+  const image = body.imageUrl ? `<img class="heroImage" src="${esc(body.imageUrl)}" alt="" loading="eager">` : `<div class="heroImage"></div>`;
+  const bodyHtml = `
+    <div class="topbar"><div class="brand"><span class="brandmark">↗</span><span>Murdilimax Traffic Lab</span></div><span class="fresh">${esc(body.sourceCheckedLabel || 'Source checked')}${checked ? ` · ${esc(checked)}` : ''}</span></div>
+    <section class="hero">
+      <article class="heroCard">
+        <span class="eyebrow">${esc(body.siteType === 'construction' ? (row.language === 'ru' ? 'Цены на ремонт' : row.language === 'lv' ? 'Remonta cenas' : 'Renovation prices') : row.host)}</span>
+        <h1>${esc(row.title)}</h1>
+        <p>${esc(body.intro || row.description)}</p>
+        <a class="cta" href="${source}">${esc(body.openCalculatorLabel || 'Open website')} →</a>
+      </article>
+      <aside class="heroSide panel">
+        ${image}
+        <div><div class="priceLabel">${esc(body.sourceDataLabel || 'Source data')}</div><div class="priceBig">${priceText}</div><div class="priceNote">${esc(body.exactLabel || '')}</div></div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <article class="panel"><h2>${esc(body.calculatorTitle || 'Quick estimate')}</h2>${calcHtml}</article>
+      <article class="panel"><h2>${esc(body.factorsTitle || 'What affects cost')}</h2><div class="facts">${factsHtml}</div></article>
+    </section>
+
+    <section class="grid">
+      <article class="panel"><h2>${esc(body.sourceDataLabel || 'Source data')}</h2><div class="sourceSignals">${signalsHtml}</div></article>
+      <article class="panel"><h2>${esc(body.checklistTitle || 'Before ordering')}</h2><div class="checklist">${checksHtml}</div></article>
+    </section>
+
+    ${sourceLinksHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(row.language === 'ru' ? 'Разделы исходного сайта по этой теме' : row.language === 'lv' ? 'Avota vietnes sadaļas par šo tēmu' : 'Relevant source sections')}</h2><div class="sourceLinks">${sourceLinksHtml}</div></section>` : ''}
+    ${relatedHtml ? `<section class="panel" style="margin-top:18px"><h2>${esc(body.relatedTitle || 'Related')}</h2><div class="related">${relatedHtml}</div></section>` : ''}
+
+    <section class="footerCta"><div><h2>${esc(row.language === 'ru' ? 'Нужен точный расчёт?' : row.language === 'lv' ? 'Vajag precīzu aprēķinu?' : 'Need an exact estimate?')}</h2><p>${esc(row.language === 'ru' ? `Откройте ${row.host} и рассчитайте стоимость по своим параметрам.` : row.language === 'lv' ? `Atveriet ${row.host} un aprēķiniet izmaksas pēc saviem parametriem.` : `Open ${row.host} and calculate using your own parameters.`)}</p></div><a class="cta" href="${source}">${esc(body.openCalculatorLabel || 'Open website')} →</a></section>
+    <div class="disclaimer">${esc(row.language === 'ru' ? 'Traffic Lab не придумывает цены: числовые ориентиры показываются только когда они найдены на публичной странице источника.' : row.language === 'lv' ? 'Traffic Lab neizdomā cenas: skaitliskie orientieri tiek rādīti tikai tad, ja tie atrasti publiskajā avota lapā.' : 'Traffic Lab does not invent prices: numeric signals are shown only when found on the public source page.')}</div>
+    ${hasPrice ? `<script>(function(){const q=document.getElementById('qty'),o=document.getElementById('calcValue'),mn=${JSON.stringify(min)},mx=${JSON.stringify(max)},unit=${JSON.stringify(body.unit||'')};function fmt(n){return new Intl.NumberFormat(document.documentElement.lang==='ru'?'ru-RU':'en-GB',{maximumFractionDigits:2}).format(n)}function run(){const v=Math.max(.1,Number(q.value)||1),a=mn*v,b=mx*v;o.textContent=(Math.abs(a-b)<.001?fmt(a):fmt(a)+'–'+fmt(b))+' €'+(unit?' / '+unit:'')}q.addEventListener('input',run);run()})()</script>` : ''}
+  `;
+
+  const schema = {
+    '@context':'https://schema.org',
+    '@type':'WebPage',
+    name:row.title,
+    description:row.description,
+    url:canonical,
+    dateModified:body.sourceCheckedAt || new Date(Number(row.updated_at || Date.now())).toISOString(),
+    about:{ '@type':'Thing', name:body.topic || row.topic || row.title },
+    isPartOf:{ '@type':'WebSite', name:'Murdilimax Traffic Lab', url:campaignUrl(row.campaign_id) }
+  };
+
+  return renderShell({ title:row.title, description:row.description, canonical, lang:row.language || 'en', body:bodyHtml, robots:active?'index,follow':'noindex,nofollow', imageUrl:body.imageUrl || '', schema });
 }
 
 async function verifyOwner(req, res, next) {
