@@ -19,6 +19,7 @@ await rm(root,{recursive:true,force:true});
 await mkdir(root,{recursive:true});
 
 const taskUrls=[];
+const taskFeed=[];
 for(const document of payload.documents||[]){
  const id=document.name.split("/").pop(),fields=document.fields||{};
  const service=field(fields,"service")||"Задание рядом";
@@ -30,6 +31,17 @@ for(const document of payload.documents||[]){
  const description=[details,category,[district,city].filter(Boolean).join(", "),date,`Бюджет: ${price}`].filter(Boolean).join(" · ").slice(0,300);
  const taskUrl=`${BASE}/task/${encodeURIComponent(id)}/`;
  taskUrls.push(taskUrl);
+ taskFeed.push({
+  id,
+  service:String(service).slice(0,120),
+  category:String(category).slice(0,80),
+  district:String(district||"").slice(0,80),
+  city:String(city||"Latvija").slice(0,80),
+  date:String(date||"").slice(0,40),
+  price:String(price||"").slice(0,60),
+  url:taskUrl,
+  publishedAt:document.createTime||document.updateTime||new Date().toISOString()
+ });
  const schema={"@context":"https://schema.org","@type":"WebPage",name:title,description,url:taskUrl,mainEntity:{"@type":"Service",name:service,description:details,areaServed:[district,city].filter(Boolean).join(", "),offers:{"@type":"Offer",price:String(price).replace(/[^0-9.,]/g,"")||undefined,priceCurrency:"EUR"}}};
  const html=`<!doctype html>
 <html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -54,4 +66,11 @@ try{
  await writeFile(sitemapPath,sitemap.replace("</urlset>",`${entries}\n</urlset>`),"utf8");
 }catch(error){console.warn("Task URLs were not added to sitemap:",error.message)}
 
-console.log(`Generated ${(payload.documents||[]).length} Facebook task pages`);
+taskFeed.sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+await writeFile(
+ join(process.cwd(),"public","task-feed.json"),
+ JSON.stringify({generatedAt:new Date().toISOString(),tasks:taskFeed.slice(0,300)},null,2)+"\n",
+ "utf8"
+);
+
+console.log(`Generated ${(payload.documents||[]).length} public task pages and sanitized task feed`);
