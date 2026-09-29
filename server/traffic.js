@@ -1003,7 +1003,7 @@ export function registerTrafficRoutes({ app, pool }) {
       LEFT JOIN traffic_pages p ON p.campaign_id=c.id
       GROUP BY c.id
       ORDER BY c.created_at DESC`);
-    const { rows: pages } = await pool.query('SELECT id,campaign_id,slug,title,views,crawls,clicks FROM traffic_pages ORDER BY created_at ASC');
+    const { rows: pages } = await pool.query("SELECT id,campaign_id,slug,title,views,crawls,clicks FROM traffic_pages WHERE COALESCE(NULLIF(body_json->>'qualityScore','')::int,0) >= 4 ORDER BY created_at ASC");
     return campaigns.map(c => ({
       id: c.id,
       url: c.target_url,
