@@ -843,7 +843,7 @@ function renderShell({ title, description, canonical, lang = 'en', body, robots 
 
 function renderTrafficPage(row, relatedRows = [], marketPulse = null, marketGeneratedAt = '') {
   const body = row.body_json || {};
-  const canonical = pageUrl(row);
+  const canonical = mirrorPageUrl(row.host,row);
   const active = row.status === 'active';
   const checked = body.sourceCheckedAt ? new Date(body.sourceCheckedAt).toLocaleDateString(row.language === 'ru' ? 'ru-RU' : row.language === 'lv' ? 'lv-LV' : 'en-GB') : '';
   const priceSignals = Array.isArray(body.priceSignals) ? body.priceSignals : [];
@@ -938,8 +938,7 @@ function renderTrafficPage(row, relatedRows = [], marketPulse = null, marketGene
     isPartOf:{ '@type':'WebSite', name:'Murdilimax Traffic Lab', url:campaignUrl(row.campaign_id) }
   };
 
-  const indexable = active && Number(body.qualityScore || 0) >= 4;
-  return renderShell({ title:row.title, description:row.description, canonical, lang:row.language || 'en', body:bodyHtml, robots:indexable?'index,follow,max-image-preview:large':'noindex,follow', imageUrl:body.imageUrl || '', schema });
+  return renderShell({ title:row.title, description:row.description, canonical, lang:row.language || 'en', body:bodyHtml, robots:'noindex,follow', imageUrl:body.imageUrl || '', schema });
 }
 
 async function verifyOwner(req, res, next) {
@@ -1046,25 +1045,8 @@ export function registerTrafficRoutes({ app, pool }) {
     }));
   }
 
-  async function submitIndexNow(pageRows, campaignId) {
-    const indexableRows = (pageRows || []).filter(row => Number(row.qualityScore || 0) >= 4);
-    const urls = [campaignUrl(campaignId), ...indexableRows.map(pageUrl)];
-    try {
-      const response = await fetch('https://api.indexnow.org/indexnow', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
-          host: new URL(PUBLIC_BASE).host,
-          key: INDEXNOW_KEY,
-          keyLocation: `${PUBLIC_BASE}/traffic/indexnow-key.txt`,
-          urlList: urls
-        }),
-        signal: AbortSignal.timeout(9000)
-      });
-      return `HTTP ${response.status} · ${new Date().toISOString()}`;
-    } catch (error) {
-      return `error: ${String(error?.message || error).slice(0, 120)}`;
-    }
+  async function submitIndexNow(_pageRows, _campaignId) {
+    return `canonical mirror · IndexNow via murdilimax.com · ${new Date().toISOString()}`;
   }
 
   async function persistAnalysis(campaign, analysis) {
@@ -1158,15 +1140,14 @@ export function registerTrafficRoutes({ app, pool }) {
   });
 
   app.get('/robots.txt', async (_req, res) => {
-    res.type('text/plain').send(`User-agent: *\nAllow: /traffic/\nDisallow: /api/\nSitemap: ${PUBLIC_BASE}/traffic/sitemap.xml\n`);
+    res.type('text/plain').send('User-agent: *\nAllow: /traffic/\nDisallow: /api/\n');
   });
 
   app.get('/traffic/sitemap.xml', async (_req, res) => {
     try {
       await ensureSchema();
       const { rows } = await pool.query(`SELECT p.id,p.slug,p.updated_at FROM traffic_pages p JOIN traffic_campaigns c ON c.id=p.campaign_id WHERE c.status='active' AND COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 4 ORDER BY p.updated_at DESC`);
-      const urls = rows.map(row => `<url><loc>${xml(pageUrl(row))}</loc><lastmod>${new Date(Number(row.updated_at)).toISOString()}</lastmod></url>`).join('');
-      res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+      res.type('application/xml').send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
     } catch (error) {
       res.status(503).type('text/plain').send('Traffic sitemap unavailable');
     }
@@ -1259,7 +1240,7 @@ export function registerTrafficRoutes({ app, pool }) {
       const { rows } = await pool.query("SELECT id,slug,title,description FROM traffic_pages WHERE campaign_id=$1 AND COALESCE(NULLIF(body_json->>'qualityScore','')::int,0) >= 4 ORDER BY created_at ASC", [campaign.id]);
       const list = rows.map(page => `<a href="${esc(pageUrl(page))}"><b>${esc(page.title)}</b><span>${esc(page.description)}</span></a>`).join('');
       const body = `<span class="tag">Murdilimax Traffic Lab</span><section class="card"><h1>${esc(campaign.title || campaign.host)}</h1><p>${esc(campaign.description || `Useful decision tools for ${campaign.host}`)}</p><div class="links">${list}</div><a class="cta" href="${esc(campaign.target_url)}" rel="noopener">Open ${esc(campaign.host)} →</a></section>`;
-      res.type('html').send(renderShell({ title:`${campaign.title || campaign.host} — tools`, description:campaign.description || `Useful tools for ${campaign.host}`, canonical:campaignUrl(campaign.id), lang:campaign.language, body, robots:campaign.status === 'active' ? 'index,follow' : 'noindex,nofollow' }));
+      res.type('html').send(renderShell({ title:`${campaign.title || campaign.host} — tools`, description:campaign.description || `Useful tools for ${campaign.host}`, canonical:mirrorCampaignUrl(campaign.host), lang:campaign.language, body, robots:'noindex,follow' }));
     } catch (error) {
       res.status(500).send('Traffic hub unavailable');
     }
