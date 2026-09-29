@@ -577,27 +577,48 @@ function buildIntentDraft(analysis, topic, intent='guide', slugPrefix='intent') 
   const targetUrl = bestSourceLink(analysis, cleanTopic);
   const title = intentTitle(analysis.language, intent, cleanTopic, analysis.location);
   const checkedAt = new Date().toISOString();
+  const sourceLinks = analysis.links
+    .map(item => ({ ...item, score:overlapScore(cleanTopic, item.text) }))
+    .sort((a,b)=>b.score-a.score)
+    .filter(item => item.score > 0)
+    .slice(0, 5)
+    .map(({text,url}) => ({text,url}));
+  const freshTasks = analysis.siteType === 'construction'
+    ? freshTasksForTopic(cleanTopic, analysis.freshTasks || [], 3)
+    : [];
+  let qualityScore = 0;
+  if (signals.length) qualityScore += 4;
+  if (sourceLinks.length) qualityScore += 2;
+  if (freshTasks.length) qualityScore += 2;
+  if (Number(analysis.crawlCount || 0) >= 2) qualityScore += 1;
+  if (analysis.siteType === 'construction') qualityScore += 1;
+  qualityScore = Math.min(10, qualityScore);
+
   return {
     slug: `${slugPrefix}-${intent}-${slugify(cleanTopic)}`.slice(0, 110),
     title,
     description: introText(analysis.language, cleanTopic, intent, analysis.host, Boolean(primary)).slice(0, 260),
     topic: cleanTopic,
     body: {
-      version: 2,
+      version: 3,
       template: 'intent-page',
       intent,
+      qualityScore,
       siteType: analysis.siteType,
       topic: cleanTopic,
       location: analysis.location,
       host: analysis.host,
       intro: introText(analysis.language, cleanTopic, intent, analysis.host, Boolean(primary)),
       sourceCheckedAt: checkedAt,
+      crawlCount: Number(analysis.crawlCount || 1),
+      crawledPages: (analysis.crawledPages || []).slice(0, 7),
       imageUrl: analysis.imageUrl || '',
       targetUrl,
       priceSignals: signals,
       baseMin: primary?.min || null,
       baseMax: primary?.max || null,
       unit: primary?.unit || '',
+      freshTasks,
       sourceDataLabel: c.sourceData,
       sourceCheckedLabel: c.sourceChecked,
       exactLabel: c.exact,
@@ -613,12 +634,7 @@ function buildIntentDraft(analysis, topic, intent='guide', slugPrefix='intent') 
       noPriceLabel: c.noPrice,
       facts: c.facts,
       checklist: c.checklist,
-      sourceLinks: analysis.links
-        .map(item => ({ ...item, score:overlapScore(cleanTopic, item.text) }))
-        .sort((a,b)=>b.score-a.score)
-        .filter(item => item.score > 0)
-        .slice(0, 5)
-        .map(({text,url}) => ({text,url}))
+      sourceLinks
     }
   };
 }
