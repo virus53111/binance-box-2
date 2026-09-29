@@ -27,6 +27,8 @@ jobs:
         run: node scripts/scan-ss.mjs
       - name: Scan public tasks and helpers across Latvia
         run: node scripts/scan-public-opportunities.mjs
+      - name: Generate anonymized construction market pulse
+        run: node scripts/generate-construction-market-signals.mjs
       - name: Generate Google pages for cities and categories
         run: node scripts/generate-radar-pages.mjs
       - name: Generate construction price guide
