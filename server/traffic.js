@@ -6,6 +6,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 const OWNER_EMAIL = String(process.env.TRAFFIC_OWNER_EMAIL || 'dshtriters@gmail.com').toLowerCase();
 const FIREBASE_PROJECT_ID = String(process.env.FIREBASE_PROJECT_ID || 'murdilimax');
 const PUBLIC_BASE = String(process.env.TRAFFIC_PUBLIC_BASE || 'https://murdilimax-live-earth-api.onrender.com').replace(/\/$/, '');
+const MIRROR_BASE = String(process.env.TRAFFIC_MIRROR_BASE || 'https://murdilimax.com/traffic').replace(/\/$/, '');
 const FIREBASE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const INDEXNOW_KEY = crypto.createHash('sha256').update(`${FIREBASE_PROJECT_ID}:murdilimax-traffic-lab`).digest('hex').slice(0, 32);
 
@@ -804,6 +805,22 @@ function campaignUrl(id) {
   return `${PUBLIC_BASE}/traffic/c/${encodeURIComponent(id)}`;
 }
 
+function mirrorHostSlug(host) {
+  return String(host || 'site')
+    .toLowerCase()
+    .replace(/^www\./, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'site';
+}
+
+function mirrorCampaignUrl(host) {
+  return `${MIRROR_BASE}/${mirrorHostSlug(host)}/`;
+}
+
+function mirrorPageUrl(host, page) {
+  return `${MIRROR_BASE}/${mirrorHostSlug(host)}/${encodeURIComponent(page.slug)}/`;
+}
+
 function safeJson(value) {
   return JSON.stringify(value).replace(/</g, '\\u003c');
 }
@@ -1024,8 +1041,8 @@ export function registerTrafficRoutes({ app, pool }) {
       indexableCount: Number(c.indexable_count || 0),
       pagesWithTasks: Number(c.pages_with_tasks || 0),
       crawlCount: Number(c.crawl_count || 0),
-      publicHubUrl: campaignUrl(c.id),
-      pages: pages.filter(p => p.campaign_id === c.id).map(p => ({ ...p, views:Number(p.views||0), crawls:Number(p.crawls||0), clicks:Number(p.clicks||0), url:pageUrl(p) }))
+      publicHubUrl: mirrorCampaignUrl(c.host),
+      pages: pages.filter(p => p.campaign_id === c.id).map(p => ({ ...p, views:Number(p.views||0), crawls:Number(p.crawls||0), clicks:Number(p.clicks||0), url:mirrorPageUrl(c.host,p), backendUrl:pageUrl(p) }))
     }));
   }
 
@@ -1152,6 +1169,69 @@ export function registerTrafficRoutes({ app, pool }) {
       res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
     } catch (error) {
       res.status(503).type('text/plain').send('Traffic sitemap unavailable');
+    }
+  });
+
+  app.get('/traffic/export.json', async (_req, res) => {
+    try {
+      await ensureSchema();
+      const market = await loadConstructionMarketSignals().catch(() => ({ generatedAt:'', signals:[] }));
+      const { rows } = await pool.query(`
+        SELECT
+          p.id,p.campaign_id,p.slug,p.title,p.description,p.topic,p.body_json,p.views,p.crawls,p.clicks,p.updated_at,
+          c.host,c.target_url,c.title AS campaign_title,c.description AS campaign_description,c.language,c.status
+        FROM traffic_pages p
+        JOIN traffic_campaigns c ON c.id=p.campaign_id
+        WHERE c.status='active'
+          AND COALESCE(NULLIF(p.body_json->>'qualityScore','')::int,0) >= 4
+        ORDER BY c.created_at ASC,p.created_at ASC
+      `);
+      const byCampaign = new Map();
+      for (const row of rows) {
+        if (!byCampaign.has(row.campaign_id)) {
+          byCampaign.set(row.campaign_id, {
+            id:row.campaign_id,
+            host:row.host,
+            targetUrl:row.target_url,
+            title:row.campaign_title,
+            description:row.campaign_description,
+            language:row.language,
+            mirrorUrl:mirrorCampaignUrl(row.host),
+            pages:[]
+          });
+        }
+        const pulse = row.body_json?.siteType === 'construction'
+          ? marketPulseForTopic(row.topic || row.body_json?.topic || '', market.signals)
+          : null;
+        byCampaign.get(row.campaign_id).pages.push({
+          id:row.id,
+          slug:row.slug,
+          title:row.title,
+          description:row.description,
+          topic:row.topic,
+          language:row.language,
+          host:row.host,
+          targetUrl:row.target_url,
+          mirrorUrl:mirrorPageUrl(row.host,row),
+          clickUrl:`${PUBLIC_BASE}/traffic/go/${encodeURIComponent(row.id)}`,
+          updatedAt:Number(row.updated_at || 0),
+          views:Number(row.views || 0),
+          crawls:Number(row.crawls || 0),
+          clicks:Number(row.clicks || 0),
+          body:row.body_json || {},
+          marketPulse:pulse,
+          marketGeneratedAt:market.generatedAt || ''
+        });
+      }
+      res.setHeader('Cache-Control','public,max-age=300');
+      return res.json({
+        generatedAt:new Date().toISOString(),
+        mirrorBase:MIRROR_BASE,
+        campaigns:[...byCampaign.values()]
+      });
+    } catch (error) {
+      console.error('Traffic export failed', error);
+      return res.status(503).json({ error:'Traffic export unavailable' });
     }
   });
 
