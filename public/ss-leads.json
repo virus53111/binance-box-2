@@ -1,6 +1,48 @@
 {
-  "generatedAt": "2026-09-30T15:21:49.866Z",
+  "generatedAt": "2026-09-30T20:14:32.627Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYmhqaWguaHRtbA",
+      "category": "builder",
+      "title": "Celtniecības, Remonta un Mēbeļu Montāžas Pakalpojumi Veicu kvalitatīvus celtniecības un Талси и р-он, Талси Среднее LV, RU, EN Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bhjih.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvZHB4bWYuaHRtbA",
+      "category": "builder",
+      "title": "Отделочные И Ремонтные Работы Предлагаю услуги по внутренней отделке и ремонту помеще Даугавпилс и р-он, Даугавпилс Высшее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/dpxmf.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvYWxiZnguaHRtbA",
+      "category": "builder",
+      "title": "Palīdzēšu visa veida mājas darbos. Ir savi instrumenti. Ir auto. Meistars uz stund Елгава и р-он, Елгава Высшее LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/albfx.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
+    {
+      "id": "hvdXNlLXBhaW50ZXIvY25mZ3guaHRtbA",
+      "category": "house-painter",
+      "title": "Meklēju darbu par krāsotāju, iekšdarbos špaktelēšana krāsoju, strādāju kvalaktīvi Рига, центр Средне-проф. - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/cnfgx.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZqaXhrLmh0bWw",
+      "category": "electrician",
+      "title": "Elektromontāžas Pakalpojumi Rīga UN Pierīga Piedāvājam pieredzējušu elektriķu pakalpo Рига, центр Средне-проф. LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fjixk.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
+    {
+      "id": "b3JrL2hhbmR5bWFuL2JjaWl4Zi5odG1s",
+      "category": "handyman",
+      "title": "Meklēju palīgstrādnieku darbu varu strādāt visādus darbus gan celtniecība gan citus darb Екабпилс и р-он, Екабпилс Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bciixf.html",
+      "foundAt": "2026-09-30T20:14:32.627Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2FtY21wLmh0bWw",
       "category": "electrician",
