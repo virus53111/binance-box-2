@@ -1,6 +1,48 @@
 {
-  "generatedAt": "2026-09-30T08:37:03.829Z",
+  "generatedAt": "2026-09-30T15:21:49.866Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FtY21wLmh0bWw",
+      "category": "electrician",
+      "title": "Sertificēts elektriķis veic izolācijas pretestības mērījumus un izsniedz oficiālus atzin Рига, Другой Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/amcmp.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2NvcG9iLmh0bWw",
+      "category": "electrician",
+      "title": "Solāro sistēmu uzstādīšana, modernizēšana , jaudas palielināšana, jūsu mājas elektrosist Рига, Дарзциемс Инженер LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/copob.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Rsb2ZuLmh0bWw",
+      "category": "electrician",
+      "title": "Штробление стен. Подразетники. Частичная или полная замена электропроводки. Работы по эл Рига, Дарзциемс Средне-проф. LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dlofn.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2RkbmhlLmh0bWw",
+      "category": "electrician",
+      "title": "Kvalificēts meistars ar elektromehāniķa izglītību meklē pastāvīgu darbu ražošanā vai teh Рига, центр Средне-проф. RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ddnhe.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JuZmRlLmh0bWw",
+      "category": "handyman",
+      "title": "Fiziski specigs pensionars mekle darbu ar dzīvošanu uz vietas. Var laukos pieskatit lauk Другой Средне-проф. LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bnfde.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2RqZWxlLmh0bWw",
+      "category": "handyman",
+      "title": "Sveicināti. Tiek meklēts darbs ir strādāts celtnieciba darīti dažādi darbi pats esmu no Рига, центр Начальное LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/djele.html",
+      "foundAt": "2026-09-30T15:21:49.866Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvY2VqeGYuaHRtbA",
       "category": "builder",
