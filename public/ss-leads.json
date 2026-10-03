@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-10-03T08:28:57.922Z",
+  "generatedAt": "2026-10-03T13:39:30.326Z",
   "leads": [
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2NtamNsLmh0bWw",
+      "category": "handyman",
+      "title": "Здравствуйте. Мужчина ищет постоянную занятость. Предложения по временной работе или под Рига, Плявниеки Среднее - Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/cmjcl.html",
+      "foundAt": "2026-10-03T13:39:30.326Z"
+    },
+    {
+      "id": "b3JrL2hhbmR5bWFuL2JjbGVrYi5odG1s",
+      "category": "handyman",
+      "title": "Ищу работу с оплатой в конце дня Рижский р-он, Олайненская вол. Среднее RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bclekb.html",
+      "foundAt": "2026-10-03T13:39:30.326Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvY2JiaGIuaHRtbA",
       "category": "builder",
