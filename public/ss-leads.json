@@ -1,6 +1,34 @@
 {
-  "generatedAt": "2026-10-04T02:42:01.082Z",
+  "generatedAt": "2026-10-04T08:51:23.605Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvY2pqZXAuaHRtbA",
+      "category": "builder",
+      "title": "Meklēju fasādes darbus. Рига, центр Средне-проф. LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cjjep.html",
+      "foundAt": "2026-10-04T08:51:23.605Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvYWttcGkuaHRtbA",
+      "category": "builder",
+      "title": "Namdaris ar labu darba pieredzi veic visa veida celtniecības darbus. Талси и р-он, Ройская вол. Средне-проф. LV, RU, EN, DE Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/akmpi.html",
+      "foundAt": "2026-10-04T08:51:23.605Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2NrZmhnLmh0bWw",
+      "category": "electrician",
+      "title": "Аварийный вызов электрика, без праздников и выходных 24/7 -Ремонт старого эл. щита, зам Рига, Зиепниеккалнс Средне-проф. - Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ckfhg.html",
+      "foundAt": "2026-10-04T08:51:23.605Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2R4aWRiLmh0bWw",
+      "category": "electrician",
+      "title": "Аварийный вызов электрика, без праздников и выходных 24/7 -Ремонт старого эл. щита, зам Рига, Зиепниеккалнс Средне-проф. - Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dxidb.html",
+      "foundAt": "2026-10-04T08:51:23.605Z"
+    },
     {
       "id": "ci13b3JrL3BsYXRlci9icG9pai5odG1s",
       "category": "plater",
