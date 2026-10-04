@@ -1,6 +1,55 @@
 {
-  "generatedAt": "2026-10-04T14:43:05.138Z",
+  "generatedAt": "2026-10-04T21:50:00.129Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvZGpnaGMuaHRtbA",
+      "category": "builder",
+      "title": "4 cilvēku brigāde piedāvā savus pakalpojumus veicam demontažu darbus veicam arī citus da Рига, Берги Начальное LV, RU Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/djghc.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvZHBlZGsuaHRtbA",
+      "category": "builder",
+      "title": "Namdara Darbi Mārupē un Apkārtnē Vajag terasi, koka fasādi vai kvalitatīvu koka grīdu Рига, Биерини Средне-проф. LV, RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/dpedk.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "hvdXNlLXBhaW50ZXIvZGlpcG0uaHRtbA",
+      "category": "house-painter",
+      "title": "Meistari ar lielu pieredzi, profesionālu pieeju, pozitīvu attieksmi. Mūsdienīgs instrume Рига, Пурвциемс Неоконч. высшее LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/diipm.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "hvdXNlLXBhaW50ZXIvYnhpbWouaHRtbA",
+      "category": "house-painter",
+      "title": "Выполню внутренние малярные работы(подготовка, штукатурка, шпаклевка, покраска и др ). Е Рига, Пурвциемс Средне-проф. RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/bximj.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2J4a2RnLmh0bWw",
+      "category": "electrician",
+      "title": "Электромонтажные сертифицированные работы на объектах любого типа и размера - дом, частн Рига, Тейка Высшее LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bxkdg.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2NmZXBlLmh0bWw",
+      "category": "electrician",
+      "title": "Сертифицированный электрик производит качественный монтаж электропроводки наружных и вну Рига, Плявниеки Высшее LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cfepe.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2VibGVvLmh0bWw",
+      "category": "handyman",
+      "title": "4 cilvēku brigāde piedāvā savus pakalpojumus veicam demontažu darbus veicam arī citus da Рига, Берги Начальное - Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/ebleo.html",
+      "foundAt": "2026-10-04T21:50:00.129Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYnhlaW4uaHRtbA",
       "category": "builder",
