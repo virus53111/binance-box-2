@@ -1,6 +1,55 @@
 {
-  "generatedAt": "2026-10-06T16:11:10.088Z",
+  "generatedAt": "2026-10-06T21:00:51.611Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYmtqY2wuaHRtbA",
+      "category": "builder",
+      "title": "Būvniecības un renovācijas pakalpojumi visā Latgalē Veicam visa veida būvniecības dar Резекне и р-он, Резекне Высшее LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bkjcl.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvZWVlZGwuaHRtbA",
+      "category": "builder",
+      "title": "Veicu ar celtniecību un būvniecību saistītus darbus- fasādes, siltināšana, karkasu māju Рижский р-он, Salaspils l. t. Средне-проф. LV, RU По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/eeedl.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvZGNpam4uaHRtbA",
+      "category": "builder",
+      "title": "Монтажник с опытом в металлоконструкциях, дверях, окнах, сендвич-панелях. Свой инструмен Рига, Иманта Средне-проф. RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/dcijn.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JrbmVmLmh0bWw",
+      "category": "electrician",
+      "title": "Profesionāli elektriķa pakalpojumi. Veicam elektroinstalācijas izbūvi, pārbūvi un no Рига, Другой Средне-проф. LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bknef.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9lbWVnay5odG1s",
+      "category": "roofer",
+      "title": "Монтаж и ремонт Пвх мембран. Крыши, террасы, балконы. Звоните, присылайте Фото ваших кры Рига, Зиепниеккалнс Средне-проф. LV, RU Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/emegk.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JuZnBrLmh0bWw",
+      "category": "handyman",
+      "title": "Подработка, разовая или временная. Рига, Засулаукс Средне-проф. - Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bnfpk.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
+    {
+      "id": "b3JrL3BsYXN0ZXJlci9kYm9nai5odG1s",
+      "category": "plasterer",
+      "title": "Neliela brigāde piedāvā veikt Jūsu mājas fasādes pilna cikla siltināšanu. Armējam, velka Рижский р-он, Кекавская вол. Средне-проф. LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/dbogj.html",
+      "foundAt": "2026-10-06T21:00:51.611Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvZmJqbmguaHRtbA",
       "category": "builder",
@@ -1701,55 +1750,6 @@
       "title": "Выполняем кровельные работы, застил вальцпрофиля, металочерепицы, битумной черепицы, мон Рига, Кенгарагс Средне-проф. LV, RU Смешанно",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/biioo.html",
       "foundAt": "2026-09-25T05:32:53.244Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9oZmpwZy5odG1s",
-      "category": "roofer",
-      "title": "Монтаж Вальц профиля, металлочерепица, битумная черепица, Монтаж окон в крышу, обшивка д Рига, Кенгарагс Среднее LV, RU Смешанно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/hfjpg.html",
-      "foundAt": "2026-09-25T05:32:53.244Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9naG9vai5odG1s",
-      "category": "roofer",
-      "title": "Кровельные работы, вальцпрофиль, битумнаячерепица, металлочерепица, обшивка дымоходов же Рига, Кенгарагс Средне-проф. LV, RU Смешанно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/ghooj.html",
-      "foundAt": "2026-09-25T05:32:53.244Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZmliamouaHRtbA",
-      "category": "builder",
-      "title": "Бригада опытных строителей без вредных привычек ищет новые объекты .Занимаемся практичес Даугавпилс и р-он, Даугавпилс Среднее LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/fibjj.html",
-      "foundAt": "2026-09-24T21:39:27.636Z"
-    },
-    {
-      "id": "b3JrL2NhcnBlbnRlci9iZ21lay5odG1s",
-      "category": "carpenter",
-      "title": "Ответственные строители без вредных привычек ищут новые объект . Звоните-всегда можно до Даугавпилс и р-он, Даугавпилс Высшее LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/carpenter/bgmek.html",
-      "foundAt": "2026-09-24T21:39:27.636Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvY25tbGwuaHRtbA",
-      "category": "builder",
-      "title": "Visu veidu apdares darbi. Рига, центр Средне-проф. LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cnmll.html",
-      "foundAt": "2026-09-24T18:25:09.703Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2FrbWNpLmh0bWw",
-      "category": "handyman",
-      "title": "В Юрмале выполняю работу не требующую особых навыков , работы по саду и территории, убор Юрмала, Булдури Среднее RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/akmci.html",
-      "foundAt": "2026-09-24T18:25:09.703Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZkaGppLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriskie mērījumi. Projektēšanas pakalpojumi. Сдача объектов в эксплуатацию, прое Рига, Дарзциемс Высшее LV, RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fdhji.html",
-      "foundAt": "2026-09-24T14:35:08.027Z"
     }
   ]
 }
