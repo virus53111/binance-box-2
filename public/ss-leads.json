@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-06T21:00:51.611Z",
+  "generatedAt": "2026-10-07T00:44:58.642Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZsZWVtLmh0bWw",
+      "category": "electrician",
+      "title": "Elektromontāžas un remonta pakalpojumi. Nelieli vienreizēji darbi un sarežģītāki uzdevum Рига, Зиепниеккалнс Средне-проф. RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fleem.html",
+      "foundAt": "2026-10-07T00:44:58.642Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYmtqY2wuaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "electrician",
       "title": "Elektriķis 24/7 Ātri, kvalitatīvi. Услуги Электрика 24/7. Профессионально. Оперативно Рига, Пурвциемс Инженер LV, RU, EN Любой",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dldoc.html",
-      "foundAt": "2026-09-25T05:32:53.244Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9iaWlvby5odG1s",
-      "category": "roofer",
-      "title": "Выполняем кровельные работы, застил вальцпрофиля, металочерепицы, битумной черепицы, мон Рига, Кенгарагс Средне-проф. LV, RU Смешанно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/biioo.html",
       "foundAt": "2026-09-25T05:32:53.244Z"
     }
   ]
