@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-07T19:53:56.778Z",
+  "generatedAt": "2026-10-08T00:05:23.395Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2drbGVmLmh0bWw",
+      "category": "electrician",
+      "title": "Sertificēta elektriķa pakalpojumi, ātri, kvalitatīvi, par pieņemamām cenām. Jebkurš el Вентспилс и р-он, Вентспилс Высшее - По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gklef.html",
+      "foundAt": "2026-10-08T00:05:23.395Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYWtobGUuaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "electrician",
       "title": "Elektriķis – Ātri, Droši, Kvalitatīvi. Nepieciešams elektriķis? Palīdzēšu atrisināt Цесис и р-он, Цесис Средне-проф. LV, RU Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cndhi.html",
-      "foundAt": "2026-09-26T07:12:46.216Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2FsbW5mLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriķis – Ātri, Droši, Kvalitatīvi. Nepieciešams elektriķis? Palīdzēšu atrisināt Лимбажи и р-он, Лимбажи Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/almnf.html",
       "foundAt": "2026-09-26T07:12:46.216Z"
     }
   ]
