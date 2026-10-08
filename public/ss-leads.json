@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-08T00:05:23.395Z",
+  "generatedAt": "2026-10-08T06:08:55.624Z",
   "leads": [
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9iY2ZjaS5odG1s",
+      "category": "roofer",
+      "title": "Jumtu tīrīšana no sūnam, jumtu profilakse. Strādājam Rīgā un apkārtnē Чистка крыш от Рига, Плявниеки Средне-проф. LV, RU Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/bcfci.html",
+      "foundAt": "2026-10-08T06:08:55.624Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2drbGVmLmh0bWw",
       "category": "electrician",
@@ -1743,13 +1750,6 @@
       "title": "Опытный плотник без вредных привычек. Ищу работу желательно в Олайне, Янупе, Плаканциемс Рижский р-он, Олайненская вол. Средне-проф. RU Облегчённый",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/carpenter/bxobm.html",
       "foundAt": "2026-09-27T12:58:20.681Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2NuZGhpLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriķis – Ātri, Droši, Kvalitatīvi. Nepieciešams elektriķis? Palīdzēšu atrisināt Цесис и р-он, Цесис Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cndhi.html",
-      "foundAt": "2026-09-26T07:12:46.216Z"
     }
   ]
 }
