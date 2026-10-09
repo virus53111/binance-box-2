@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T23:54:51.756Z",
+  "generatedAt": "2026-10-09T05:30:48.774Z",
   "leads": [
     {
       "id": "aXJlZC9jb3VyaWVyL2Jsbm1iby5odG1s",
@@ -6392,6 +6392,19 @@
       "license": "CC0 1.0"
     },
     {
+      "id": "nva-261001-115",
+      "type": "task",
+      "category": "Другое",
+      "profession": "other",
+      "title": "SKOLOTĀJA PALĪGS · €780",
+      "city": "Резекне",
+      "url": "https://cvvp.nva.gov.lv/#/pub/vakances/465366516",
+      "source": "NVA · CVVP",
+      "foundAt": "2026-10-05T00:00:00",
+      "deadline": "2026-11-02T00:00:00",
+      "license": "CC0 1.0"
+    },
+    {
       "id": "nva-261005-109",
       "type": "task",
       "category": "Перевозка",
@@ -7146,6 +7159,19 @@
       "license": "CC0 1.0"
     },
     {
+      "id": "nva-261002-204",
+      "type": "task",
+      "category": "Другое",
+      "profession": "other",
+      "title": "ARHITEKTS · €1522–2640",
+      "city": "Рига",
+      "url": "https://cvvp.nva.gov.lv/#/pub/vakances/465559563",
+      "source": "NVA · CVVP",
+      "foundAt": "2026-10-05T00:00:00",
+      "deadline": "2026-10-23T00:00:00",
+      "license": "CC0 1.0"
+    },
+    {
       "id": "nva-261005-75",
       "type": "task",
       "category": "Другое",
@@ -7270,32 +7296,6 @@
       "title": "VECĀKAIS EKSPERTS · €2095–2549",
       "city": "Рига",
       "url": "https://cvvp.nva.gov.lv/#/pub/vakances/465531608",
-      "source": "NVA · CVVP",
-      "foundAt": "2026-10-02T00:00:00",
-      "deadline": "2026-10-15T00:00:00",
-      "license": "CC0 1.0"
-    },
-    {
-      "id": "nva-261002-132",
-      "type": "task",
-      "category": "Перевозка",
-      "profession": "driver",
-      "title": "PROJEKTA VADĪTĀJS · €2095–2549",
-      "city": "Рига",
-      "url": "https://cvvp.nva.gov.lv/#/pub/vakances/465532766",
-      "source": "NVA · CVVP",
-      "foundAt": "2026-10-02T00:00:00",
-      "deadline": "2026-10-21T00:00:00",
-      "license": "CC0 1.0"
-    },
-    {
-      "id": "nva-261002-133",
-      "type": "task",
-      "category": "Другое",
-      "profession": "other",
-      "title": "VECĀKAIS EKSPERTS · €1856–2149",
-      "city": "Рига",
-      "url": "https://cvvp.nva.gov.lv/#/pub/vakances/465533881",
       "source": "NVA · CVVP",
       "foundAt": "2026-10-02T00:00:00",
       "deadline": "2026-10-15T00:00:00",
