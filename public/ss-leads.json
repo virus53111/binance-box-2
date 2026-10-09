@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-09T18:23:05.971Z",
+  "generatedAt": "2026-10-09T22:49:40.528Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VnZ3BpLmh0bWw",
+      "category": "electrician",
+      "title": "Sertificēts elektriķis Alūksnē. Elektroinstalācijas nomaiņa vai remonts; Iekšējā un ārēj Алуксне и р-он, Алуксне Неоконч. высшее LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/eggpi.html",
+      "foundAt": "2026-10-09T22:49:40.528Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2Jja21tLmh0bWw",
       "category": "electrician",
@@ -1742,13 +1749,6 @@
       "category": "handyman",
       "title": "Мы небольшая, но очень надежная и трудолюбивая в работе бригада до 4 человек. Выполним т Рига, центр Высшее LV, RU Любой",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/gmfpm.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "b3JrL3BsYXN0ZXJlci9hcG5reC5odG1s",
-      "category": "plasterer",
-      "title": "Выполняем все виды штукатурный работ, так внутренних, в том числе гипсовые, цементно-изв Рига, центр Среднее RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/apnkx.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
