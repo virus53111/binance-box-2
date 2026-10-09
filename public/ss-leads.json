@@ -1,6 +1,27 @@
 {
-  "generatedAt": "2026-10-09T12:04:24.687Z",
+  "generatedAt": "2026-10-09T18:23:05.971Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Jja21tLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis. Elektrodrošība \"C\" kategorija. Оbo Bettermann sertifikāts. Visu veidu darbi, Краславa и р-он, Краслава Высшее LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bckmm.html",
+      "foundAt": "2026-10-09T18:23:05.971Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JlbWx4Lmh0bWw",
+      "category": "handyman",
+      "title": "Услуги демонтажа от команды из 2 человек. Разберём и подготовим помещения к ремонту:стен Рига, центр Средне-проф. RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bemlx.html",
+      "foundAt": "2026-10-09T18:23:05.971Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2NkYmRpLmh0bWw",
+      "category": "handyman",
+      "title": "Meklēju darbu vai haltūru, Интересует подработка либо работa, strādāt varu Rīga vai ārpu Рига, Югла Средне-проф. LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/cdbdi.html",
+      "foundAt": "2026-10-09T18:23:05.971Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYW1tb2cuaHRtbA",
       "category": "builder",
@@ -1729,27 +1750,6 @@
       "title": "Выполняем все виды штукатурный работ, так внутренних, в том числе гипсовые, цементно-изв Рига, центр Среднее RU По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/apnkx.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2JsZG9pLmh0bWw",
-      "category": "handyman",
-      "title": "Два молодых человека без вредных привычек ищут работу оплата в конце рабочего дня Рига, центр Среднее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bldoi.html",
-      "foundAt": "2026-09-27T22:35:09.811Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYW9wZmsuaHRtbA",
-      "category": "builder",
-      "title": "Meklē celtnieka darbu ilgtermiņā ārpus LV. Norvēģijā, Islandē, vai Dānijā. Ir pietiekama Валмиера и р-он, Валмиера Среднее LV, RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/aopfk.html",
-      "foundAt": "2026-09-27T19:39:40.894Z"
-    },
-    {
-      "id": "b3JrL2hhbmR5bWFuL2J4bWxjYy5odG1s",
-      "category": "handyman",
-      "title": "Meklēju darbu, ko varētu apvienot ar pamatdarbu Vugd. Nebaida darbs naktīs, vai dienna Рига, Агенскалнс Среднее LV По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bxmlcc.html",
-      "foundAt": "2026-09-27T19:39:40.894Z"
     }
   ]
 }
