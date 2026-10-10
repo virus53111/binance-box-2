@@ -1,6 +1,27 @@
 {
-  "generatedAt": "2026-10-10T02:12:11.119Z",
+  "generatedAt": "2026-10-10T08:35:17.510Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYXBkaWMuaHRtbA",
+      "category": "builder",
+      "title": "Meklēju pagaidu darbu vai haltūras celtniecībā. Ir pieredze koka karkasa māju montāžā lī Рига, центр Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/apdic.html",
+      "foundAt": "2026-10-10T08:35:17.510Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvY2toZ3AuaHRtbA",
+      "category": "builder",
+      "title": "Veicu dažādus celtniecības darbus, strādāju pārsvarā Kurzemes pusē Demontāžas darbi, Талси и р-он, Талси Среднее LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/ckhgp.html",
+      "foundAt": "2026-10-10T08:35:17.510Z"
+    },
+    {
+      "id": "b3JrL3BsYXN0ZXJlci9jaWVjbi5odG1s",
+      "category": "plasterer",
+      "title": "Бригада опытных штукатуров, профессионально выполнит штукатурные работы, как гипсовым та Рига, Плявниеки Высшее - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/ciecn.html",
+      "foundAt": "2026-10-10T08:35:17.510Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2VnZ3BpLmh0bWw",
       "category": "electrician",
@@ -1728,27 +1749,6 @@
       "category": "electrician",
       "title": "Электромонтажные работы. Ремонт старой эл. проводки, Инсталляция новых розеток, выключат Рига, Иманта Средне-проф. LV, RU Выходные дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fjjoo.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZjY2xnLmh0bWw",
-      "category": "electrician",
-      "title": "Услуги электрика с опытом работы. Индивидуальный подход к каждому клиенту. Электромонт Рига, Зиепниеккалнс Среднее - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fcclg.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2RiZGt4Lmh0bWw",
-      "category": "handyman",
-      "title": "Предлагаю услуги строителя. Сантехника: -разводка воды (хемка, карбон, медь, ппр), ка Рига, центр Неоконч. высшее RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/dbdkx.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2dtZnBtLmh0bWw",
-      "category": "handyman",
-      "title": "Мы небольшая, но очень надежная и трудолюбивая в работе бригада до 4 человек. Выполним т Рига, центр Высшее LV, RU Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/gmfpm.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
