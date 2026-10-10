@@ -1,6 +1,34 @@
 {
-  "generatedAt": "2026-10-10T08:35:17.510Z",
+  "generatedAt": "2026-10-10T14:47:10.551Z",
   "leads": [
+    {
+      "id": "ci13b3JrL3BsYXRlci9kZm5lYi5odG1s",
+      "category": "plater",
+      "title": "Профессиональная укладка плитки на пол и стены. Большой опыт по облицовке плиткой полов, Елгава и р-он, Елгава Среднее RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plater/dfneb.html",
+      "foundAt": "2026-10-10T14:47:10.551Z"
+    },
+    {
+      "id": "hvdXNlLXBhaW50ZXIvZmVta2QuaHRtbA",
+      "category": "house-painter",
+      "title": "Veicu špaktelēšanas/krāsoša nas darbus. Kā arī veicu daudz citus darbus kas nav saistīts Рига, центр Среднее LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/femkd.html",
+      "foundAt": "2026-10-10T14:47:10.551Z"
+    },
+    {
+      "id": "b3JrL2hhbmR5bWFuL2J4b2ZuYi5odG1s",
+      "category": "handyman",
+      "title": "Veicu daudz dažādus darbus. Visādi melnie, fiziskie darbi, krāvēju pakalpojumi , mater Рига, центр Среднее LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bxofnb.html",
+      "foundAt": "2026-10-10T14:47:10.551Z"
+    },
+    {
+      "id": "b3JrL3BsYXN0ZXJlci9kaW1pbS5odG1s",
+      "category": "plasterer",
+      "title": "Profesionālu apmetēju brigāde ar vairāk nekā 15 gadu pieredzi veic pilnu apmetuma darbu Рига, Дарзини Высшее - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/dimim.html",
+      "foundAt": "2026-10-10T14:47:10.551Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYXBkaWMuaHRtbA",
       "category": "builder",
@@ -1721,34 +1749,6 @@
       "category": "electrician",
       "title": "Elektriskie mērījumi. Электрические измерения. Electrical measurements. Ogres novadā un Огре и р-он, Огре Инженер LV, RU, EN По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ggkmg.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2VjbHhiLmh0bWw",
-      "category": "electrician",
-      "title": "Atzinums par būves gatavību ekspluatācijai būvvaldē vai citās organizācijās. Kvalitat Рига, Пурвциемс Высшее LV, RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/eclxb.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2NjZ29tLmh0bWw",
-      "category": "electrician",
-      "title": "Sertificēts elektriķis. Электрик. 24/7 ar ilggadēju pieredzi veic visa veida Elektromon Рига, Пурвциемс Высшее LV, RU, DE Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ccgom.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZrY2NsLmh0bWw",
-      "category": "electrician",
-      "title": "Аварийный вызов электрика, без праздников и выходных 24/7 -Ремонт старого эл. щита, зам Рига, Зиепниеккалнс Средне-проф. - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fkccl.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2Zqam9vLmh0bWw",
-      "category": "electrician",
-      "title": "Электромонтажные работы. Ремонт старой эл. проводки, Инсталляция новых розеток, выключат Рига, Иманта Средне-проф. LV, RU Выходные дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fjjoo.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
