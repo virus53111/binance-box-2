@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-10T14:47:10.551Z",
+  "generatedAt": "2026-10-10T19:11:25.582Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvY2NqYmQuaHRtbA",
+      "category": "builder",
+      "title": "Mājas meistars Jūrmalā un apkārtnē Nepieciešama palīdzība ar mājas darbiem, remontu v Юрмала, Вайвари Средне-проф. LV, RU, EN Выходные дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/ccjbd.html",
+      "foundAt": "2026-10-10T19:11:25.582Z"
+    },
     {
       "id": "ci13b3JrL3BsYXRlci9kZm5lYi5odG1s",
       "category": "plater",
@@ -1742,13 +1749,6 @@
       "category": "electrician",
       "title": "Сертифицированный, опытный электромонтер. Любые электрические работы. Отличное качество. Рига, Кенгарагс Средне-проф. LV, RU Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dpmhf.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2dna21nLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriskie mērījumi. Электрические измерения. Electrical measurements. Ogres novadā un Огре и р-он, Огре Инженер LV, RU, EN По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ggkmg.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
