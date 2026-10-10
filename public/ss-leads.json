@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-10T19:11:25.582Z",
+  "generatedAt": "2026-10-10T22:37:00.032Z",
   "leads": [
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9oZXh4Yy5odG1s",
+      "category": "roofer",
+      "title": "Jumtu seguma darbi. Jebkuras sarežģītības spāru sistēma, latošanā, vēja dēļi. Izgatavoša Елгава и р-он, Елгава Среднее LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/hexxc.html",
+      "foundAt": "2026-10-10T22:37:00.032Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvY2NqYmQuaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "electrician",
       "title": "Сертифицированный, опытный электромонтер. Любые электрические работы. Отличное качество. Рига, Вецмилгравис Средне-проф. LV, RU Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gbcxp.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2RwbWhmLmh0bWw",
-      "category": "electrician",
-      "title": "Сертифицированный, опытный электромонтер. Любые электрические работы. Отличное качество. Рига, Кенгарагс Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dpmhf.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
