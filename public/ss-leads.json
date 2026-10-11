@@ -1,6 +1,34 @@
 {
-  "generatedAt": "2026-10-11T01:18:21.232Z",
+  "generatedAt": "2026-10-11T07:43:32.050Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvY2tpYm0uaHRtbA",
+      "category": "builder",
+      "title": "Veic celtniecības darbus Smiltenē. Ir 20 gadu pieredze. Ir savi instrumenti un auto. Zva Валка и р-он, Смилтене Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/ckibm.html",
+      "foundAt": "2026-10-11T07:43:32.050Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvYWtqcG4uaHRtbA",
+      "category": "builder",
+      "title": "Sveiki piedāvāju nelielus celtniecības pakalpojumus. Sākot ar Demontāžu, tapešu noņemšan Елгава и р-он, Елгава Среднее LV, RU Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/akjpn.html",
+      "foundAt": "2026-10-11T07:43:32.050Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JraWlwLmh0bWw",
+      "category": "handyman",
+      "title": "Sveiki. Vīrietis 35 gadi steidzami meklē darbu Alūksnē, esu pats no pašas pilsētas. Var Алуксне и р-он, Алуксне Средне-проф. LV Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bkiip.html",
+      "foundAt": "2026-10-11T07:43:32.050Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2FtbGJrLmh0bWw",
+      "category": "handyman",
+      "title": "Mekleju jabkadubdarbu ir B kat. tiesibas Елгава и р-он, Ценская вол. Начальное LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/amlbk.html",
+      "foundAt": "2026-10-11T07:43:32.050Z"
+    },
     {
       "id": "ci13b3JrL3Jvb2Zlci9oZXh4Yy5odG1s",
       "category": "roofer",
@@ -1721,34 +1749,6 @@
       "category": "house-painter",
       "title": "Kvaletatīvi un akurāti špahtalējam, slīpējam, krāsojam, kā arī veicam pārējos darbus. Рига, Тейка Неоконч. высшее LV, RU По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/gixhx.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvZnhrY2guaHRtbA",
-      "category": "house-painter",
-      "title": "Specializējos spaktelēšanas, krāsosanas darbos. varu strādāt mehanizēti. ir savs špaktel Рига, Саркандаугава Средне-проф. LV, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/fxkch.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvYm1oZWsuaHRtbA",
-      "category": "house-painter",
-      "title": "Опытный мастер выполнит практически все виды внутренних работ. Без вредных привычек, со Елгава и р-он, Елгава Среднее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/bmhek.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2JicGxsLmh0bWw",
-      "category": "electrician",
-      "title": "Предлагаю услуги электрика. Огромный опыт в электромонтаже. Ответственный и порядочный. Рига, Пурвциемс Средне-проф. RU, EN По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bbpll.html",
-      "foundAt": "2026-09-28T08:02:06.416Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2diY3hwLmh0bWw",
-      "category": "electrician",
-      "title": "Сертифицированный, опытный электромонтер. Любые электрические работы. Отличное качество. Рига, Вецмилгравис Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gbcxp.html",
       "foundAt": "2026-09-28T08:02:06.416Z"
     }
   ]
