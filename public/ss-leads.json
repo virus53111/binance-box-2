@@ -1,6 +1,132 @@
 {
-  "generatedAt": "2026-10-14T19:43:44.904Z",
+  "generatedAt": "2026-10-14T22:42:20.376Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYW14aHAuaHRtbA",
+      "category": "builder",
+      "title": "Ищу подработку в выходные дни или вечером. Выполню мелкий ремонт, покраска, подготовка к Даугавпилс и р-он, Даугавпилс Среднее RU Выходные дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/amxhp.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvaGNpeHguaHRtbA",
+      "category": "builder",
+      "title": "Выполняем строительные работы Резекне и р-он, Резекне Среднее LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/hcixx.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JmbGNoLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Stopiņos 00-24. Электрик в Стопини 00-24. Electrician in Stopini 00-24. No Рижский р-он, Стопиньский округ Инженер LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bflch.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Fuam5wLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Ķengaragā 24/7. Электрик в Кенгарагсе 24/7. Electrician in Kengarags 24/7. Рига, Кенгарагс Инженер LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/anjnp.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZnZ3BiLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Āgenskalnā 24/7. Электрик в Агенскалнсе 24/7. Electrician in Agenskalns 24/7. Рига, Агенскалнс Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fggpb.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VvbnhvLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Ziepniekkalnā 24/7. Электрик в Зиепниеккалнсе 24/7. Electrician in Ziepniekka Рига, Зиепниеккалнс Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/eonxo.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Rsb29wLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Pļavniekos 24/7. Электрик в Плявниеки 24/7. Electrician in Plavnieki 24/7. Рига, Плявниеки Инженер LV, RU, EN Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dloop.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VoZGNqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Imantā 24/7. Электрик в Иманте 24/7. Electrician in Imanta 24/7. Novēršu a Рига, Иманта Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ehdcj.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2hjamZtLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Ikšķilē 24-7. Электрик в Икшкиле 24-7. Electrician in Ikskile 24-7. Novērš Огре и р-он, Икшкиле Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/hcjfm.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JncHhnLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Juglā 24/7. Электрик в Югле 24/7. Electrician in Jugla 24/7. Novēršu avāri Рига, Югла Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bgpxg.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JjZmpuLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Saulkrastos 24/7. Электрик в Саулкрасты 24/7. Electrician in Saulkrasti 24/7. Рижский р-он, Саулкрасты Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bcfjn.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2NibWZnLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Carnikavā 24/7. Электрик в Царникаве 24/7. Electrician in Carnikava 24/7. Рижский р-он, Царникавский округ Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cbmfg.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JraXBqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Ādažos 24/7. Электрик в Адажи 24/7. Electrician in Adazi 24/7. Novēršu avā Рижский р-он, Адажский округ Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bkipj.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FucGNsLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Garciemā 24x7. Электрик в Гарциемсе 24x7. Electrician in Garciems 24x7. No Рижский р-он, Царникавский округ Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/anpcl.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2RmZXBqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Ropažos 24-7. Электрик в Ропажи 24-7. Electrician in Ropazi 24-7. Novēršu Рижский р-он, Ропажский округ Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dfepj.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Jnb2ptLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Teikā 24/7. Электрик в Тейке 24/7. Electrician in Teika 24/7. Novēršu avār Рига, Тейка Инженер LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bgojm.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2h4aHhrLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķa atzinums pēc MK 238 būvvaldei un apdrošinātājiem. Заключение электрика согласн Юрмала, Дубулты Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/hxhxk.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JiZmNkLmh0bWw",
+      "category": "handyman",
+      "title": "От 90 Eur в день готов выполнить любую работу: погрузка-выгрузка, работал в тяжелой пром Рига, Плявниеки Среднее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bbfcd.html",
+      "foundAt": "2026-10-14T22:42:20.376Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYm9la2suaHRtbA",
       "category": "builder",
@@ -1624,132 +1750,6 @@
       "title": "Электромонтажные сертифицированные работы на объектах любого типа и размера - дом, частн Рига, центр Высшее LV, RU, EN По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/edpno.html",
       "foundAt": "2026-10-05T06:16:44.105Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2J4Zm5lLmh0bWw",
-      "category": "electrician",
-      "title": "Услуга электрика 24/7 -дома квартиры дачи офисы участки -решение аварийных ситуаций - Рига, Закюсала Высшее - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bxfne.html",
-      "foundAt": "2026-10-05T06:16:44.105Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZGpnaGMuaHRtbA",
-      "category": "builder",
-      "title": "4 cilvēku brigāde piedāvā savus pakalpojumus veicam demontažu darbus veicam arī citus da Рига, Берги Начальное LV, RU Ежедневно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/djghc.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZHBlZGsuaHRtbA",
-      "category": "builder",
-      "title": "Namdara Darbi Mārupē un Apkārtnē Vajag terasi, koka fasādi vai kvalitatīvu koka grīdu Рига, Биерини Средне-проф. LV, RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/dpedk.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvZGlpcG0uaHRtbA",
-      "category": "house-painter",
-      "title": "Meistari ar lielu pieredzi, profesionālu pieeju, pozitīvu attieksmi. Mūsdienīgs instrume Рига, Пурвциемс Неоконч. высшее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/diipm.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvYnhpbWouaHRtbA",
-      "category": "house-painter",
-      "title": "Выполню внутренние малярные работы(подготовка, штукатурка, шпаклевка, покраска и др ). Е Рига, Пурвциемс Средне-проф. RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/bximj.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2J4a2RnLmh0bWw",
-      "category": "electrician",
-      "title": "Электромонтажные сертифицированные работы на объектах любого типа и размера - дом, частн Рига, Тейка Высшее LV, RU, EN По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bxkdg.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2NmZXBlLmh0bWw",
-      "category": "electrician",
-      "title": "Сертифицированный электрик производит качественный монтаж электропроводки наружных и вну Рига, Плявниеки Высшее LV, RU, EN По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cfepe.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2VibGVvLmh0bWw",
-      "category": "handyman",
-      "title": "4 cilvēku brigāde piedāvā savus pakalpojumus veicam demontažu darbus veicam arī citus da Рига, Берги Начальное - Ежедневно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/ebleo.html",
-      "foundAt": "2026-10-04T21:50:00.129Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYnhlaW4uaHRtbA",
-      "category": "builder",
-      "title": "Veicu dzīvokļu kosmētisko un kapitālo remontu. Тукумс и р-он, Кандава Средне-проф. LV, RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bxein.html",
-      "foundAt": "2026-10-04T14:43:05.138Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZG9tZnAuaHRtbA",
-      "category": "builder",
-      "title": "Veicu dzīvokļa kosmētiskos remontus krāsošanas darbi, tapetes, grīdas segumi , linolejs Рига, Берги Средне-проф. LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/domfp.html",
-      "foundAt": "2026-10-04T14:43:05.138Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvY2xuZ2YuaHRtbA",
-      "category": "house-painter",
-      "title": "Meklēju darbu Ogrē vai tās apkārtnē, esmu radoša personība ar izcilu krāsu izjūtu un vie Огре и р-он, Огре Средне-проф. LV, EN Посменно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/clngf.html",
-      "foundAt": "2026-10-04T14:43:05.138Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2RoZWloLmh0bWw",
-      "category": "handyman",
-      "title": "Молодой человек, 25 лет, ищу работу. Ответственный, трудолюбивый, без вредных привычек Рига, центр Среднее LV, RU Ежедневно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/dheih.html",
-      "foundAt": "2026-10-04T14:43:05.138Z"
-    },
-    {
-      "id": "b3JrL2hhbmR5bWFuL2J4b2ZqYi5odG1s",
-      "category": "handyman",
-      "title": "Palīgdarbiem būvniecībā vai remontdarbos. Noliktavas darbiem (iekraušana, izkraušana, Цесис и р-он, Заубская вол. Начальное LV, RU Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bxofjb.html",
-      "foundAt": "2026-10-04T14:43:05.138Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvY2pqZXAuaHRtbA",
-      "category": "builder",
-      "title": "Meklēju fasādes darbus. Рига, центр Средне-проф. LV, RU, EN Смешанно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cjjep.html",
-      "foundAt": "2026-10-04T08:51:23.605Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYWttcGkuaHRtbA",
-      "category": "builder",
-      "title": "Namdaris ar labu darba pieredzi veic visa veida celtniecības darbus. Талси и р-он, Ройская вол. Средне-проф. LV, RU, EN, DE Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/akmpi.html",
-      "foundAt": "2026-10-04T08:51:23.605Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2NrZmhnLmh0bWw",
-      "category": "electrician",
-      "title": "Аварийный вызов электрика, без праздников и выходных 24/7 -Ремонт старого эл. щита, зам Рига, Зиепниеккалнс Средне-проф. - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ckfhg.html",
-      "foundAt": "2026-10-04T08:51:23.605Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2R4aWRiLmh0bWw",
-      "category": "electrician",
-      "title": "Аварийный вызов электрика, без праздников и выходных 24/7 -Ремонт старого эл. щита, зам Рига, Зиепниеккалнс Средне-проф. - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dxidb.html",
-      "foundAt": "2026-10-04T08:51:23.605Z"
-    },
-    {
-      "id": "ci13b3JrL3BsYXRlci9icG9pai5odG1s",
-      "category": "plater",
-      "title": "Flizhu remonts. Saplisa flize? Ja ir uz vietas uz ko nomainit - tiks izdarits . Nebus pu Рига, центр Средне-проф. LV, RU, EN Ежедневно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plater/bpoij.html",
-      "foundAt": "2026-10-03T17:38:18.529Z"
     }
   ]
 }
