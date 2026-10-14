@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-10-14T00:33:30.381Z",
+  "generatedAt": "2026-10-14T05:27:39.275Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvYmVtZ24uaHRtbA",
+      "category": "builder",
+      "title": "Veicam dažāda veida celtniecības un remonta darbus. Regipša montāža, špaltelēšanas un kr Елгава и р-он, Елгава Среднее LV, RU, EN Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bemgn.html",
+      "foundAt": "2026-10-14T05:27:39.275Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2JiaG9vLmh0bWw",
+      "category": "handyman",
+      "title": "Meklēju jebkādu darbu ja ir ko piedāvāt droši zvanāt Мадона и р-он, Мадона Средне-проф. LV По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bbhoo.html",
+      "foundAt": "2026-10-14T05:27:39.275Z"
+    },
     {
       "id": "3b3JrL2hhbmR5bWFuL2ZnbGZsLmh0bWw",
       "category": "handyman",
@@ -1735,20 +1749,6 @@
       "category": "builder",
       "title": "Sveiki. Meklēju darbu vai nelielas haltūras brīvajā laikā. Varu darīt dažādus nelielus Рига, Агенскалнс Средне-проф. LV, RU Любой",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cofjn.html",
-      "foundAt": "2026-10-02T08:35:01.754Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZWlua2wuaHRtbA",
-      "category": "builder",
-      "title": "Piedāvājam žoga montāžas pakalpojumus 3d žogi 2d žogi Štaketes Arsmetal Koka vairo Талси и р-он, Талси Среднее LV, EN Смешанно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/einkl.html",
-      "foundAt": "2026-10-02T08:35:01.754Z"
-    },
-    {
-      "id": "ci13b3JrL3BsYXRlci9ha2hobi5odG1s",
-      "category": "plater",
-      "title": "Облицовочные работы .Качество. Аккуратность. Рига, центр Средне-проф. LV, RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plater/akhhn.html",
       "foundAt": "2026-10-02T08:35:01.754Z"
     }
   ]
