@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-13T21:27:56.071Z",
+  "generatedAt": "2026-10-14T00:33:30.381Z",
   "leads": [
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2ZnbGZsLmh0bWw",
+      "category": "handyman",
+      "title": "Vīrietis 37 gadi meklē darbu. fiziski spēcīgs. var būt vienās dienās darbs Елгава и р-он, Елгава Средне-проф. LV, RU Выходные дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/fglfl.html",
+      "foundAt": "2026-10-14T00:33:30.381Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYnBncGYuaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "plater",
       "title": "Облицовочные работы .Качество. Аккуратность. Рига, центр Средне-проф. LV, RU По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plater/akhhn.html",
-      "foundAt": "2026-10-02T08:35:01.754Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZsZWxmLmh0bWw",
-      "category": "electrician",
-      "title": "Ищу сдельную работу. Рига, Ильгюциемс Средне-проф. LV, RU, EN, DE Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/flelf.html",
       "foundAt": "2026-10-02T08:35:01.754Z"
     }
   ]
