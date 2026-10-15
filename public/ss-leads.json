@@ -1,6 +1,27 @@
 {
-  "generatedAt": "2026-10-15T11:09:13.514Z",
+  "generatedAt": "2026-10-15T15:36:58.908Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2RtZWRnLmh0bWw",
+      "category": "electrician",
+      "title": "Sertificēta elektriķa mērījumi ar atzinumu iesniegšanai apdrošinātājiem un būvvaldei pie Тукумс и р-он, Тукумс Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dmedg.html",
+      "foundAt": "2026-10-15T15:36:58.908Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2ZreG1jLmh0bWw",
+      "category": "handyman",
+      "title": "Парень 18 лет ищу работу Юрмала, Каугури Начальное - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/fkxmc.html",
+      "foundAt": "2026-10-15T15:36:58.908Z"
+    },
+    {
+      "id": "b3JrL3BsYXN0ZXJlci9oZWd4Zi5odG1s",
+      "category": "plasterer",
+      "title": "Мокрый фасад. Утепление - Декоративная штукатурка на фасад дома. Механизированное нанесе Рига, Пардаугава Средне-проф. - Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/plasterer/hegxf.html",
+      "foundAt": "2026-10-15T15:36:58.908Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvaGZnZmcuaHRtbA",
       "category": "builder",
@@ -1728,27 +1749,6 @@
       "category": "builder",
       "title": "Jelgavā būvēju dārza mājas, pirtis, terases, lapenes, nojumes, škūnīšus, auto nojumes. V Елгава и р-он, Елгава Среднее LV, RU, EN Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/blnmi.html",
-      "foundAt": "2026-10-05T22:02:44.640Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYmhscGouaHRtbA",
-      "category": "builder",
-      "title": "Jelgavā sētu remonts, uzstādīšana. Varu visā Latvijā. Posmu remonts, nomainīšana. Ir sav Елгава и р-он, Елгава Среднее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bhlpj.html",
-      "foundAt": "2026-10-05T22:02:44.640Z"
-    },
-    {
-      "id": "hvdXNlLXBhaW50ZXIvZGxubmMuaHRtbA",
-      "category": "house-painter",
-      "title": "Meistari ar lielu pieredzi, profesionālu pieeju, pozitīvu attieksmi. Mūsdienīgs instrume Рига, Пурвциемс Неоконч. высшее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/house-painter/dlnnc.html",
-      "foundAt": "2026-10-05T22:02:44.640Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2RpYmlkLmh0bWw",
-      "category": "electrician",
-      "title": "Выполняю полный комплекс работ по устройству новой электрики в квартирах. Электрика в Рига, центр Средне-проф. - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dibid.html",
       "foundAt": "2026-10-05T22:02:44.640Z"
     }
   ]
