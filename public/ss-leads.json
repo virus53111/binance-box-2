@@ -1,6 +1,27 @@
 {
-  "generatedAt": "2026-10-15T15:36:58.908Z",
+  "generatedAt": "2026-10-15T19:25:42.805Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2Vmb2NqLmh0bWw",
+      "category": "electrician",
+      "title": "Veicu elektromontāžas darbus. Rozešu un slēdžu nomaiņa un uzstādīšana Gaismekļu m Рига, Другой Высшее LV По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/efocj.html",
+      "foundAt": "2026-10-15T19:25:42.805Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2dtZWZ4Lmh0bWw",
+      "category": "electrician",
+      "title": "Veicu elektromontāžas darbus. Rozešu un slēdžu nomaiņa un uzstādīšana Gaismekļu m Талси и р-он, Талси Высшее LV, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gmefx.html",
+      "foundAt": "2026-10-15T19:25:42.805Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2dsY2dkLmh0bWw",
+      "category": "electrician",
+      "title": "Elektrotehniskie mērījumi un citi darbi saistītie ar elektrību Елгава и р-он, Платонская вол. Средне-проф. LV, RU, EN, EST Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/glcgd.html",
+      "foundAt": "2026-10-15T19:25:42.805Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2RtZWRnLmh0bWw",
       "category": "electrician",
@@ -1729,27 +1750,6 @@
       "title": "Девушка, 25 лет. Ищу работу разнорабочей, помощницы по хозяйству или другую физическую р Рига, Вецмилгравис Среднее LV, RU Смешанно",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/anipp.html",
       "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "b3JrL2NhcnBlbnRlci9jaHBlbS5odG1s",
-      "category": "carpenter",
-      "title": "Namdaru pakalpojumi. Sadarbība gan ar fiziskām, gan juridiskām personām. Рига, Чиекуркалнс Высшее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/carpenter/chpem.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvaGVlbmMuaHRtbA",
-      "category": "builder",
-      "title": "Монтаж гипсокартона любой сложности. Рига, Юрмала, район. Вечера и выходные. Професс Рига, Межциемс Среднее RU Выходные дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/heenc.html",
-      "foundAt": "2026-10-05T22:02:44.640Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYmxubWkuaHRtbA",
-      "category": "builder",
-      "title": "Jelgavā būvēju dārza mājas, pirtis, terases, lapenes, nojumes, škūnīšus, auto nojumes. V Елгава и р-он, Елгава Среднее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/blnmi.html",
-      "foundAt": "2026-10-05T22:02:44.640Z"
     }
   ]
 }
