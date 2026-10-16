@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-16T00:48:11.200Z",
+  "generatedAt": "2026-10-16T05:38:57.112Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvY21kamwuaHRtbA",
+      "category": "builder",
+      "title": "Piedāvājam demontāžas pakalpojumus. Демонтажные работы. Подготовка квартиры , дома Рига, Плявниеки Высшее LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/cmdjl.html",
+      "foundAt": "2026-10-16T05:38:57.112Z"
+    },
     {
       "id": "rL2VsZWN0cmljaWFuL2FnY2VwLmh0bWw",
       "category": "electrician",
@@ -1742,13 +1749,6 @@
       "category": "roofer",
       "title": "Мастер с большим опытом , качественно и в срок смонтирует кровлю любой сложности , из лю Рига, Плявниеки Высшее LV, RU Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/gphfd.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9mY29neC5odG1s",
-      "category": "roofer",
-      "title": "Plakano jumtu darbi. Veicu: Pvc membrānas ieklāšanu Bitumena jumtu (ruberoīda) i Рижский р-он, Марупская вол. Среднее - Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/fcogx.html",
       "foundAt": "2026-10-06T09:17:53.289Z"
     }
   ]
