@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-15T22:37:27.832Z",
+  "generatedAt": "2026-10-16T00:48:11.200Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FnY2VwLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķis Mežaparkā 24/7. Электрик в Межапарке 24/7. Electrician in Mezaparks 24/7. Рига, Межапарк Инженер LV, RU, EN Смешанно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/agcep.html",
+      "foundAt": "2026-10-16T00:48:11.200Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvZ2tpcG0uaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "roofer",
       "title": "Plakano jumtu darbi. Veicu: Pvc membrānas ieklāšanu Bitumena jumtu (ruberoīda) i Рижский р-он, Марупская вол. Среднее - Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/fcogx.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2JjY2ttLmh0bWw",
-      "category": "handyman",
-      "title": "Meklēju darbu būvobjektā vai brigādē. Loti labs palīgs jebkuram meistaram. Nemāku špakte Рига, центр Средне-проф. LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bcckm.html",
       "foundAt": "2026-10-06T09:17:53.289Z"
     }
   ]
