@@ -1,6 +1,55 @@
 {
-  "generatedAt": "2026-10-16T05:38:57.112Z",
+  "generatedAt": "2026-10-16T10:08:10.477Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvZW5vZ2kuaHRtbA",
+      "category": "builder",
+      "title": "Profesionāli celtnieki, mēs būvējam privātmājas ar garantiju un laikā. Mēs sadarbojamies Рижский р-он, Марупская вол. Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/enogi.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2h4cHBtLmh0bWw",
+      "category": "electrician",
+      "title": "Сертифицированный, oпытный электромонтер. Любые электрические работы. Отличное качество. Рига, Пурвциемс Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/hxppm.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2VjbmlvLmh0bWw",
+      "category": "electrician",
+      "title": "Сертифицированный, oпытный электромонтер. Любые электрические работы. Отличное качество. Рига, Плявниеки Неоконч. высшее LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/ecnio.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2dlaWZqLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriķa atzinums pēc MK 238 būvvaldei un apdrošinātājiem. Заключение электрика согласн Рижский р-он, Кекавская вол. Инженер - По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/geifj.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "L2VsZWN0cmljaWFuL2NkYmRrbi5odG1s",
+      "category": "electrician",
+      "title": "Elektriskie mērījumi. Электрические измерения. Electrical measurements. Saulkrastos un a Рижский р-он, Саулкрасты Высшее LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/cdbdkn.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2JkaWxvLmh0bWw",
+      "category": "electrician",
+      "title": "Elektroinstalācija, remontdarbi, pieslēgumi, ātri, kvalitatīvi. Рига, Пурвциемс Высшее LV, RU, EN, DE Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bdilo.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
+    {
+      "id": "ci13b3JrL3Jvb2Zlci9namhkbS5odG1s",
+      "category": "roofer",
+      "title": "Jumtu seguma darbi. Jebkuras sarežģītības spāru sistēma, latošanā, vēja dēļi. Izgatavoša Рижский р-он, Марупская вол. Средне-проф. LV, RU Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/gjhdm.html",
+      "foundAt": "2026-10-16T10:08:10.477Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvY21kamwuaHRtbA",
       "category": "builder",
@@ -1700,55 +1749,6 @@
       "category": "electrician",
       "title": "Sertificēts elektriķis. Сертифицированный электрик. Jebkuras sarežģītības darbi. Работ Рига, Пурвциемс Бакалавр LV, RU, EN Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dlfpg.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2RpanhlLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriskie mērījumi. Сдача объектов в эксплуатацию, проектирование, топография, согласо Рига, Тейка Высшее LV, RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/dijxe.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2Jkb254Lmh0bWw",
-      "category": "electrician",
-      "title": "Сертифицированный, oпытный электромонтер. Любые электрические работы. Отличное качество. Рига, Золитуде Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bdonx.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2ZkbGJvLmh0bWw",
-      "category": "electrician",
-      "title": "Сертифицированный, oпытный электромонтер. Любые электрические работы. Отличное качество. Рига, Золитуде Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fdlbo.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2dwbnBnLmh0bWw",
-      "category": "electrician",
-      "title": "Elektriskie mērījumi. Projektēšanas pakalpojumi. Сдача объектов в эксплуатацию, проект Рига, Плявниеки Высшее LV, RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gpnpg.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2JuZ2llLmh0bWw",
-      "category": "electrician",
-      "title": "Sertificēts speciālists veic elektromontāžas un elektroinstalācijas darbus jebkura veida Рига, Пурвциемс Высшее LV, RU, EN По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bngie.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2Jna2RmLmh0bWw",
-      "category": "electrician",
-      "title": "Meklēju darbu par elektriķi, vēlams biroju vai daudstāvmāju apsaimniekošanā. Рижский р-он, Стопиньский округ Средне-проф. LV, RU Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bgkdf.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9ncGhmZC5odG1s",
-      "category": "roofer",
-      "title": "Мастер с большим опытом , качественно и в срок смонтирует кровлю любой сложности , из лю Рига, Плявниеки Высшее LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/gphfd.html",
       "foundAt": "2026-10-06T09:17:53.289Z"
     }
   ]
