@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-10-16T18:42:22.000Z",
+  "generatedAt": "2026-10-16T21:45:31.933Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2FuamdsLmh0bWw",
+      "category": "electrician",
+      "title": "Kvalificēts elektriķis. Veicu sadalņu, iekšējo tīklu izbūvi no 0, rozešu, gaismekļu, slē Екабпилс и р-он, Екабпилс Средне-проф. LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/anjgl.html",
+      "foundAt": "2026-10-16T21:45:31.933Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYm5uZGIuaHRtbA",
       "category": "builder",
@@ -1742,13 +1749,6 @@
       "category": "builder",
       "title": "Vispārceltniecības darbu meistars piedāvā savus pakalpojumus: pamatu nospraušanas(ģeodēz Рига, Золитуде Высшее LV Рабочие дни",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/eobij.html",
-      "foundAt": "2026-10-06T09:17:53.289Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYWxka24uaHRtbA",
-      "category": "builder",
-      "title": "Teicams privātmāju celtnieks. Ir savs auto, savi instrumenti, nav atkarību. Iespējama sa Рига, Золитуде Высшее LV, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/aldkn.html",
       "foundAt": "2026-10-06T09:17:53.289Z"
     }
   ]
