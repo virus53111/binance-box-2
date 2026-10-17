@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-10-17T08:50:24.251Z",
+  "generatedAt": "2026-10-17T12:49:27.063Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2J4YmtrLmh0bWw",
+      "category": "electrician",
+      "title": "Elektriskie mērījumi. Электрические измерения. Electrical measurements. Stopiņu novadā u Рижский р-он, Стопиньский округ Инженер LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bxbkk.html",
+      "foundAt": "2026-10-17T12:49:27.063Z"
+    },
+    {
+      "id": "b3JrL2NhcnBlbnRlci9kaWtsaC5odG1s",
+      "category": "carpenter",
+      "title": "Ekoloģiskas mājas, salmu ķīpu siltinājums, māla apmetums, koka karkass Рижский р-он, Марупская вол. Средне-проф. LV, RU, EN По выбору",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/carpenter/diklh.html",
+      "foundAt": "2026-10-17T12:49:27.063Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYmpsZW0uaHRtbA",
       "category": "builder",
@@ -1735,20 +1749,6 @@
       "category": "roofer",
       "title": "Услуги кровельных и жестяных работ. Jumiķa/skārdnieka pakalpojumi. Рига, Кенгарагс Высшее LV, RU По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/cplbm.html",
-      "foundAt": "2026-10-06T16:11:10.088Z"
-    },
-    {
-      "id": "b3JrL2hhbmR5bWFuL2J4cGZvZi5odG1s",
-      "category": "handyman",
-      "title": "Meklēju darbu ir B C E autovadītāja apliecība Tr2 traktor tiesības ir neliela pieredze a Рижский р-он, Сигулда Средне-проф. LV Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bxpfof.html",
-      "foundAt": "2026-10-06T16:11:10.088Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2NpZWJvLmh0bWw",
-      "category": "handyman",
-      "title": "Steidzami meklēju jebkāda veida darbu zem jumta vēlams demontāžas darbos, kraušanas darb Рижский р-он, Кекавская вол. Средне-проф. LV, RU Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/ciebo.html",
       "foundAt": "2026-10-06T16:11:10.088Z"
     }
   ]
