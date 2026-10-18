@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-10-18T14:23:44.673Z",
+  "generatedAt": "2026-10-18T17:29:06.989Z",
   "leads": [
+    {
+      "id": "rL2VsZWN0cmljaWFuL2dia3BlLmh0bWw",
+      "category": "electrician",
+      "title": "Услуги электрика Качественно и профессионально Электрик с профессиональным образованием Рига, центр Средне-проф. LV, RU, EN Выходные дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/gbkpe.html",
+      "foundAt": "2026-10-18T17:29:06.989Z"
+    },
+    {
+      "id": "3b3JrL2hhbmR5bWFuL2dreGNqLmh0bWw",
+      "category": "handyman",
+      "title": "Mekleju patstavigu darbu Bauskā un tas rajonā. Ir pieredze celtnieciba, iekšdarbos, fasa Бауска и р-он, Бауска Средне-проф. LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/gkxcj.html",
+      "foundAt": "2026-10-18T17:29:06.989Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvZ2ZsaWIuaHRtbA",
       "category": "builder",
@@ -1736,20 +1750,6 @@
       "title": "Elektromontāžas un remonta pakalpojumi. Nelieli vienreizēji darbi un sarežģītāki uzdevum Рига, Зиепниеккалнс Средне-проф. RU Любой",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fleem.html",
       "foundAt": "2026-10-07T00:44:58.642Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvYmtqY2wuaHRtbA",
-      "category": "builder",
-      "title": "Būvniecības un renovācijas pakalpojumi visā Latgalē Veicam visa veida būvniecības dar Резекне и р-он, Резекне Высшее LV, RU, EN Рабочие дни",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/bkjcl.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZWVlZGwuaHRtbA",
-      "category": "builder",
-      "title": "Veicu ar celtniecību un būvniecību saistītus darbus- fasādes, siltināšana, karkasu māju Рижский р-он, Salaspils l. t. Средне-проф. LV, RU По выбору",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/eeedl.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
     }
   ]
 }
