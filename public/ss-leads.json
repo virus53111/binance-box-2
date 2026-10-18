@@ -1,6 +1,34 @@
 {
-  "generatedAt": "2026-10-18T10:52:14.231Z",
+  "generatedAt": "2026-10-18T14:23:44.673Z",
   "leads": [
+    {
+      "id": "13b3JrL2J1aWxkZXIvZ2ZsaWIuaHRtbA",
+      "category": "builder",
+      "title": "Celtnieku komanda piedāvā veikt remontu jūsu īpašumā. Spējām veikt jebkādas sarežģītīb Рига, Зиепниеккалнс Высшее - Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/gflib.html",
+      "foundAt": "2026-10-18T14:23:44.673Z"
+    },
+    {
+      "id": "13b3JrL2J1aWxkZXIvYW5sZmYuaHRtbA",
+      "category": "builder",
+      "title": "Sveiki. Esmu celtnieks ar vairāku gadu stāžu. Apdare un vēl daudz kas cits ir savi instr Валмиера и р-он, Валмиера Высшее LV, RU, EN Рабочие дни",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/anlff.html",
+      "foundAt": "2026-10-18T14:23:44.673Z"
+    },
+    {
+      "id": "rL2VsZWN0cmljaWFuL2ZobWhnLmh0bWw",
+      "category": "electrician",
+      "title": "Celtnieku komanda piedāvā veikt remontu jūsu īpašumā. Spējām veikt jebkādas sarežģītīb Валмиера и р-он, Валмиера Магистр LV, RU, EN Ежедневно",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/fhmhg.html",
+      "foundAt": "2026-10-18T14:23:44.673Z"
+    },
+    {
+      "id": "b3JrL2hhbmR5bWFuL2J4bmNnZi5odG1s",
+      "category": "handyman",
+      "title": "Meklēju darbu vai haltūru, Интересует подработка либо работa, strādāt varu Rīga vai ārpu Рига, Югла Средне-проф. LV, RU Любой",
+      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bxncgf.html",
+      "foundAt": "2026-10-18T14:23:44.673Z"
+    },
     {
       "id": "13b3JrL2J1aWxkZXIvYmVseGouaHRtbA",
       "category": "builder",
@@ -1721,34 +1749,6 @@
       "category": "builder",
       "title": "Veicu ar celtniecību un būvniecību saistītus darbus- fasādes, siltināšana, karkasu māju Рижский р-он, Salaspils l. t. Средне-проф. LV, RU По выбору",
       "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/eeedl.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
-    },
-    {
-      "id": "13b3JrL2J1aWxkZXIvZGNpam4uaHRtbA",
-      "category": "builder",
-      "title": "Монтажник с опытом в металлоконструкциях, дверях, окнах, сендвич-панелях. Свой инструмен Рига, Иманта Средне-проф. RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/builder/dcijn.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
-    },
-    {
-      "id": "rL2VsZWN0cmljaWFuL2JrbmVmLmh0bWw",
-      "category": "electrician",
-      "title": "Profesionāli elektriķa pakalpojumi. Veicam elektroinstalācijas izbūvi, pārbūvi un no Рига, Другой Средне-проф. LV, RU, EN Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/electrician/bknef.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
-    },
-    {
-      "id": "ci13b3JrL3Jvb2Zlci9lbWVnay5odG1s",
-      "category": "roofer",
-      "title": "Монтаж и ремонт Пвх мембран. Крыши, террасы, балконы. Звоните, присылайте Фото ваших кры Рига, Зиепниеккалнс Средне-проф. LV, RU Ежедневно",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/roofer/emegk.html",
-      "foundAt": "2026-10-06T21:00:51.611Z"
-    },
-    {
-      "id": "3b3JrL2hhbmR5bWFuL2JuZnBrLmh0bWw",
-      "category": "handyman",
-      "title": "Подработка, разовая или временная. Рига, Засулаукс Средне-проф. - Любой",
-      "url": "https://www.ss.com/msg/ru/work/i-search-for-work/handyman/bnfpk.html",
       "foundAt": "2026-10-06T21:00:51.611Z"
     }
   ]
