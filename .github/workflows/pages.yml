@@ -1,3 +1,4 @@
+# Publish the cinema playback update; canonical source remains dogizen/main.
 name: Deploy MURDILIMAX from dogizen
 on:
   push:
