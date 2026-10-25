@@ -1,59 +1,44 @@
-name: Deploy MURDILIMAX
+name: Deploy MURDILIMAX from dogizen
 on:
   push:
     branches: [main]
+    paths:
+      - .github/workflows/pages.yml
   workflow_dispatch:
   schedule:
     - cron: "*/15 * * * *"
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
-  build:
+  deploy:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm install
-      - name: Scan new SS.com construction listings
-        run: node scripts/scan-ss.mjs
-      - name: Scan public tasks and helpers across Latvia
-        run: node scripts/scan-public-opportunities.mjs
-      - name: Generate anonymized construction market pulse
-        run: node scripts/generate-construction-market-signals.mjs
-      - name: Generate Google pages for cities and categories
-        run: node scripts/generate-radar-pages.mjs
-      - name: Generate construction price guide
-        run: node scripts/generate-price-pages.mjs
-      - name: Generate social preview pages for public tasks
-        run: node scripts/generate-task-pages.mjs
-      - name: Generate branded Traffic Lab pages
-        run: node scripts/generate-traffic-pages.mjs
-      - name: Notify IndexNow search engines
-        run: node scripts/submit-indexnow.mjs
-      - run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
-      - name: Save monitor state
-        run: |
-          git config user.name "murdilimax-monitor"
-          git config user.email "actions@users.noreply.github.com"
-          git add public/ss-leads.json .monitor/ss-state.json public/external-leads.json .monitor/external-state.json
-          git diff --cached --quiet || git commit -m "Update SS.com monitor state [skip ci]"
-          git pull --rebase origin main || true
-          git push || echo "::warning::Monitor state push skipped after concurrent update; next scheduled run will retry."
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the single source of truth
+        uses: actions/checkout@v4
+        with:
+          repository: virus53111/dogizen
+          ref: main
+          persist-credentials: false
+      - name: Verify cinema and domain before publishing
+        shell: bash
+        run: |
+          test -s index.html
+          test "$(tr -d '\r\n' < CNAME)" = "murdilimax.com"
+          grep -q 'твоя вселенная кино' index.html
+          git rev-parse HEAD
+          sha256sum index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
