@@ -1,13 +1,9 @@
-# Publish playback and resilient thumbnails; canonical source remains dogizen/main.
-name: Deploy MURDILIMAX from dogizen
+# LEGACY/RETIRED: old Murdilimax deployment kept for reference only.
+# Current live site is built and deployed from virus53111/dogizen main.
+# Automatic schedule and push triggers removed after repeated failures.
+name: Legacy MURDILIMAX deployment (manual only)
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/pages.yml
   workflow_dispatch:
-  schedule:
-    - cron: "*/15 * * * *"
 permissions:
   contents: read
   pages: write
